@@ -20,5 +20,8 @@ các điểm yếu bảo mật từ bên ngoài.
 ## Architecture
 Updating...
 
+## Documentation
+- [Web technology stack đã thống nhất — Issue #7](docs/README.md)
+
 ## Project Status
 Week 1 - Project Foundation
