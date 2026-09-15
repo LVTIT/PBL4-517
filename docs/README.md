@@ -1,5 +1,7 @@
 # Quyết định web technology stack
 
+> Bản ghi lịch sử của Issue #7 tại ngày chốt stack. Context hiện hành được quản lý trong [wiki/README.md](../wiki/README.md); stack tại [wiki/WEB_STACK.md](../wiki/WEB_STACK.md), quyết định tại [wiki/DECISIONS.md](../wiki/DECISIONS.md), tiến độ tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md). Các mô tả “chưa tạo/chưa kiểm thử” bên dưới phản ánh thời điểm Issue #7; xem [website/README.md](../website/README.md) để chạy source hiện tại.
+
 Issue: [#7 — WEB-01: Select Web Technology Stack](https://github.com/LVTIT/PBL4-517/issues/7).
 
 **Trạng thái: Đã thống nhất ngày 14/09/2026.** Người dùng xác nhận lựa chọn stack cho nhóm và yêu cầu hoàn thành issue #7, commit vào `main`. Nhóm đã dùng TypeScript ở PBL3. Tài liệu này là đầu vào cho việc tạo website ở issue #8.
