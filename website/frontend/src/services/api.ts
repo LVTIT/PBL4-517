@@ -51,6 +51,32 @@ export async function post<T>(path: string, body: unknown = {}): Promise<T> {
   });
 }
 
+export async function put<T>(path: string, body: unknown = {}): Promise<T> {
+  const { csrfToken } = await get<{ csrfToken: string }>('/auth/csrf');
+  return request<T>(path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function patch<T>(path: string, body: unknown = {}): Promise<T> {
+  const { csrfToken } = await get<{ csrfToken: string }>('/auth/csrf');
+  return request<T>(path, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function del<T>(path: string): Promise<T> {
+  const { csrfToken } = await get<{ csrfToken: string }>('/auth/csrf');
+  return request<T>(path, {
+    method: 'DELETE',
+    headers: { 'X-CSRF-Token': csrfToken },
+  });
+}
+
 export function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'Có lỗi xảy ra. Vui lòng thử lại.';
 }

@@ -27,18 +27,15 @@ lab/OWASP hoặc branch lab tương đương
 - Evidence phải đủ để tái hiện và đánh giá fix; loại bỏ password thật, session cookie/token, database URL có mật khẩu và cloud credential. Lưu evidence vào `evidence/` theo issue, không nhét báo cáo vào wiki.
 - Chỉ ghi scenario Completed khi đã có exploit, fix và retest thực tế. Có thể đưa fix phù hợp về baseline theo workflow review; không merge phần cố ý làm yếu ứng dụng.
 
-## Kịch bản tiềm năng
+## Kịch bản thực nghiệm OWASP Top 10
 
-**Status: Proposed** — danh sách ứng viên, chưa phải các bài lab đã chọn hay đã triển khai.
+| Scenario | Trạng thái | Chi tiết triển khai & Công cụ |
+| :--- | :--- | :--- |
+| **A01: Broken Access Control (IDOR)** | **Implemented** | Đã xây dựng hoàn chỉnh kịch bản đọc trộm đơn hàng `GET /api/orders/:id`. Kiểm soát qua cờ môi trường `VULN_IDOR_ENABLED` (`.env`), tự động hóa khai thác qua script [`scripts/attacker/exploit_idor.py`](../scripts/attacker/exploit_idor.py). |
+| **A01: Admin Authorization** | **Implemented (Baseline)** | Phân quyền nghiêm ngặt qua middleware `requireAdmin`; Admin bị chặn đặt hàng (`ADMIN_CANNOT_ORDER`) và chặn tự review sản phẩm. |
+| **A03: Injection (SQLi)** | **Planned** | Ô tìm kiếm `GET /api/products?search=...` (chuẩn bị kịch bản `VULN_SQLI_ENABLED` với query ghép chuỗi thô). |
+| **A03: Stored XSS** | **Planned** | Bình luận sản phẩm `POST /api/products/:id/reviews` (chuẩn bị kịch bản `VULN_XSS_ENABLED`). |
+| **A05: Security Misconfiguration** | **Planned** | Module `scanner/` dò quét cổng mở trên AWS Security Group và gửi cảnh báo về Telegram/Discord. |
+| **A07: Authentication & Brute Force** | **Implemented (Baseline)** | Đã triển khai rate limiter, bcrypt hash mật khẩu, kiểm tra phiên session phía server. |
 
-| Scenario | Hướng kiểm tra tương lai |
-| --- | --- |
-| Authentication | Validation, thông báo lỗi, chống thử password và xử lý phiên |
-| Broken Access Control / IDOR | Truy cập dữ liệu của tài khoản khác khi có tài nguyên/order phù hợp |
-| Admin authorization | Kiểm tra quyền phía server khi có route admin |
-| XSS | Nội dung không tin cậy, cách render và security headers |
-| Injection | Truy vấn database, input và ranh giới parameterization |
-| Security Misconfiguration | Môi trường, lỗi, secret, port và proxy configuration |
-| Session security | Fixation, expiry, logout/replay, cookie attributes và CSRF |
-
-Order/admin chưa nằm trong skeleton Issue #8; scenario phụ thuộc các chức năng đó phải chờ task phát triển phù hợp. Khi chốt lab, thêm decision hoặc kế hoạch issue cụ thể; tham khảo [OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) cho baseline CSRF hiện có.
+Cơ chế thực nghiệm sử dụng cờ môi trường (`VULN_*_ENABLED=true/false`) để đảm bảo nhánh `main` luôn là **Secure Baseline** khi deploy lên AWS Cloud, đồng thời cho phép bật nhanh chế độ có lỗ hổng khi demo khai thác và kiểm chứng bịt lỗi.

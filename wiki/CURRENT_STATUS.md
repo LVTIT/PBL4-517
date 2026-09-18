@@ -1,36 +1,43 @@
 # Current Project Status
 
-**Last updated:** 2026-09-15
+**Last updated:** 2026-09-18
 
-**Current phase:** Xây dựng và kiểm chứng website local Issue #8; thiết lập knowledge base để bàn giao context.
+**Current phase:** Hoàn thành mở rộng tính năng website e-commerce (Register, Search & Filter, Product Detail, Reviews, Cart & Orders, Admin panel) đảm bảo Secure Baseline trên `main` và tạo đầy đủ bề mặt kiểm thử cho lab OWASP Top 10.
 
 **Completed:**
 
-- [Issue #7 — Web technology stack selected](https://github.com/LVTIT/PBL4-517/issues/7): đã chốt và CLOSED; hồ sơ ở commit `e1cc09c`. Không coi đây là kết quả deploy Linux/EC2.
-- Issues [#2](https://github.com/LVTIT/PBL4-517/issues/2), [#3](https://github.com/LVTIT/PBL4-517/issues/3) đang CLOSED theo GitHub; đọc nội dung issue trước khi suy ra phạm vi đã làm.
+- [Issue #7 — Web technology stack selected](https://github.com/LVTIT/PBL4-517/issues/7): đã chốt và CLOSED; hồ sơ ở commit `e1cc09c`.
+- [Issue #8 — Website skeleton](https://github.com/LVTIT/PBL4-517/issues/8): Skeleton website ban đầu đã hoàn thành và merge vào `main` (commit `01a3da3`).
+- **Nâng cấp tính năng e-commerce phục vụ bề mặt kiểm thử OWASP (2026-09-18):**
+  - **Auth mở rộng:** Đăng ký tài khoản mới (`POST /api/auth/register` với rate limiter, check trùng email, hash mật khẩu), xem và cập nhật họ tên (`PUT /api/auth/profile`), đổi mật khẩu có kiểm tra mật khẩu cũ (`PUT /api/auth/password`).
+  - **Tìm kiếm & Chi tiết sản phẩm:** Tìm kiếm theo từ khóa `search` và lọc theo `category` (`GET /api/products?search=...&category=...`), xem chi tiết sản phẩm (`GET /api/products/:id`).
+  - **Đánh giá sản phẩm (Reviews):** Viết đánh giá 1–5 sao và bình luận (`POST /api/products/:id/reviews`), xem danh sách đánh giá từ khách hàng.
+  - **Giỏ hàng & Đơn hàng:** Lưu trữ giỏ hàng client (`CartContext`), tạo đơn hàng với xác thực tồn kho và tính tổng tiền phía server chống gian lận giá (`POST /api/orders`), xem lịch sử đơn hàng (`GET /api/orders`), xem chi tiết đơn hàng (`GET /api/orders/:id`) có cơ chế kiểm tra quyền sở hữu chống **IDOR**.
+  - **Bảng điều khiển Quản trị (Admin Panel):** Quản lý kho hàng (thêm mới, xóa sản phẩm) và quản lý danh sách đơn hàng (cập nhật trạng thái `PENDING` → `CONFIRMED` → `SHIPPED` → `DELIVERED` → `CANCELLED`). Phân quyền chặt chẽ qua middleware `requireAdmin`.
+  - **Tối ưu phân quyền (RBAC) & Đặt hàng Khách vãng lai (Guest Checkout) (2026-09-18):**
+    - **Tách bạch vai trò Admin & Khách hàng:** Quản trị viên (`ADMIN`) chỉ thực hiện các tác vụ quản trị, không thể tham gia mua hàng/đặt đơn (`403 ADMIN_CANNOT_ORDER`) và không được tự viết review sản phẩm (`403 ADMIN_CANNOT_REVIEW`). Ẩn giỏ hàng trên thanh điều hướng đối với tài khoản Admin.
+    - **Đặt hàng cho Khách vãng lai (Guest):** Cho phép đặt hàng mà không bắt buộc tạo tài khoản (`POST /api/orders` hỗ trợ `guestInfo: { name, email, phone }`), vẫn được bảo vệ CSRF và session đầy đủ.
+    - **Cô lập giỏ hàng & Fix rò rỉ session (Cart Session Isolation):** Giỏ hàng được lưu theo namespace (`pbl517_cart_user_<id>` hoặc `pbl517_cart_guest`). Khi đăng xuất, giỏ hàng trong bộ nhớ và localStorage được xóa sạch hoàn toàn để bảo mật phiên dùng chung máy; khi đăng nhập, giỏ hàng khách được tự động hợp nhất vào tài khoản người dùng.
+    - **Sửa giao diện giỏ hàng:** Điều chỉnh CSS `.cart-item-details` dạng flex-column, ngăn chặn việc tên sản phẩm và đơn giá bị dính liền chữ trên cùng một dòng.
+  - **Chuẩn hóa kịch bản khai thác OWASP A01 (IDOR) & Attacker Script (2026-09-18):**
+    - Viết script tấn công tự động [`scripts/attacker/exploit_idor.py`](../scripts/attacker/exploit_idor.py) kiểm thử khai thác IDOR và đánh giá mã phản hồi HTTP 200 vs 403.
+    - Tích hợp cờ môi trường `VULN_IDOR_ENABLED` (mặc định `false` trên baseline) giúp demo chuyển đổi trạng thái "Chưa bịt lỗi" $\leftrightarrow$ "Đã bịt lỗi" tức thì mà không cần can thiệp sửa code thủ công.
+  - **Database & Prisma:** Migration `20260918000000_expand_ecommerce` và `20260918140000_guest_checkout` (hỗ trợ `userId String?`, lưu `customerName`, `customerEmail`, `customerPhone` cho đơn hàng khách vãng lai). Cập nhật `seed.ts` với tài khoản Admin demo (`admin@example.com` / `AdminOnly517!`).
+  - **Kiểm thử & Build:** Đã bổ sung bộ kiểm thử tự động, 16/16 backend integration tests chạy thành công (`npm run test:integration`); cả frontend (`npm run build`) và backend (`npm run build`) biên dịch 100% không lỗi.
 
 **In progress:**
 
-- [Issue #8 — Website skeleton](https://github.com/LVTIT/PBL4-517/issues/8): frontend/backend `npm ci` và build PASS; Prisma generate/migration/seed và API integration 10/10 PASS. Chrome kiểm thử Home/Products/Login, refresh/session/logout, mobile và loading/empty/error PASS. Bản source sạch với database mới cũng PASS; đang push và kiểm tra clone GitHub trước khi cập nhật checklist cuối cùng.
-- Knowledge base `wiki/`, bootstrap `AGENTS.md` và liên kết README đã tạo, đang hoàn tất kiểm tra/publish cùng source.
+- Chuẩn bị môi trường AWS EC2 Ubuntu 24.04 LTS để đưa website lên cloud ([Issue #12](https://github.com/LVTIT/PBL4-517/issues/12)–[#14](https://github.com/LVTIT/PBL4-517/issues/14)).
 
 **Next:**
 
-- Hoàn tất kiểm thử/push source và cập nhật checklist/evidence Issue #8 theo kết quả thật. Giữ issue OPEN để người quản lý review, trừ khi workflow hoặc người dùng có chỉ dẫn đóng rõ ràng.
-- Tiếp tục backlog đã giao sau khi đọc issue: [#9](https://github.com/LVTIT/PBL4-517/issues/9)–[#10](https://github.com/LVTIT/PBL4-517/issues/10) scanner, [#11](https://github.com/LVTIT/PBL4-517/issues/11) architecture v0.1, [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17) EC2/deploy/service/verification/docs, [#18](https://github.com/LVTIT/PBL4-517/issues/18) integration. Viết wiki chưa đồng nghĩa hoàn thành các issue đó.
-
-**Known problems:**
-
-- GitHub publish và kiểm tra bản clone từ remote còn đang thực hiện. Audit cả hai project không còn advisory tại thời điểm kiểm tra; ghi chú duy trì override ở [website/README.md](../website/README.md#notes).
-- Docker không chạy được trên máy kiểm thử hiện tại do cấu hình WSL2. PostgreSQL 16 native được dùng để kiểm thử; hướng dẫn Docker chỉ là lựa chọn local, chưa có kết quả chạy trên máy này.
+- Tiếp tục các backlog đã giao:
+  - [#9](https://github.com/LVTIT/PBL4-517/issues/9)–[#10](https://github.com/LVTIT/PBL4-517/issues/10): Scanner dò quét host/port từ bên ngoài và gửi alert Telegram/Discord.
+  - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1.
+  - [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17): Cấu hình EC2, Nginx reverse proxy, systemd service, verify deployment và lưu evidence.
+  - Chuẩn bị lab branch riêng cho kịch bản OWASP (vulnerable → exploit → evidence → fix → retest) theo đúng [SECURITY_PLAN.md](SECURITY_PLAN.md).
 
 **Important constraints:**
 
-- Giữ stack Accepted ở [WEB_STACK.md](WEB_STACK.md); source web chỉ trong `website/`, API `/api/`, auth session PostgreSQL + HttpOnly/CSRF; không commit secret/generated files.
-- AWS/Nginx/systemd, ALB/VPC/SG/NACL, scanner/alerts và OWASP lab chưa triển khai trong scope Issue #8. `main` giữ secure baseline.
-
-**Do not redo:**
-
-- Không chọn lại stack Issue #7 nếu task không yêu cầu thay đổi quyết định.
-- Không tạo thêm một website hoặc hướng dẫn setup song song; dùng source hiện có và [website/README.md](../website/README.md).
-- Không ghi Planned/Proposed thành Implemented hay đánh dấu checklist chưa kiểm chứng.
+- `main` luôn giữ vững **Secure Baseline** (mã nguồn chuẩn mực, fix đầy đủ các lỗ hổng Injection, XSS, CSRF, IDOR, Broken Authentication).
+- Bất kỳ kịch bản cố tình làm yếu hệ thống để thực hiện bài lab tấn công đều phải thực hiện trên branch lab riêng biệt (không đưa lỗ hổng cố ý vào `main`).

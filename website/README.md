@@ -206,42 +206,67 @@ npm run dev
 Mở **http://127.0.0.1:5173**:
 
 - `/`: trang chủ và liên kết đến sản phẩm/đăng nhập.
-- `/products`: sản phẩm lấy từ PostgreSQL qua `GET /api/products`.
+- `/products`: sản phẩm lấy từ PostgreSQL qua `GET /api/products` (hỗ trợ tìm kiếm `search` và lọc `category`).
+- `/products/:id`: xem chi tiết sản phẩm, tồn kho và danh sách đánh giá từ khách hàng.
+- `/cart`: giỏ hàng mua sắm, chọn số lượng và đặt hàng (`CartContext`).
+- `/orders`: xem lịch sử đơn hàng đã đặt của tài khoản hiện tại.
 - `/login`: đăng nhập thật bằng session cookie.
+- `/register`: đăng ký tài khoản thành viên mới.
+- `/profile`: quản lý họ tên và đổi mật khẩu an toàn.
+- `/admin`: bảng điều khiển quản trị (thêm/xóa sản phẩm, duyệt và đổi trạng thái đơn hàng; chỉ tài khoản `ADMIN` mới truy cập được).
 
 Giữ cả hai terminal chạy. Dùng cùng `http://127.0.0.1:5173` trong quá trình test vì `localhost` và `127.0.0.1` là hai cookie host khác nhau.
 
 ```text
 Browser → Vite :5173
-            ├── React frontend
+            ├── React frontend (SPA)
             └── /api/ → Express 127.0.0.1:3000 → Prisma → PostgreSQL
 ```
 
 Frontend gọi đường dẫn tương đối `/api/...`; Vite proxy giữ cùng origin trong trình duyệt, nên không cần CORS. Khi triển khai Nginx sau này, frontend giữ nguyên cách gọi API.
 
-## Test account
+## Test accounts
 
 Sau khi seed:
 
 ```text
-Email:    demo@example.com
-Password: DemoOnly517!
+1. Khách hàng Demo (CUSTOMER):
+   Email:    demo@example.com
+   Password: DemoOnly517!
+
+2. Quản trị viên Demo (ADMIN):
+   Email:    admin@example.com
+   Password: AdminOnly517!
 ```
 
-Tài khoản này có mật khẩu công khai, chỉ dùng development/testing với dữ liệu giả. Đây không phải thông tin đăng nhập thật của thành viên. Không dùng tài khoản hoặc mật khẩu demo trên môi trường public.
+Các tài khoản này có mật khẩu công khai, chỉ dùng development/testing với dữ liệu giả. Đây không phải thông tin đăng nhập thật của thành viên. Không dùng tài khoản hoặc mật khẩu demo trên môi trường public.
 
 ## API endpoints
 
-| Method | Đường dẫn | Kết quả |
-| --- | --- | --- |
-| `GET` | `/api/health` | Trạng thái backend/database. |
-| `GET` | `/api/products` | Danh sách sản phẩm từ PostgreSQL. |
-| `GET` | `/api/auth/csrf` | CSRF token gắn với session hiện tại; đặt cookie khi cần. |
-| `POST` | `/api/auth/login` | JSON `{ "email": "...", "password": "..." }`, yêu cầu header `X-CSRF-Token`. |
-| `GET` | `/api/auth/me` | User công khai hiện tại, hoặc `null` nếu chưa đăng nhập. |
-| `POST` | `/api/auth/logout` | Hủy session, xóa cookie; yêu cầu header `X-CSRF-Token`. |
+| Method | Đường dẫn | Quyền hạn | Kết quả |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Public | Trạng thái backend/database. |
+| `GET` | `/api/products` | Public | Danh sách sản phẩm từ PostgreSQL (`?search=...&category=...`). |
+| `GET` | `/api/products/:id` | Public | Chi tiết sản phẩm, trung bình đánh giá và danh sách reviews. |
+| `GET` | `/api/products/:id/reviews` | Public | Danh sách đánh giá của sản phẩm. |
+| `POST` | `/api/products/:id/reviews` | Đăng nhập | Gửi đánh giá 1–5 sao kèm nhận xét. |
+| `POST` | `/api/products` | Admin | Thêm sản phẩm mới vào kho hàng. |
+| `PUT` | `/api/products/:id` | Admin | Cập nhật thông tin/giá/kho sản phẩm. |
+| `DELETE` | `/api/products/:id` | Admin | Xóa sản phẩm khỏi kho hàng. |
+| `GET` | `/api/auth/csrf` | Public | CSRF token gắn với session hiện tại; đặt cookie khi cần. |
+| `POST` | `/api/auth/register` | Public | Đăng ký tài khoản: `{ "name", "email", "password" }`. |
+| `POST` | `/api/auth/login` | Public | Đăng nhập: `{ "email", "password" }`. |
+| `GET` | `/api/auth/me` | Public | Thông tin user hiện tại (`null` nếu chưa đăng nhập). |
+| `POST` | `/api/auth/logout` | Đăng nhập | Hủy session server-side, xóa cookie. |
+| `PUT` | `/api/auth/profile` | Đăng nhập | Cập nhật thông tin họ tên của tài khoản. |
+| `PUT` | `/api/auth/password` | Đăng nhập | Đổi mật khẩu tài khoản (yêu cầu mật khẩu cũ). |
+| `GET` | `/api/orders` | Đăng nhập | Lịch sử các đơn hàng của user hiện tại. |
+| `POST` | `/api/orders` | Public (Khách / User) | Tạo đơn hàng (tính tiền & trừ kho phía server; chặn Admin). |
+| `GET` | `/api/orders/:id` | Chủ đơn / Admin | Chi tiết đơn hàng (bảo vệ chống **IDOR**). |
+| `GET` | `/api/admin/orders` | Admin | Toàn bộ đơn hàng trong hệ thống (bao gồm đơn khách vãng lai). |
+| `PATCH` | `/api/admin/orders/:id/status` | Admin | Cập nhật trạng thái đơn (`PENDING`, `CONFIRMED`, `SHIPPED`...). |
 
-Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. `/api/auth/me` trả `{ "data": { "user": null } }` khi chưa đăng nhập. API không trả password hash.
+Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
 
 ### Session, password và CSRF
 

@@ -61,3 +61,32 @@ Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đ�
 **Consequences:** Cập nhật current status sau công việc đáng kể, ghi decision mới khi đổi kiến trúc, ưu tiên link để tránh trùng tài liệu. Lab/scenario và hạ tầng tương lai phải ghi Planned hoặc Proposed đúng tình trạng; không lưu báo cáo/evidence trong wiki.
 
 **Related:** [wiki/README.md](README.md), [DEVELOPMENT.md](DEVELOPMENT.md), [SECURITY_PLAN.md](SECURITY_PLAN.md), [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8).
+
+## 2026-09-18 — Mở rộng tính năng e-commerce tạo bề mặt kiểm thử OWASP Top 10
+
+**Status: Accepted**
+
+**Decision:** Bổ sung các tính năng cốt lõi cho website nhưng giữ cấu trúc cơ bản và tinh gọn:
+1. Xác thực mở rộng: Đăng ký (`Register`), Quản lý hồ sơ (`Profile`), Đổi mật khẩu (`changePassword`).
+2. Danh mục & Tìm kiếm: Lọc `category`, tìm kiếm theo từ khóa `search`, xem chi tiết sản phẩm.
+3. Đánh giá sản phẩm (`Review`): Xếp hạng 1–5 sao và bình luận đánh giá.
+4. Giỏ hàng & Đơn hàng (`Cart` & `Order`): Quản lý giỏ hàng phía client (`CartContext`), tạo đơn hàng với tính toán giá và trừ kho phía server, chặn truy cập trái phép IDOR (`/api/orders/:id`).
+5. Phân quyền Quản trị viên (`ADMIN`): Bảng điều khiển admin (`/admin`) cho phép thêm/xóa sản phẩm và cập nhật trạng thái đơn hàng thông qua middleware `requireAdmin`.
+
+**Reason:** Đáp ứng yêu cầu của đề tài PBL4-517: Website thương mại điện tử cần đủ các chức năng nghiệp vụ thông dụng để tạo bề mặt tấn công (attack surface) phong phú cho các bài lab OWASP Top 10 (Injection, Broken Authentication, XSS, Broken Access Control / IDOR, Security Misconfiguration), đồng thời duy trì Secure Baseline trên nhánh `main`.
+
+**Consequences:** Thêm migration schema cho `Review`, `Order`, `OrderItem`, `OrderStatus` và `category` cho `Product`. Cập nhật `seed.ts` tài khoản admin demo. Cả frontend và backend cần tiếp tục duy trì 100% build pass và type safety.
+
+**Related:** [wiki/CURRENT_STATUS.md](CURRENT_STATUS.md), [wiki/SECURITY_PLAN.md](SECURITY_PLAN.md), [website/README.md](../website/README.md).
+
+## 2026-09-18 — Chuẩn hóa kịch bản khai thác OWASP bằng script và cờ cấu hình môi trường
+
+**Status: Accepted**
+
+**Decision:** Thay vì chỉnh sửa/comment code thủ công trong lúc demo, hệ thống sử dụng các cờ cấu hình môi trường độc lập (ví dụ `VULN_IDOR_ENABLED=true/false` trong `.env`) để bật/tắt từng kịch bản lỗ hổng. Xây dựng bộ script khai thác tự động lưu trong `scripts/attacker/` (khởi đầu với `exploit_idor.py`).
+
+**Reason:** Đảm bảo nhánh `main` luôn duy trì **Secure Baseline** mặc định (`VULN_*=false`) khi triển khai lên AWS Cloud, đồng thời cho phép bật nhanh chế độ thực nghiệm an toàn khi bảo vệ đồ án trước giảng viên mà không gây rủi ro lỗi cú pháp hay làm xáo trộn mã nguồn.
+
+**Consequences:** Mọi kiểm thử tự động (integration tests) mặc định chạy trên Secure Baseline (100% pass). Khi làm lab/demo, chỉ cần thay đổi cờ môi trường và chạy script Python tương ứng từ máy tấn công (Attacker).
+
+**Related:** [wiki/CURRENT_STATUS.md](CURRENT_STATUS.md), [wiki/SECURITY_PLAN.md](SECURITY_PLAN.md), [scripts/attacker/exploit_idor.py](../scripts/attacker/exploit_idor.py).

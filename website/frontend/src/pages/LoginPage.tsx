@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { ArrowIcon } from '../components/Icon';
 import { useAuth } from '../services/auth';
 import { messageFrom } from '../services/api';
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from ?? '/products';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -19,6 +23,7 @@ export function LoginPage() {
     setError(null);
     try {
       await login(email.trim(), password);
+      navigate(from, { replace: true });
     } catch (error) {
       setError(messageFrom(error));
     } finally {
@@ -54,7 +59,11 @@ export function LoginPage() {
             {error && <p id="login-error" className="form-error" role="alert">{error}</p>}
             <button className="button button-primary submit-button" type="submit" disabled={submitting}>{submitting ? 'Đang đăng nhập…' : 'Đăng nhập'}<ArrowIcon /></button>
           </form>
-          <div className="login-bottom-note"><span aria-hidden="true">↳</span> Chỉ muốn xem một chút? <Link to="/products">Khám phá sản phẩm</Link></div>
+          <div className="login-bottom-note">
+            <span>Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link></span>
+            <span style={{ marginInline: '8px' }}>·</span>
+            <Link to="/products">Khám phá sản phẩm</Link>
+          </div>
         </>}
       </section>
     </div>

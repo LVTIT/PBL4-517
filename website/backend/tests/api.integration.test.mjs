@@ -154,6 +154,187 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.equal(result.body.error.code, 'NOT_FOUND');
       assert.equal('stack' in result.body.error, false);
     });
+
+    await suite.test('user registration and duplicate detection', async () => {
+      const regBrowser = new BrowserSession();
+      const csrfToken = await regBrowser.csrf();
+      const testEmail = `test_${Date.now()}@example.com`;
+      const regResult = await regBrowser.request('/auth/register', {
+        method: 'POST',
+        csrfToken,
+        body: { name: 'Người Dùng Mới', email: testEmail, password: 'Password123!' },
+      });
+      assert.equal(regResult.status, 201);
+      assert.equal(regResult.body.data.user.name, 'Người Dùng Mới');
+      assert.equal(regResult.body.data.user.email, testEmail);
+
+      // Verify immediate session login
+      const meResult = await regBrowser.request('/auth/me');
+      assert.equal(meResult.body.data.user.email, testEmail);
+
+      // Duplicate registration rejected (requires post-registration CSRF token)
+      const dupCsrf = await regBrowser.csrf();
+      const dupResult = await regBrowser.request('/auth/register', {
+        method: 'POST',
+        csrfToken: dupCsrf,
+        body: { name: 'Trùng Email', email: testEmail, password: 'Password123!' },
+      });
+      assert.equal(dupResult.status, 409);
+      assert.equal(dupResult.body.error.code, 'EMAIL_EXISTS');
+    });
+
+    await suite.test('product search and detail with reviews', async () => {
+      const searchRes = await browser.request('/products?search=Bàn%20phím');
+      assert.equal(searchRes.status, 200);
+      assert.ok(searchRes.body.data.length >= 1);
+      assert.ok(searchRes.body.data.some((p) => p.name.includes('Bàn phím')));
+
+      const firstProduct = searchRes.body.data[0];
+      const detailRes = await browser.request(`/products/${firstProduct.id}`);
+      assert.equal(detailRes.status, 200);
+      assert.equal(detailRes.body.data.id, firstProduct.id);
+      assert.ok(Array.isArray(detailRes.body.data.reviews));
+    });
+
+    await suite.test('orders, server-side pricing, and IDOR protection', async () => {
+      // Login as demo user
+      const userA = new BrowserSession();
+      let csrfToken = await userA.csrf();
+      await userA.request('/auth/login', {
+        method: 'POST',
+        csrfToken,
+        body: { email: 'demo@example.com', password: 'DemoOnly517!' },
+      });
+
+      // Products list to get valid ID
+      const productsRes = await userA.request('/products');
+      const prod = productsRes.body.data.find((p) => p.stock > 0);
+      assert.ok(prod, 'At least one product with stock is required.');
+
+      // Create order as userA
+      csrfToken = await userA.csrf();
+      const orderRes = await userA.request('/orders', {
+        method: 'POST',
+        csrfToken,
+        body: {
+          items: [{ productId: prod.id, quantity: 1 }],
+          shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+        },
+      });
+      assert.equal(orderRes.status, 201);
+      const createdOrderId = orderRes.body.data.id;
+      assert.equal(orderRes.body.data.totalPrice, prod.price);
+
+      // User A can view own order
+      const getOwnOrder = await userA.request(`/orders/${createdOrderId}`);
+      assert.equal(getOwnOrder.status, 200);
+      assert.equal(getOwnOrder.body.data.id, createdOrderId);
+
+      // Register User B
+      const userB = new BrowserSession();
+      const userBCsrf = await userB.csrf();
+      await userB.request('/auth/register', {
+        method: 'POST',
+        csrfToken: userBCsrf,
+        body: { name: 'User B', email: `user_b_${Date.now()}@example.com`, password: 'Password123!' },
+      });
+
+      // User B attempts to access User A's order (IDOR attack simulation)
+      const idorAttempt = await userB.request(`/orders/${createdOrderId}`);
+      assert.equal(idorAttempt.status, 403, 'IDOR attack must be blocked with 403 FORBIDDEN');
+      assert.equal(idorAttempt.body.error.code, 'FORBIDDEN');
+    });
+
+    await suite.test('admin authorization guard', async () => {
+      // Normal user cannot create products
+      const userBrowser = new BrowserSession();
+      const csrf = await userBrowser.csrf();
+      await userBrowser.request('/auth/login', {
+        method: 'POST',
+        csrfToken: csrf,
+        body: { email: 'demo@example.com', password: 'DemoOnly517!' },
+      });
+
+      // Login rotated session, so fetch new CSRF token for the authenticated user
+      const postLoginCsrf = await userBrowser.csrf();
+      const unauthorizedCreate = await userBrowser.request('/products', {
+        method: 'POST',
+        csrfToken: postLoginCsrf,
+        body: { name: 'Hack Product', description: 'desc', price: 1000, stock: 10 },
+      });
+      assert.equal(unauthorizedCreate.status, 403);
+      assert.equal(unauthorizedCreate.body.error.code, 'FORBIDDEN');
+    });
+
+    await suite.test('guest checkout without authentication', async () => {
+      const guestBrowser = new BrowserSession();
+      const csrf = await guestBrowser.csrf();
+      const productsRes = await guestBrowser.request('/products');
+      const prod = productsRes.body.data.find((p) => p.stock > 0);
+      assert.ok(prod);
+
+      // Guest order with contact info
+      const guestOrder = await guestBrowser.request('/orders', {
+        method: 'POST',
+        csrfToken: csrf,
+        body: {
+          items: [{ productId: prod.id, quantity: 1 }],
+          shippingAddress: 'Kí túc xá Đại học Bách Khoa, Đà Nẵng',
+          guestInfo: {
+            name: 'Nguyễn Khách Vãng Lai',
+            email: 'guest.test@example.com',
+            phone: '0987654321',
+          },
+        },
+      });
+      assert.equal(guestOrder.status, 201);
+      assert.equal(guestOrder.body.data.userId, null);
+      assert.equal(guestOrder.body.data.customerName, 'Nguyễn Khách Vãng Lai');
+      assert.equal(guestOrder.body.data.customerEmail, 'guest.test@example.com');
+      assert.equal(guestOrder.body.data.customerPhone, '0987654321');
+    });
+
+    await suite.test('role boundaries: admin cannot place orders or post reviews', async () => {
+      const adminBrowser = new BrowserSession();
+      const csrf = await adminBrowser.csrf();
+      const loginRes = await adminBrowser.request('/auth/login', {
+        method: 'POST',
+        csrfToken: csrf,
+        body: { email: 'admin@example.com', password: 'AdminOnly517!' },
+      });
+      assert.equal(loginRes.status, 200);
+      assert.equal(loginRes.body.data.user.role, 'ADMIN');
+
+      const productsRes = await adminBrowser.request('/products');
+      const prod = productsRes.body.data.find((p) => p.stock > 0);
+      assert.ok(prod);
+
+      // Admin attempts to place an order
+      const adminOrderCsrf = await adminBrowser.csrf();
+      const orderAttempt = await adminBrowser.request('/orders', {
+        method: 'POST',
+        csrfToken: adminOrderCsrf,
+        body: {
+          items: [{ productId: prod.id, quantity: 1 }],
+          shippingAddress: 'Địa chỉ Admin',
+        },
+      });
+      assert.equal(orderAttempt.status, 403);
+      assert.equal(orderAttempt.body.error.code, 'ADMIN_CANNOT_ORDER');
+
+      // Admin attempts to post a product review
+      const adminReviewCsrf = await adminBrowser.csrf();
+      const reviewAttempt = await adminBrowser.request(`/products/${prod.id}/reviews`, {
+        method: 'POST',
+        csrfToken: adminReviewCsrf,
+        body: {
+          rating: 5,
+          comment: 'Admin tự đánh giá sản phẩm của mình.',
+        },
+      });
+      assert.equal(reviewAttempt.status, 403);
+      assert.equal(reviewAttempt.body.error.code, 'ADMIN_CANNOT_REVIEW');
+    });
   } finally {
     await database.end();
   }
