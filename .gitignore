@@ -18,7 +18,15 @@ test-results/
 
 # Logs and editor settings
 *.log
+npm-debug.log*
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# SSH / TLS private keys and AWS key pairs (never commit these)
+*.pem
+*.key
+*.crt
+id_rsa*
+id_ed25519*

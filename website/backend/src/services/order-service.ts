@@ -1,21 +1,10 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
 import { AppError, databaseUnavailable } from '../lib/errors.js';
 import type { OrderStatus } from '../generated/prisma/client.js';
 
 function isIdorVulnerable(): boolean {
-  try {
-    const envFile = path.resolve(process.cwd(), '.env');
-    if (fs.existsSync(envFile)) {
-      const content = fs.readFileSync(envFile, 'utf-8');
-      const match = content.match(/^\s*VULN_IDOR_ENABLED\s*=\s*(true|false)/m);
-      if (match) return match[1] === 'true';
-    }
-  } catch {
-    // Fallback
-  }
-  return process.env.VULN_IDOR_ENABLED === 'true';
+  return config.VULN_IDOR_ENABLED === 'true';
 }
 
 export interface CartItemInput {
