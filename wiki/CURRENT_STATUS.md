@@ -1,8 +1,8 @@
 # Current Project Status
 
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-20
 
-**Current phase:** Hoàn thành mở rộng tính năng website e-commerce (Register, Search & Filter, Product Detail, Reviews, Cart & Orders, Admin panel) đảm bảo Secure Baseline trên `main` và tạo đầy đủ bề mặt kiểm thử cho lab OWASP Top 10.
+**Current phase:** Hoàn thành mở rộng tính năng website e-commerce (Register, Search & Filter, Product Detail, Reviews, Cart & Orders, Admin panel) đảm bảo Secure Baseline trên `main` và tạo đầy đủ bề mặt kiểm thử cho lab OWASP Top 10. Đã tạo nháp Architecture v0.1 (`docs/architecture/v0.1.md`) cho Issue #11, chờ nhóm review để close issue.
 
 **Completed:**
 
@@ -33,7 +33,7 @@
 
 - Tiếp tục các backlog đã giao:
   - [#9](https://github.com/LVTIT/PBL4-517/issues/9)–[#10](https://github.com/LVTIT/PBL4-517/issues/10): Scanner dò quét host/port từ bên ngoài và gửi alert Telegram/Discord.
-  - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1.
+  - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1 — đã tạo nháp `docs/architecture/v0.1.md` (2026-09-20), chờ cả 3 thành viên review để close.
   - [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17): Cấu hình EC2, Nginx reverse proxy, systemd service, verify deployment và lưu evidence.
   - Chuẩn bị lab branch riêng cho kịch bản OWASP (vulnerable → exploit → evidence → fix → retest) theo đúng [SECURITY_PLAN.md](SECURITY_PLAN.md).
 
