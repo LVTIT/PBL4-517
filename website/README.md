@@ -1,6 +1,6 @@
 # Website PBL4-517
 
-Skeleton thương mại điện tử cho [Issue #8 — WEB-02](https://github.com/LVTIT/PBL4-517/issues/8), theo [technology stack đã chốt ở Issue #7](../docs/README.md). Trang chủ, danh sách sản phẩm và đăng nhập kết nối với Express và PostgreSQL thật.
+Website thương mại điện tử cho đồ án PBL4-517: trang chủ, sản phẩm, chi tiết, đánh giá, giỏ hàng, đơn hàng (kể cả khách vãng lai), đăng ký/đăng nhập, hồ sơ và trang quản trị, kết nối Express và PostgreSQL thật qua Prisma.
 
 ## Requirements
 
@@ -20,9 +20,9 @@ website/
 ├── README.md
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # Header, hiển thị sản phẩm và thành phần dùng chung
-│   │   ├── pages/        # Home, Products, Login
-│   │   ├── services/     # Gọi /api và xử lý session/CSRF
+│   │   ├── components/   # Layout, Header, ProductCard, AuthProvider, Icon
+│   │   ├── pages/        # Home, Products, ProductDetail, Cart, Orders, Login, Register, Profile, Admin, NotFound
+│   │   ├── services/     # Gọi /api tương đối, session/CSRF, CartContext
 │   │   └── types/        # Kiểu dữ liệu API
 │   ├── vite.config.ts   # Proxy /api tới backend local
 │   └── package-lock.json
@@ -33,15 +33,16 @@ website/
     │   ├── schema.prisma
     │   ├── migrations/  # SQL migration được commit
     │   └── seed.ts
+    ├── tests/           # Integration test API (node --test)
     ├── src/
-    │   ├── routes/
-    │   ├── controllers/
-    │   ├── middleware/
-    │   ├── services/
-    │   ├── lib/
+    │   ├── routes/       # api-routes, auth-routes (prefix /api/)
+    │   ├── controllers/  # auth, product, order
+    │   ├── middleware/   # session, csrf, auth-guard, error-handler
+    │   ├── services/     # auth, product, order
+    │   ├── lib/          # config (env), database, errors
     │   ├── types/
     │   ├── app.ts
-    │   └── server.ts
+    │   └── server.ts     # Chỉ khởi động/dừng server, bind 127.0.0.1
     └── package-lock.json
 ```
 
@@ -355,6 +356,19 @@ Output là `frontend/dist/`, backend là `backend/dist/`. Không commit `dist/`,
 
 Khi triển khai production ở issue sau: cài dependency/build trên môi trường Linux đích, chạy `npm run prisma:migrate` để áp dụng migration đã commit, phục vụ `frontend/dist/` bằng Nginx và chạy backend JavaScript bằng systemd. Nginx giữ nguyên `/api/` khi proxy, chỉ dùng SPA fallback cho frontend. Cần HTTPS cho cookie Secure và cấu hình `TRUST_PROXY` theo proxy thực tế; không dùng Vite dev server/preview để phục vụ production.
 
+### Production start (EC2 Linux)
+
+Trong `website/backend` trên máy EC2 (đã có `.env` production với `NODE_ENV=production`, `VULN_IDOR_ENABLED=false`):
+
+```sh
+npm ci
+npm run build
+npm run prisma:migrate
+npm start
+```
+
+`npm start` chạy `node dist/server.js` (không dùng `tsx`); backend bind `127.0.0.1`, Nginx reverse proxy `/api/` và phục vụ `frontend/dist/`. Chi tiết Nginx/systemd thuộc các issue triển khai tiếp theo.
+
 ## Troubleshooting
 
 | Hiện tượng | Cách kiểm tra |
@@ -376,6 +390,6 @@ Kiểm chứng local ngày **2026-09-15** trên Windows, Node.js **24.21.0**, np
 
 Đã kiểm thử session qua restart backend, cookie cũ sau logout, PostgreSQL outage trả `503` rồi phục hồi, rate limit `429`, CSRF thiếu/token cũ và cookie Secure sau proxy HTTPS. `npm audit` tại thời điểm kiểm tra: 0 vulnerabilities ở cả hai project. Đây là kết quả local; Docker/Linux/EC2/Nginx/systemd chưa được chạy kiểm thử trong Issue #8. Tiến độ publish/review được duy trì tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md).
 
-Issue #8 chỉ cung cấp Home, Login, Products, backend REST API, migration và seed local. Cart, checkout, payment, admin đầy đủ, EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Skeleton này áp dụng security baseline; không cố tình tạo lỗ hổng phục vụ lab.
+Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source này áp dụng security baseline; không cố tình tạo lỗ hổng phục vụ lab (ngoài cờ `VULN_IDOR_ENABLED` mặc định `false`).
 
 Backend có scoped npm overrides cho `@prisma/config@7.10.0 → deepmerge-ts@8.0.2` và `prisma@7.10.0 → mysql2@3.24.4` để xử lý advisory [deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) trong dependency bắc cầu. Prisma CLI/Client/adapter vẫn cùng `7.10.0`, database ứng dụng vẫn là PostgreSQL. Khi nâng Prisma 7 sau này, kiểm tra dependency upstream, bỏ override khi đã có bản sửa phù hợp và chạy lại `npm ci`, audit, generate/build, migrate/seed và integration test.

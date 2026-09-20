@@ -10,6 +10,7 @@ const environmentSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   TRUST_PROXY: z.enum(['0', 'loopback']).default('0'),
+  VULN_IDOR_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 const parsed = environmentSchema.safeParse(process.env);
