@@ -2,6 +2,16 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-09-21 — Region cho AWS-02
+
+**Status: Accepted**
+
+**Decision:** Dùng Singapore (`ap-southeast-1`) cho EC2 của project trong Issue #6, theo xác nhận trực tiếp của người dùng.
+
+**Reason:** Người dùng đã chọn Region này khi thực hiện launch; trước đó repository chưa có quyết định Region.
+
+**Consequences:** Chọn đúng Region khi quản lý EC2, key pair và Security Group. Giữ stack/kiến trúc Accepted; Issue #6 chỉ xác minh Ubuntu, SSH và Nginx mặc định. Chi tiết môi trường/evidence ở [tài liệu AWS](../docs/aws/ec2-launch.md); tiến độ ở [CURRENT_STATUS.md](CURRENT_STATUS.md).
+
 ## 2026-09-14 — Chọn web technology stack cho Issue #7
 
 **Status: Accepted**

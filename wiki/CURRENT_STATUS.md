@@ -1,6 +1,6 @@
 # Current Project Status
 
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-21
 
 **Current phase:** Hoàn thành mở rộng tính năng website e-commerce (Register, Search & Filter, Product Detail, Reviews, Cart & Orders, Admin panel) đảm bảo Secure Baseline trên `main` và tạo đầy đủ bề mặt kiểm thử cho lab OWASP Top 10.
 
@@ -27,6 +27,7 @@
 
 **In progress:**
 
+- [Issue #6 — Launch EC2 Linux](https://github.com/LVTIT/PBL4-517/issues/6): **Implemented, toàn bộ Definition of Done PASS; đang chờ human review, issue giữ OPEN.** EC2 Ubuntu 24.04.4 LTS tại Singapore đã được triển khai và kiểm chứng: Running và cả ba status checks, SSH, Nginx active/enabled, listener 80, HTTP local và browser Public IP. External scanner chạy từ Windows cho kết quả 22/80 OPEN, 3000/5432 FILTERED; SG giới hạn SSH theo một IP `/32`. Người dùng giữ thêm rule 443, chưa cấu hình HTTPS. Đã lưu đủ screenshot/output thật tại [evidence](../evidence/AWS-02/README.md); hướng dẫn và giới hạn kiểm chứng tại [tài liệu AWS](../docs/aws/ec2-launch.md). Chưa deploy website; mini lab tạm gỡ HTTP là tùy chọn, chưa thực hiện.
 - Chuẩn bị môi trường AWS EC2 Ubuntu 24.04 LTS để đưa website lên cloud ([Issue #12](https://github.com/LVTIT/PBL4-517/issues/12)–[#14](https://github.com/LVTIT/PBL4-517/issues/14)).
 
 **Next:**
