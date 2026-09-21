@@ -1,0 +1,31 @@
+Captured by agent over SSH from Windows; target ubuntu@47.129.214.70
+Started UTC: 2026-09-21T16:56:03.235257+00:00
+
+Mon Sep 21 16:56:05 UTC 2026
+
+$ nginx -v
+nginx version: nginx/1.24.0 (Ubuntu)
+
+$ sudo -n nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+$ systemctl is-active nginx
+active
+
+$ systemctl is-enabled nginx
+enabled
+
+$ curl --silent --show-error --fail --max-time 10 -I http://127.0.0.1
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 21 Sep 2026 16:56:05 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Mon, 21 Sep 2026 09:30:29 GMT
+Connection: keep-alive
+ETag: "6ab0f935-267"
+Accept-Ranges: bytes
+
+
+SSH/script exit code: 0

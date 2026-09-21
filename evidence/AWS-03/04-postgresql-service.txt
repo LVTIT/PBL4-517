@@ -1,0 +1,50 @@
+Captured by agent over SSH from Windows; target ubuntu@47.129.214.70
+Started UTC: 2026-09-21T16:54:56.575946+00:00
+
+Mon Sep 21 16:54:56 UTC 2026
+
+$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+16  main    5432 online postgres /var/lib/postgresql/16/main /var/log/postgresql/postgresql-16-main.log
+
+$ sudo -n systemctl status postgresql@16-main --no-pager
+* postgresql@16-main.service - PostgreSQL Cluster 16-main
+     Loaded: loaded (/usr/lib/systemd/system/postgresql@.service; enabled-runtime; preset: enabled)
+     Active: active (running) since Mon 2026-09-21 16:50:00 UTC; 4min 56s ago
+    Process: 4238 ExecStart=/usr/bin/pg_ctlcluster --skip-systemctl-redirect 16-main start (code=exited, status=0/SUCCESS)
+   Main PID: 4243 (postgres)
+      Tasks: 6 (limit: 627)
+     Memory: 25.5M (peak: 28.0M)
+        CPU: 433ms
+     CGroup: /system.slice/system-postgresql.slice/postgresql@16-main.service
+             |-4243 /usr/lib/postgresql/16/bin/postgres -D /var/lib/postgresql/16/main -c config_file=/etc/postgresql/16/main/postgresql.conf
+             |-4244 "postgres: 16/main: checkpointer "
+             |-4245 "postgres: 16/main: background writer "
+             |-4247 "postgres: 16/main: walwriter "
+             |-4248 "postgres: 16/main: autovacuum launcher "
+             `-4249 "postgres: 16/main: logical replication launcher "
+
+Sep 21 16:49:58 ip-172-31-11-224 systemd[1]: Starting postgresql@16-main.service - PostgreSQL Cluster 16-main...
+Sep 21 16:50:00 ip-172-31-11-224 systemd[1]: Started postgresql@16-main.service - PostgreSQL Cluster 16-main.
+
+$ systemctl is-enabled postgresql
+enabled
+
+$ cat /etc/postgresql/16/main/start.conf
+# Automatic startup configuration
+#   auto: automatically start the cluster
+#   manual: manual startup with pg_ctlcluster/postgresql@.service only
+#   disabled: refuse to start cluster
+# See pg_createcluster(1) for details. When running from systemd,
+# invoke 'systemctl daemon-reload' after editing this file.
+
+auto
+
+$ pg_isready -h 127.0.0.1 -p 5432
+127.0.0.1:5432 - accepting connections
+
+$ sudo -n ss -ltnp '( sport = :5432 )'
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*    users:(("postgres",pid=4243,fd=6))
+
+SSH/script exit code: 0

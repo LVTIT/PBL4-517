@@ -1,11 +1,13 @@
 # Current Project Status
 
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-22 (Asia/Bangkok; evidence #12 ghi thời gian UTC ngày 2026-09-21)
 
-**Current phase:** Hoàn thành mở rộng tính năng website e-commerce (Register, Search & Filter, Product Detail, Reviews, Cart & Orders, Admin panel) đảm bảo Secure Baseline trên `main` và tạo đầy đủ bề mặt kiểm thử cho lab OWASP Top 10.
+**Current phase:** Môi trường EC2 cho Issue #12 đã được chuẩn bị và kiểm chứng, sẵn sàng nhận source ở #14. Website e-commerce đã có source local; chưa deploy website hay systemd backend. OWASP hiện có scenario IDOR; scanner #10 do Ninh tiếp tục.
 
 **Completed:**
 
+- [Issue #12 — Configure EC2 Web Environment](https://github.com/LVTIT/PBL4-517/issues/12): **Implemented / verified ngày 2026-09-21; EC2 READY cho #14.** Ubuntu sau nâng cấp/reboot là 24.04.5 LTS, kernel 7.0.0-1012-aws; APT không còn package chờ nâng cấp. Git 2.43.0, Node.js v24.21.0, npm 11.19.0, PostgreSQL 16.15 (cluster 16/main active, query local PASS, chỉ listen 127.0.0.1:5432), Nginx 1.24.0 active/enabled và HTTP local/public 200. Thư mục `/var/www/pbl4-517` rỗng, `ubuntu:ubuntu`, 0755, kiểm tra ghi file PASS. Người dùng xác nhận toàn bộ SG rules: SSH `171.225.185.22/32`, HTTP/443 public; chưa có TLS, không public 3000/5432/8080. Agent đối chiếu metadata/listeners và scan từ Windows: 22/80 OPEN, 3000/5432/8080 FILTERED; không có quyền đọc SG qua API. [Tài liệu canonical](../docs/aws/ec2-web-environment.md), [evidence thật và giới hạn](../evidence/AWS-03/README.md); trạng thái merge/đóng issue xem liên kết GitHub. Chưa deploy source/app database/systemd backend; RAM khoảng 909 MiB, không swap, chưa kiểm chứng build website.
+- [Issue #6 — Launch EC2 Linux](https://github.com/LVTIT/PBL4-517/issues/6): **Completed / CLOSED ngày 2026-09-21.** Human review đã hoàn thành; [PR #25](https://github.com/LVTIT/PBL4-517/pull/25) đã merge cùng evidence (commit `8a66a88`). EC2 Ubuntu 24.04.4 LTS tại Singapore: Running và cả ba status checks PASS, SSH PASS, Nginx active/enabled PASS, port 80 PASS, HTTP local và Browser Public IP PASS. External scanner từ Windows: 22/80 OPEN, 3000/5432 FILTERED; SG giới hạn SSH theo một IP `/32`. Rule 443 được giữ, HTTPS chưa triển khai. [Evidence gốc](../evidence/AWS-02/README.md) được giữ nguyên; trạng thái hiện tại và giới hạn kiểm chứng ở [tài liệu AWS](../docs/aws/ec2-launch.md). Không còn blocker thuộc Issue #6; chưa deploy website.
 - [Issue #7 — Web technology stack selected](https://github.com/LVTIT/PBL4-517/issues/7): đã chốt và CLOSED; hồ sơ ở commit `e1cc09c`.
 - [Issue #8 — Website skeleton](https://github.com/LVTIT/PBL4-517/issues/8): Skeleton website ban đầu đã hoàn thành và merge vào `main` (commit `01a3da3`).
 - **Nâng cấp tính năng e-commerce phục vụ bề mặt kiểm thử OWASP (2026-09-18):**
@@ -27,15 +29,14 @@
 
 **In progress:**
 
-- [Issue #6 — Launch EC2 Linux](https://github.com/LVTIT/PBL4-517/issues/6): **Implemented, toàn bộ Definition of Done PASS; đang chờ human review, issue giữ OPEN.** EC2 Ubuntu 24.04.4 LTS tại Singapore đã được triển khai và kiểm chứng: Running và cả ba status checks, SSH, Nginx active/enabled, listener 80, HTTP local và browser Public IP. External scanner chạy từ Windows cho kết quả 22/80 OPEN, 3000/5432 FILTERED; SG giới hạn SSH theo một IP `/32`. Người dùng giữ thêm rule 443, chưa cấu hình HTTPS. Đã lưu đủ screenshot/output thật tại [evidence](../evidence/AWS-02/README.md); hướng dẫn và giới hạn kiểm chứng tại [tài liệu AWS](../docs/aws/ec2-launch.md). Chưa deploy website; mini lab tạm gỡ HTTP là tùy chọn, chưa thực hiện.
-- Chuẩn bị môi trường AWS EC2 Ubuntu 24.04 LTS để đưa website lên cloud ([Issue #12](https://github.com/LVTIT/PBL4-517/issues/12)–[#14](https://github.com/LVTIT/PBL4-517/issues/14)).
+- [#10 — Scanner](https://github.com/LVTIT/PBL4-517/issues/10): Ninh tiếp tục thực hiện; việc dùng scanner trong #12 chỉ là kiểm tra hạ tầng phụ.
 
 **Next:**
 
 - Tiếp tục các backlog đã giao:
-  - [#9](https://github.com/LVTIT/PBL4-517/issues/9)–[#10](https://github.com/LVTIT/PBL4-517/issues/10): Scanner dò quét host/port từ bên ngoài và gửi alert Telegram/Discord.
+  - [#10](https://github.com/LVTIT/PBL4-517/issues/10): Ninh tiếp tục học/phát triển scanner; task #12 chỉ dùng prototype để verification phụ, không đóng #10. Alert Telegram/Discord thuộc giai đoạn sau.
   - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1.
-  - [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17): Cấu hình EC2, Nginx reverse proxy, systemd service, verify deployment và lưu evidence.
+  - [#14](https://github.com/LVTIT/PBL4-517/issues/14): Deploy source website lên EC2; [#15](https://github.com/LVTIT/PBL4-517/issues/15): systemd backend; [#16](https://github.com/LVTIT/PBL4-517/issues/16): verify deployment; [#17](https://github.com/LVTIT/PBL4-517/issues/17): tài liệu/evidence triển khai.
   - Chuẩn bị lab branch riêng cho kịch bản OWASP (vulnerable → exploit → evidence → fix → retest) theo đúng [SECURITY_PLAN.md](SECURITY_PLAN.md).
 
 **Important constraints:**

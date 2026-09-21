@@ -1,0 +1,29 @@
+Captured by agent over SSH from Windows; target ubuntu@47.129.214.70
+Started UTC: 2026-09-21T16:54:58.138415+00:00
+
+Mon Sep 21 16:54:58 UTC 2026
+
+$ sudo -n install -d -o ubuntu -g ubuntu -m 0755 /var/www/pbl4-517
+
+$ ls -ld /var/www/pbl4-517
+drwxr-xr-x 2 ubuntu ubuntu 4096 Sep 21 16:54 /var/www/pbl4-517
+
+$ stat -c '%U:%G %a %n' /var/www/pbl4-517
+ubuntu:ubuntu 755 /var/www/pbl4-517
+
+$ namei -l /var/www/pbl4-517
+f: /var/www/pbl4-517
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   var
+drwxr-xr-x root   root   www
+drwxr-xr-x ubuntu ubuntu pbl4-517
+
+$ test -w /var/www/pbl4-517 && echo "ubuntu can write"
+ubuntu can write
+
+$ probe=$(mktemp /var/www/pbl4-517/.aws03-write-check.XXXXXX) && printf "AWS-03 write verification\n" > "$probe" && cat "$probe" && rm -- "$probe"
+AWS-03 write verification
+
+$ find /var/www/pbl4-517 -mindepth 1 -maxdepth 1 -print
+
+SSH/script exit code: 0

@@ -1,0 +1,15 @@
+HTTP HEAD executed from Windows outside EC2. Command: curl.exe --silent --show-error --fail --max-time 15 -I http://47.129.214.70
+Started UTC: 2026-09-21T16:56:09.880078+00:00
+
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 21 Sep 2026 16:56:09 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Mon, 21 Sep 2026 09:30:29 GMT
+Connection: keep-alive
+ETag: "6ab0f935-267"
+Accept-Ranges: bytes
+
+
+Exit code: 0

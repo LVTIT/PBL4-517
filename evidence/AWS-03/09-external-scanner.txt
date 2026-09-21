@@ -1,0 +1,14 @@
+Existing scanner executed from Windows outside EC2. Command: python scanner/scan.py 47.129.214.70 --ports 22,80,3000,5432,8080
+Started UTC: 2026-09-21T16:56:06.174221+00:00
+
+Scan 47.129.214.70 (47.129.214.70): 5 ports, timeout=1.0s
+----------------------------------------------
+     22/tcp  OPEN
+     80/tcp  OPEN
+   3000/tcp  FILTERED
+   5432/tcp  FILTERED
+   8080/tcp  FILTERED
+----------------------------------------------
+Open ports: 22, 80
+
+Exit code: 0

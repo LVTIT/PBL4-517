@@ -1,0 +1,11 @@
+Read selected EC2 IMDSv2 metadata over SSH; token is held only in remote process memory and never printed. Metadata lists attached SG names, not their rules.
+Started UTC: 2026-09-21T16:56:03.399434+00:00
+
+placement/region: ap-southeast-1
+instance-type: t3.micro
+local-ipv4: 172.31.11.224
+public-ipv4: 47.129.214.70
+security-groups: launch-wizard-1
+ipv6: (not present; HTTP 404)
+
+Exit code: 0
