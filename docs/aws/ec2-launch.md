@@ -2,7 +2,7 @@
 
 Ngày kiểm chứng: **2026-09-21**. Phạm vi: EC2 Linux, SSH và trang mặc định Nginx; chưa triển khai website.
 
-**Trạng thái:** EC2 Ubuntu 24.04 đã được triển khai và kiểm chứng; toàn bộ Definition of Done PASS, đủ screenshot/output thực tế. Issue #6 giữ OPEN để human review. [Evidence và nguồn kết quả](../../evidence/AWS-02/README.md).
+**Trạng thái: Completed / CLOSED (2026-09-21).** EC2 Ubuntu 24.04 đã được triển khai và kiểm chứng; toàn bộ Definition of Done PASS, đủ screenshot/output thực tế. Human review đã hoàn thành, [PR #25](https://github.com/LVTIT/PBL4-517/pull/25) đã merge cùng evidence và [Issue #6](https://github.com/LVTIT/PBL4-517/issues/6) đã CLOSED; không còn blocker thuộc Issue #6. [Evidence và nguồn kết quả](../../evidence/AWS-02/README.md) được giữ nguyên như hồ sơ tại thời điểm kiểm chứng; ghi chú chờ review trong hồ sơ cũ không còn là trạng thái hiện tại.
 
 ## Environment
 
@@ -98,7 +98,7 @@ Chỉ chạy bước cài sau khi `apt update` thành công. Nếu Nginx chưa c
 
 ## Remaining work
 
-- Human review hồ sơ và quyết định merge/đóng Issue #6; không còn blocker kỹ thuật trong phạm vi đã kiểm thử.
+- Human review đã hoàn thành; PR #25 đã merge và Issue #6 đã CLOSED ngày 2026-09-21. Không còn blocker thuộc Issue #6.
 - Mini lab tạm gỡ rule HTTP: **chưa thực hiện**, tùy chọn; cần người dùng đồng ý trước khi thay rule và phải khôi phục sau lab.
 
-Node/PostgreSQL production, deploy React/Express, reverse proxy `/api`, backend systemd, HTTPS và ALB vẫn thuộc các issue sau. SG cho phép 443 không đồng nghĩa HTTPS đã được triển khai.
+Node/PostgreSQL và thư mục deploy đã được chuẩn bị, kiểm chứng sau đó trong [Issue #12 — EC2 Web Environment](ec2-web-environment.md). Deploy React/Express, reverse proxy `/api`, backend systemd, HTTPS và ALB vẫn thuộc các issue sau. SG cho phép 443 không đồng nghĩa HTTPS đã được triển khai. Các giá trị OS/IP/SG ở hồ sơ #6 phía trên là tại thời điểm launch; xem tài liệu #12 cho trạng thái sau nâng cấp và đổi IP quản trị.
