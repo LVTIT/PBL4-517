@@ -11,7 +11,7 @@ Nhóm: Lê Viết Thương (team leader), Nguyễn Thái Toàn và Đinh Khang N
 | `website/` | React frontend, Express API, PostgreSQL/Prisma, tài khoản và sản phẩm | Source skeleton Issue #8; xem trạng thái kiểm chứng trong [CURRENT_STATUS.md](CURRENT_STATUS.md) |
 | `scanner/` | Quét host/port từ bên ngoài, lưu trạng thái để phát hiện thay đổi | Planned; chưa có implementation trong repository |
 | `alerts/` | Gửi kết quả/cảnh báo scanner qua Telegram hoặc Discord | Planned; chưa có implementation trong repository |
-| AWS infrastructure | EC2, Ubuntu/Linux, VPC/subnet, Security Group, Network ACL và ALB | Planned; chưa có bằng chứng triển khai trong repository |
+| AWS infrastructure | EC2, Ubuntu/Linux, VPC/subnet, Security Group, Network ACL và ALB | EC2 Ubuntu và Nginx mặc định đã được kiểm chứng trong Issue #6; hồ sơ/review còn tiếp tục tại [CURRENT_STATUS.md](CURRENT_STATUS.md). Deploy website, NACL nâng cao và ALB vẫn Planned |
 | Security testing | Lập lab và kịch bản OWASP, khai thác được kiểm soát, khắc phục, kiểm thử lại | Planned; chiến lược tại [SECURITY_PLAN.md](SECURITY_PLAN.md) |
 | `evidence/` | Lưu bằng chứng kiểm thử và triển khai đã thực hiện | Không lưu secret/dữ liệu thật; wiki chỉ liên kết tới evidence cần thiết |
 | `docs/`, `scripts/` | Tài liệu lịch sử/báo cáo phù hợp và script hỗ trợ có phạm vi rõ ràng | `docs/README.md` là hồ sơ quyết định stack Issue #7 |
