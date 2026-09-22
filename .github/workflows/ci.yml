@@ -1,0 +1,146 @@
+name: PBL4 CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  repo-policy:
+    name: repo-policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Verify policy regression cases
+        run: python -m unittest discover -s scripts/ci/tests -v
+      - name: Check tracked paths and credential signatures
+        run: python scripts/ci/repo_policy.py
+
+  backend-build:
+    name: backend-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website/backend
+    env:
+      # Prisma loads this at build time; no database is contacted in this job.
+      DATABASE_URL: postgresql://pbl517_app:ci_only_password@127.0.0.1:5432/pbl517?schema=public
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Block high and critical dependency advisories
+        run: npm audit --audit-level=high
+
+  frontend-build:
+    name: frontend-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website/frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Block high and critical dependency advisories
+        run: npm audit --audit-level=high
+
+  backend-integration:
+    name: backend-integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website/backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: pbl517_app
+          POSTGRES_PASSWORD: ci_only_password
+          POSTGRES_DB: pbl517
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pbl517_app -d pbl517"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      # Disposable CI fixtures only. Never reference production secrets here.
+      DATABASE_URL: postgresql://pbl517_app:ci_only_password@127.0.0.1:5432/pbl517?schema=public
+      SESSION_SECRET: ci_only_session_secret_not_for_production_517
+      NODE_ENV: development
+      PORT: '3000'
+      TRUST_PROXY: '0'
+      VULN_IDOR_ENABLED: 'false'
+      TEST_API_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Apply committed migrations
+        run: npm run prisma:migrate
+      - name: Seed disposable development database
+        run: npm run prisma:seed
+      - name: Start compiled backend, wait for health, test and clean up
+        run: bash ../../scripts/ci/backend-integration.sh
+
+  python-check:
+    name: python-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Validate Python syntax without executing scanners or exploits
+        run: |
+          test -f scanner/scan.py
+          test -f scripts/attacker/exploit_idor.py
+          python -m compileall -q scanner scripts/attacker scripts/ci

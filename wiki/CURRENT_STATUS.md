@@ -35,6 +35,8 @@
 
 **In progress:**
 
+- [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **Implemented trên feature branch, verification đang thực hiện**. Đã thêm workflow 5 checks, PostgreSQL 16 integration, PR template, policy/evidence governance và tài liệu [CI/CD](../docs/devops/ci-cd.md). [Evidence và kết quả](../evidence/DEVOPS-01/README.md) phân biệt local/hosted CI/human review. Branch protection hiện chưa bật; [đề xuất settings](../docs/devops/github-branch-protection.md) chờ human review trước áp dụng. CD chưa triển khai, không deploy EC2 trong task này.
+
 - [#10 — Scanner](https://github.com/LVTIT/PBL4-517/issues/10): Ninh tiếp tục thực hiện; việc dùng scanner trong #12 chỉ là kiểm tra hạ tầng phụ.
 
 **Next:**

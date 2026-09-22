@@ -30,3 +30,20 @@ Thumbs.db
 *.crt
 id_rsa*
 id_ed25519*
+
+# CI/local Python validation and database artifacts
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+*.db-*
+*.sqlite*
+*.dump
+*.backup
+*.sql.gz
+*.sql.zip
+*.p12
+*.pfx
+.aws/
+.ssh/
