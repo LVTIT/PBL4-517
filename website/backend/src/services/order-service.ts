@@ -181,6 +181,41 @@ export async function getAllOrders() {
 
 export async function getOrderById(orderId: string, requestingUserId: string, isAdmin: boolean) {
   try {
+    // Defense-in-depth: When secure baseline is active, apply query scoping at the database level
+    if (!isIdorVulnerable() && !isAdmin) {
+      const scopedOrder = await prisma.order.findFirst({
+        where: { id: orderId, userId: requestingUserId },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          items: {
+            include: {
+              product: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+
+      if (scopedOrder) {
+        return {
+          ...scopedOrder,
+          totalPrice: scopedOrder.totalPrice.toFixed(2),
+          items: scopedOrder.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
+        };
+      }
+
+      // If not found for current user, check if order exists in system to return 403 vs 404
+      const orderExists = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { id: true },
+      });
+
+      if (orderExists) {
+        throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền xem thông tin đơn hàng này.');
+      }
+      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    }
+
+    // Vulnerable mode (VULN_IDOR_ENABLED=true) or Admin role:
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -197,16 +232,125 @@ export async function getOrderById(orderId: string, requestingUserId: string, is
       throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
     }
 
-    // IDOR Protection: Enabled by default (Secure Baseline).
-    // Can be toggled via VULN_IDOR_ENABLED=true in .env for OWASP Lab Demonstration.
-    if (!isIdorVulnerable() && order.userId !== requestingUserId && !isAdmin) {
-      throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền xem thông tin đơn hàng này.');
-    }
-
     return {
       ...order,
       totalPrice: order.totalPrice.toFixed(2),
       items: order.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw databaseUnavailable();
+  }
+}
+
+export async function updateOrderDetails(
+  orderId: string,
+  requestingUserId: string,
+  isAdmin: boolean,
+  data: { shippingAddress?: string; customerPhone?: string }
+) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, userId: true, status: true },
+    });
+
+    if (!order) {
+      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    }
+
+    // IDOR Protection: Enabled by default (Secure Baseline).
+    // Can be toggled via VULN_IDOR_ENABLED=true in .env for OWASP Lab Demonstration.
+    if (!isIdorVulnerable() && order.userId !== requestingUserId && !isAdmin) {
+      throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền chỉnh sửa đơn hàng này.');
+    }
+
+    if (order.status !== 'PENDING') {
+      throw new AppError(400, 'CANNOT_UPDATE', 'Chỉ có thể chỉnh sửa đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+    }
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        ...(data.shippingAddress ? { shippingAddress: data.shippingAddress } : {}),
+        ...(data.customerPhone !== undefined ? { customerPhone: data.customerPhone } : {}),
+      },
+      include: {
+        items: {
+          include: {
+            product: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    return {
+      ...updated,
+      totalPrice: updated.totalPrice.toFixed(2),
+      items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw databaseUnavailable();
+  }
+}
+
+export async function cancelOrder(
+  orderId: string,
+  requestingUserId: string,
+  isAdmin: boolean
+) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        items: { select: { productId: true, quantity: true } },
+      },
+    });
+
+    if (!order) {
+      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    }
+
+    // IDOR Protection: Enabled by default (Secure Baseline).
+    // Can be toggled via VULN_IDOR_ENABLED=true in .env for OWASP Lab Demonstration.
+    if (!isIdorVulnerable() && order.userId !== requestingUserId && !isAdmin) {
+      throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền hủy đơn hàng này.');
+    }
+
+    if (order.status !== 'PENDING') {
+      throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+    }
+
+    // Prisma transaction: Update status to CANCELLED and restore stock
+    const cancelled = await prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+
+      return tx.order.update({
+        where: { id: orderId },
+        data: { status: 'CANCELLED' },
+        include: {
+          items: {
+            include: {
+              product: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+    });
+
+    return {
+      ...cancelled,
+      totalPrice: cancelled.totalPrice.toFixed(2),
+      items: cancelled.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
     if (error instanceof AppError) throw error;

@@ -6,7 +6,9 @@ Thư mục chứa các kịch bản (scripts) tự động phục vụ việc th
 
 | File | Lỗ hổng OWASP | Mô tả kịch bản |
 | :--- | :--- | :--- |
-| `exploit_idor.py` | **A01:2021 – Broken Access Control (IDOR)** | Đăng nhập phiên Kẻ tấn công (`hacker@example.com`), gửi request `GET /api/orders/<id>` để đọc trộm đơn hàng của Nạn nhân (`demo@example.com`). |
+| `exploit_idor.py` | **A01:2021 – Broken Access Control (Read IDOR)** | Đăng nhập phiên Kẻ tấn công (`hacker@example.com`), gửi request `GET /api/orders/<id>` để đọc trộm đơn hàng của Nạn nhân (`demo@example.com`). |
+| `exploit_idor_update.py` | **A01:2021 – Broken Access Control (Write IDOR - Sửa địa chỉ)** | Đăng nhập phiên Kẻ tấn công, gửi request `PATCH /api/orders/<id>` để đổi địa chỉ nhận hàng của đơn hàng nạn nhân về địa chỉ của hacker. |
+| `exploit_idor_cancel.py` | **A01:2021 – Broken Access Control (Write IDOR - Hủy đơn)** | Đăng nhập phiên Kẻ tấn công, gửi request `POST /api/orders/<id>/cancel` để phá hoại, hủy đơn hàng đang chờ xử lý của nạn nhân. |
 
 ---
 

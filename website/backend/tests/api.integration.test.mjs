@@ -239,10 +239,46 @@ test('real PostgreSQL API and session authentication', async (suite) => {
         body: { name: 'User B', email: `user_b_${Date.now()}@example.com`, password: 'Password123!' },
       });
 
-      // User B attempts to access User A's order (IDOR attack simulation)
+      // User B attempts to access User A's order (IDOR Read attack simulation)
       const idorAttempt = await userB.request(`/orders/${createdOrderId}`);
       assert.equal(idorAttempt.status, 403, 'IDOR attack must be blocked with 403 FORBIDDEN');
       assert.equal(idorAttempt.body.error.code, 'FORBIDDEN');
+
+      // User B attempts to modify User A's order (IDOR Update attack simulation)
+      const userBPostCsrf = await userB.csrf();
+      const idorUpdateAttempt = await userB.request(`/orders/${createdOrderId}`, {
+        method: 'PATCH',
+        csrfToken: userBPostCsrf,
+        body: { shippingAddress: 'Dia chi gia mao cua Hacker' },
+      });
+      assert.equal(idorUpdateAttempt.status, 403, 'IDOR update attack must be blocked with 403 FORBIDDEN');
+      assert.equal(idorUpdateAttempt.body.error.code, 'FORBIDDEN');
+
+      // User B attempts to cancel User A's order (IDOR Cancel attack simulation)
+      const idorCancelAttempt = await userB.request(`/orders/${createdOrderId}/cancel`, {
+        method: 'POST',
+        csrfToken: userBPostCsrf,
+      });
+      assert.equal(idorCancelAttempt.status, 403, 'IDOR cancel attack must be blocked with 403 FORBIDDEN');
+      assert.equal(idorCancelAttempt.body.error.code, 'FORBIDDEN');
+
+      // User A (legitimate owner) updates own order
+      const userAPostCsrf = await userA.csrf();
+      const updateOwnOrder = await userA.request(`/orders/${createdOrderId}`, {
+        method: 'PATCH',
+        csrfToken: userAPostCsrf,
+        body: { shippingAddress: '456 Đường Nguyễn Văn Linh, Đà Nẵng', customerPhone: '0905123456' },
+      });
+      assert.equal(updateOwnOrder.status, 200);
+      assert.equal(updateOwnOrder.body.data.shippingAddress, '456 Đường Nguyễn Văn Linh, Đà Nẵng');
+
+      // User A (legitimate owner) cancels own order
+      const cancelOwnOrder = await userA.request(`/orders/${createdOrderId}/cancel`, {
+        method: 'POST',
+        csrfToken: userAPostCsrf,
+      });
+      assert.equal(cancelOwnOrder.status, 200);
+      assert.equal(cancelOwnOrder.body.data.status, 'CANCELLED');
     });
 
     await suite.test('admin authorization guard', async () => {

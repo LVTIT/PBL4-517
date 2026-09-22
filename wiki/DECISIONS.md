@@ -100,3 +100,19 @@ Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đ�
 **Consequences:** Mọi kiểm thử tự động (integration tests) mặc định chạy trên Secure Baseline (100% pass). Khi làm lab/demo, chỉ cần thay đổi cờ môi trường và chạy script Python tương ứng từ máy tấn công (Attacker).
 
 **Related:** [wiki/CURRENT_STATUS.md](CURRENT_STATUS.md), [wiki/SECURITY_PLAN.md](SECURITY_PLAN.md), [scripts/attacker/exploit_idor.py](../scripts/attacker/exploit_idor.py).
+
+## 2026-09-22 — Mở rộng chu trình IDOR toàn diện và Phòng thủ chuyên sâu tại tầng Database
+
+**Status: Accepted**
+
+**Decision:** 
+1. Mở rộng kịch bản OWASP A01 (IDOR) từ Read-only thành chu trình toàn vẹn (Full-Lifecycle): Đọc trộm (`GET /api/orders/:id`), Sửa địa chỉ nhận hàng (`PATCH /api/orders/:id`), và Hủy đơn hàng (`POST /api/orders/:id/cancel`).
+2. Áp dụng kỹ thuật Phòng thủ chuyên sâu (Defense-in-Depth) tại tầng Database: Khi ở Secure Baseline (`VULN_IDOR_ENABLED=false`), thay vì nạp dữ liệu lên RAM rồi lọc bằng code ứng dụng, Prisma ép trực tiếp điều kiện sở hữu `where: { id: orderId, userId: requestingUserId }`. Phân biệt mã phản hồi 403 Forbidden cho mục đích lab/chấm điểm và ghi nhận cơ chế 404 Not Found (Denial of Existence) cho mô hình Zero-Trust.
+3. Bổ sung các công cụ khai thác tương ứng trong `scripts/attacker/` (`exploit_idor_update.py`, `exploit_idor_cancel.py`) và bộ tài liệu bằng chứng `evidence/OWASP-01/`.
+
+**Reason:** Nâng cao tính thực tế của kịch bản an toàn thông tin (chứng minh hành vi chiếm đoạt kiện hàng và phá hoại giao dịch qua IDOR), triệt tiêu nguy cơ rò rỉ dữ liệu nhạy cảm vào RAM Node.js, và hoàn thiện hồ sơ nghiệm thu cho đồ án PBL4.
+
+**Consequences:** Backend có thêm 2 endpoint nghiệp vụ có kiểm soát phân quyền chặt chẽ; integration test mở rộng bao phủ cả 3 thao tác cho cả hai vai trò (chủ đơn hợp lệ và kẻ tấn công); tài liệu đồ án có đầy đủ bằng chứng đối chiếu trước - sau khi khắc phục.
+
+**Related:** [wiki/CURRENT_STATUS.md](CURRENT_STATUS.md), [wiki/SECURITY_PLAN.md](SECURITY_PLAN.md), [evidence/OWASP-01/README.md](../evidence/OWASP-01/README.md).
+

@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { AppError } from '../lib/errors.js';
 import { findCurrentUser } from '../services/auth-service.js';
 import {
+  cancelOrder,
   createOrder,
   getAllOrders,
   getOrderById,
   getUserOrders,
+  updateOrderDetails,
   updateOrderStatus,
 } from '../services/order-service.js';
 
@@ -90,4 +92,42 @@ export const handleUpdateOrderStatus: RequestHandler = async (req, res) => {
   }
   const updated = await updateOrderStatus(id, parsed.data.status);
   res.json({ data: updated });
+};
+
+const updateOrderDetailsSchema = z
+  .strictObject({
+    shippingAddress: z.string().trim().min(5, 'Địa chỉ giao hàng phải có ít nhất 5 ký tự.').max(255).optional(),
+    customerPhone: z.string().trim().min(8, 'Số điện thoại không hợp lệ.').max(20).optional(),
+  })
+  .refine((data) => data.shippingAddress !== undefined || data.customerPhone !== undefined, {
+    message: 'Cần cung cấp ít nhất thông tin địa chỉ giao hàng hoặc số điện thoại.',
+  });
+
+export const handleUpdateOrderDetails: RequestHandler = async (req, res) => {
+  const id = getParamId(req.params.id);
+  if (!req.session.userId) {
+    throw new AppError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập để thao tác đơn hàng.');
+  }
+  if (!req.is('application/json')) {
+    throw new AppError(415, 'JSON_REQUIRED', 'Yêu cầu phải sử dụng application/json.');
+  }
+  const parsed = updateOrderDetailsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError(400, 'INVALID_INPUT', parsed.error.issues[0]?.message ?? 'Dữ liệu cập nhật không hợp lệ.');
+  }
+  const user = await findCurrentUser(req.session.userId);
+  const isAdmin = user?.role === 'ADMIN';
+  const updated = await updateOrderDetails(id, req.session.userId, isAdmin, parsed.data);
+  res.json({ data: updated });
+};
+
+export const handleCancelOrder: RequestHandler = async (req, res) => {
+  const id = getParamId(req.params.id);
+  if (!req.session.userId) {
+    throw new AppError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập để thao tác đơn hàng.');
+  }
+  const user = await findCurrentUser(req.session.userId);
+  const isAdmin = user?.role === 'ADMIN';
+  const cancelled = await cancelOrder(id, req.session.userId, isAdmin);
+  res.json({ data: cancelled });
 };
