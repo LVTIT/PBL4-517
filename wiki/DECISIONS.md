@@ -2,6 +2,16 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-09-22 — CI bắt buộc và human-reviewed delivery
+
+**Status: Accepted** — yêu cầu trực tiếp của người dùng, [Issue #28](https://github.com/LVTIT/PBL4-517/issues/28).
+
+**Decision:** Năm job CI độc lập chạy trên PR vào main và push main: repository policy, backend build, frontend TypeScript/build, integration với PostgreSQL 16 thật và Secure Baseline, Python syntax. Node 24, npm lockfiles và stack giữ nguyên; npm audit HIGH/CRITICAL chặn merge theo policy. Mọi task qua feature branch và PR, thành viên khác review, Team Leader/Owner final merge; Agent không merge/approve hoặc dùng PR merge thay evidence để đóng Issue.
+
+**Reason:** Tách code tồn tại, kiểm chứng tự động và human review; phòng commit secret/artifact và bảo vệ baseline trước triển khai #14.
+
+**Consequences:** Repository settings/protection cần human review trước áp dụng, CI YAML không tự enforce merge restriction. CD chưa triển khai; sau manual deployment #14 có evidence mới thiết kế automation dùng production approval và exact tested SHA/artifact. Không tạo deployment command bằng suy đoán. Hướng dẫn canonical ở [CI/CD](../docs/devops/ci-cd.md), [branch protection proposal](../docs/devops/github-branch-protection.md); kết quả chạy thật ở [evidence](../evidence/DEVOPS-01/README.md).
+
 ## 2026-09-21 — Region cho AWS-02
 
 **Status: Accepted**

@@ -24,6 +24,21 @@ Trước bàn giao thay đổi web, chạy `npm ci` và `npm run build` ở cả
 
 ## Git và bàn giao
 
+Quy trình bắt buộc: Issue/task → branch riêng → code/test local → push branch → PR vào `main` → CI → human review → Team Leader final merge. Không phát triển hoặc push feature/fix trực tiếp trên `main`; Agent không approve hay merge PR.
+
+Từ working tree sạch, cập nhật `main` bằng `git pull --ff-only origin main`, rồi tạo `feature/<issue-number>-<short-description>`. Nếu có công việc chưa commit, giữ nguyên và tách workspace khi cần. Stage đúng file liên quan (không `git add .` mù quáng), commit `<type>(<scope>): <description> (#issue)`, push task branch và tạo PR. Ví dụ: Toàn `feature/8-web-improvements`, Ninh `feature/10-scanner` hoặc `feature/24-idor-lab`, Team Leader `feature/14-ec2-deployment`.
+
+CI canonical ở [docs/devops/ci-cd.md](../docs/devops/ci-cd.md); năm required checks là `repo-policy`, `backend-build`, `frontend-build`, `backend-integration`, `python-check`. Tất cả phải PASS trên revision mới nhất trước khi báo `READY FOR HUMAN REVIEW`. Main thay đổi thì cập nhật feature branch, giải thích/xử lý conflict tại đó, test lại, push lại và đợi CI mới; không force push hay sửa main để né conflict. Team Leader/Owner merge sau review từ thành viên khác và giải quyết conversations.
+
+### Issue và evidence
+
+- Mặc định dùng `Refs #N` / `Related to #N` trong PR và commit. Agent không dùng `Closes #N`, `Fixes #N`, `Resolves #N` chỉ vì viết xong code.
+- Chỉ đóng Issue sau khi tasks thực hiện thật, DoD được xác minh, required CI PASS, evidence có đủ, human review bắt buộc đã xong và không còn blocker của Issue. Sau merge vẫn phải kiểm tra riêng các điều kiện này.
+- Không tự tick tiêu chí “cả 3 thành viên hiểu”, “human review”, “demo cho nhóm”, “người dùng xác nhận”; human phải xác nhận.
+- Source tồn tại ≠ verified; build PASS ≠ integration PASS; integration PASS ≠ deployment PASS; deployment PASS ≠ security verified; PR merged ≠ Issue Done.
+- Ghi command, môi trường, SHA, kết quả và giới hạn; evidence ở `evidence/`, wiki chỉ link. Checklist Implemented / Verified / CI PASS / Human reviewed tách biệt trong PR template.
+- Thay đổi permission/ruleset phải có đề xuất cụ thể và human review trước áp dụng. [Hướng dẫn settings](../docs/devops/github-branch-protection.md) không có nghĩa settings đã bật. CD chờ #14 kiểm chứng thủ công; deployment tương lai cần `production` approval và exact tested SHA/artifact.
+
 - Tuân theo workflow/branch thực tế của repository và ủy quyền trong task hiện tại. Việc Issue #7 từng được phép commit `main` không tự tạo quyền bỏ qua mọi workflow tương lai.
 - Commit chỉ chứa file liên quan, message mô tả kết quả và issue, ví dụ `feat(web): build initial website skeleton (#8)`.
 - Trước commit: kiểm tra diff/status, secret và generated files. Không commit `.env`, `node_modules`, `dist`, log, IDE local files, credential hoặc dump có dữ liệu nhạy cảm.

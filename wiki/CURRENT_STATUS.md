@@ -35,6 +35,8 @@
 
 **In progress:**
 
+- [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **Implemented / hosted CI verified; chờ human review và Team Leader merge ở [PR #29](https://github.com/LVTIT/PBL4-517/pull/29)**. [Run triển khai](https://github.com/LVTIT/PBL4-517/actions/runs/35713164678) PASS cả 5 checks; PostgreSQL 16.15 thật, 3 migration, seed, health, integration 16/16 PASS; audit cả hai project 0 vulnerabilities. Đã thêm PR template, policy/evidence governance và [CI/CD docs](../docs/devops/ci-cd.md). [Evidence và giới hạn](../evidence/DEVOPS-01/README.md) ghi rõ SHA; trước merge phải đối chiếu latest PR checks, kể cả commit cập nhật docs. Branch protection hiện chưa bật; [đề xuất settings](../docs/devops/github-branch-protection.md) chờ human review trước áp dụng. CD chưa triển khai, không deploy EC2 hay tự đóng Issue.
+
 - [#10 — Scanner](https://github.com/LVTIT/PBL4-517/issues/10): Ninh tiếp tục thực hiện; việc dùng scanner trong #12 chỉ là kiểm tra hạ tầng phụ.
 
 **Next:**
