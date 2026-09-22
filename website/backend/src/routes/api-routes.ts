@@ -9,10 +9,12 @@ import {
   handleUpdateProduct,
 } from '../controllers/product-controller.js';
 import {
+  handleCancelOrder,
   handleCreateOrder,
   handleGetAllOrders,
   handleGetOrderById,
   handleGetUserOrders,
+  handleUpdateOrderDetails,
   handleUpdateOrderStatus,
 } from '../controllers/order-controller.js';
 import { prisma } from '../lib/database.js';
@@ -51,6 +53,8 @@ apiRoutes.delete('/products/:id', sessionMiddleware, csrfProtection, requireAdmi
 apiRoutes.get('/orders', sessionMiddleware, csrfProtection, requireAuth, handleGetUserOrders);
 apiRoutes.post('/orders', sessionMiddleware, csrfProtection, handleCreateOrder);
 apiRoutes.get('/orders/:id', sessionMiddleware, csrfProtection, requireAuth, handleGetOrderById);
+apiRoutes.patch('/orders/:id', sessionMiddleware, csrfProtection, requireAuth, handleUpdateOrderDetails);
+apiRoutes.post('/orders/:id/cancel', sessionMiddleware, csrfProtection, requireAuth, handleCancelOrder);
 
 // Admin-specific routes
 apiRoutes.get('/admin/orders', sessionMiddleware, csrfProtection, requireAdmin, handleGetAllOrders);

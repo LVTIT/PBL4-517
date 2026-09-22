@@ -24,6 +24,12 @@
   - **Chuẩn hóa kịch bản khai thác OWASP A01 (IDOR) & Attacker Script (2026-09-18):**
     - Viết script tấn công tự động [`scripts/attacker/exploit_idor.py`](../scripts/attacker/exploit_idor.py) kiểm thử khai thác IDOR và đánh giá mã phản hồi HTTP 200 vs 403.
     - Tích hợp cờ môi trường `VULN_IDOR_ENABLED` (mặc định `false` trên baseline) giúp demo chuyển đổi trạng thái "Chưa bịt lỗi" $\leftrightarrow$ "Đã bịt lỗi" tức thì mà không cần can thiệp sửa code thủ công.
+  - **Mở rộng chu trình IDOR toàn diện & Phòng thủ chuyên sâu tầng Database (2026-09-22):**
+    - Mở rộng kịch bản IDOR đầy đủ 3 thao tác: Đọc trộm (`GET /api/orders/:id`), Sửa địa chỉ nhận hàng (`PATCH /api/orders/:id`), và Hủy đơn hàng có hoàn tồn kho (`POST /api/orders/:id/cancel`).
+    - Triển khai kỹ thuật **Phòng thủ chuyên sâu (Database-level Scoping)** trong `order-service.ts`: Ép điều kiện sở hữu `id + userId` ngay tại tầng truy vấn Database khi ở Secure Baseline (`VULN_IDOR_ENABLED=false`), triệt tiêu hoàn toàn nguy cơ rò rỉ dữ liệu nhạy cảm (PII) lên RAM Node.js.
+    - Bổ sung bộ công cụ khai thác hoàn chỉnh trong `scripts/attacker/`: [`exploit_idor.py`](../scripts/attacker/exploit_idor.py) (Read IDOR), [`exploit_idor_update.py`](../scripts/attacker/exploit_idor_update.py) (Write IDOR - Đổi địa chỉ), [`exploit_idor_cancel.py`](../scripts/attacker/exploit_idor_cancel.py) (Write IDOR - Hủy đơn).
+    - Tạo hồ sơ kiểm chứng đầy đủ tại [`evidence/OWASP-01/README.md`](../evidence/OWASP-01/README.md).
+    - Mở rộng bộ kiểm thử tự động [`tests/api.integration.test.mjs`](../website/backend/tests/api.integration.test.mjs) kiểm tra toàn diện cả 3 thao tác cho cả kẻ tấn công (chặn 403) và chủ đơn hợp lệ (thành công 200). Backend build đạt 100% không lỗi (`npm run build`).
   - **Database & Prisma:** Migration `20260918000000_expand_ecommerce` và `20260918140000_guest_checkout` (hỗ trợ `userId String?`, lưu `customerName`, `customerEmail`, `customerPhone` cho đơn hàng khách vãng lai). Cập nhật `seed.ts` với tài khoản Admin demo (`admin@example.com` / `AdminOnly517!`).
   - **Kiểm thử & Build:** Đã bổ sung bộ kiểm thử tự động, 16/16 backend integration tests chạy thành công (`npm run test:integration`); cả frontend (`npm run build`) và backend (`npm run build`) biên dịch 100% không lỗi.
 
