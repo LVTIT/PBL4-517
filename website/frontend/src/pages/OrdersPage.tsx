@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { get, messageFrom } from '../services/api';
+import { get, messageFrom, post } from '../services/api';
 import { useAuth } from '../services/auth';
 import type { Order } from '../types/api';
 
@@ -11,6 +11,8 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || user.role === 'ADMIN') {
@@ -31,6 +33,23 @@ export function OrdersPage() {
         setLoading(false);
       });
   }, [user]);
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Các sản phẩm sẽ được hoàn lại vào kho.')) {
+      return;
+    }
+    setCancellingId(orderId);
+    setActionNotice(null);
+    try {
+      const cancelled = await post<Order>(`/orders/${orderId}/cancel`);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? cancelled : o)));
+      setActionNotice({ type: 'success', message: `Đơn hàng #${orderId.slice(0, 8)} đã được hủy thành công.` });
+    } catch (err) {
+      setActionNotice({ type: 'error', message: messageFrom(err) });
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (!user) {
     return (
@@ -79,6 +98,12 @@ export function OrdersPage() {
         <p className="muted">Theo dõi tình trạng đơn và các mặt hàng bạn đã đặt mua tại 517 Store.</p>
       </div>
 
+      {actionNotice && (
+        <div className={`notice notice-${actionNotice.type}`} style={{ marginBottom: '20px' }}>
+          {actionNotice.message}
+        </div>
+      )}
+
       {error && <div className="notice notice-error" role="alert">{error}</div>}
 
       {orders.length === 0 ? (
@@ -96,7 +121,11 @@ export function OrdersPage() {
               <header className="order-card-header">
                 <div>
                   <span className="small muted">MÃ ĐƠN HÀNG</span>
-                  <p className="order-code"><strong>{order.id}</strong></p>
+                  <p className="order-code">
+                    <Link to={`/orders/${order.id}`} title="Bấm để xem chi tiết" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                      <strong>{order.id}</strong>
+                    </Link>
+                  </p>
                 </div>
                 <div>
                   <span className="small muted">NGÀY ĐẶT</span>
@@ -128,6 +157,28 @@ export function OrdersPage() {
                       <span className="item-price">{currency.format(Number(item.unitPrice) * item.quantity)}</span>
                     </div>
                   ))}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f0f3eb' }}>
+                  <Link to={`/orders/${order.id}`} className="button button-secondary" style={{ padding: '6px 14px', fontSize: '.82rem' }}>
+                    Xem chi tiết
+                  </Link>
+                  {order.status === 'PENDING' && (
+                    <button
+                      onClick={() => handleCancelOrder(order.id)}
+                      disabled={cancellingId === order.id}
+                      className="button"
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '.82rem',
+                        background: '#fff0f0',
+                        color: '#c84b31',
+                        borderColor: '#fad2cb',
+                      }}
+                    >
+                      {cancellingId === order.id ? 'Đang hủy…' : 'Hủy đơn'}
+                    </button>
+                  )}
                 </div>
               </div>
             </article>

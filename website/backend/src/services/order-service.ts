@@ -250,23 +250,41 @@ export async function updateOrderDetails(
   data: { shippingAddress?: string; customerPhone?: string }
 ) {
   try {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      select: { id: true, userId: true, status: true },
-    });
+    if (!isIdorVulnerable() && !isAdmin) {
+      // Defense-in-depth: Database Query Scoping enforced at database level
+      const scopedOrder = await prisma.order.findFirst({
+        where: { id: orderId, userId: requestingUserId },
+        select: { id: true, status: true },
+      });
 
-    if (!order) {
-      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
-    }
+      if (!scopedOrder) {
+        const orderExists = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { id: true },
+        });
 
-    // IDOR Protection: Enabled by default (Secure Baseline).
-    // Can be toggled via VULN_IDOR_ENABLED=true in .env for OWASP Lab Demonstration.
-    if (!isIdorVulnerable() && order.userId !== requestingUserId && !isAdmin) {
-      throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền chỉnh sửa đơn hàng này.');
-    }
+        if (orderExists) {
+          throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền chỉnh sửa đơn hàng này.');
+        }
+        throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+      }
 
-    if (order.status !== 'PENDING') {
-      throw new AppError(400, 'CANNOT_UPDATE', 'Chỉ có thể chỉnh sửa đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+      if (scopedOrder.status !== 'PENDING') {
+        throw new AppError(400, 'CANNOT_UPDATE', 'Chỉ có thể chỉnh sửa đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+      }
+    } else {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { id: true, status: true },
+      });
+
+      if (!order) {
+        throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+      }
+
+      if (order.status !== 'PENDING') {
+        throw new AppError(400, 'CANNOT_UPDATE', 'Chỉ có thể chỉnh sửa đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+      }
     }
 
     const updated = await prisma.order.update({
@@ -301,33 +319,54 @@ export async function cancelOrder(
   isAdmin: boolean
 ) {
   try {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        items: { select: { productId: true, quantity: true } },
-      },
-    });
+    let orderToCancel: { id: string; status: OrderStatus; items: { productId: string; quantity: number }[] } | null;
 
-    if (!order) {
-      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    if (!isIdorVulnerable() && !isAdmin) {
+      // Defense-in-depth: Database Query Scoping enforced at database level
+      const scopedOrder = await prisma.order.findFirst({
+        where: { id: orderId, userId: requestingUserId },
+        select: {
+          id: true,
+          status: true,
+          items: { select: { productId: true, quantity: true } },
+        },
+      });
+
+      if (!scopedOrder) {
+        const orderExists = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { id: true },
+        });
+
+        if (orderExists) {
+          throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền hủy đơn hàng này.');
+        }
+        throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+      }
+      orderToCancel = scopedOrder;
+    } else {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: {
+          id: true,
+          status: true,
+          items: { select: { productId: true, quantity: true } },
+        },
+      });
+
+      if (!order) {
+        throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+      }
+      orderToCancel = order;
     }
 
-    // IDOR Protection: Enabled by default (Secure Baseline).
-    // Can be toggled via VULN_IDOR_ENABLED=true in .env for OWASP Lab Demonstration.
-    if (!isIdorVulnerable() && order.userId !== requestingUserId && !isAdmin) {
-      throw new AppError(403, 'FORBIDDEN', 'Bạn không có quyền hủy đơn hàng này.');
-    }
-
-    if (order.status !== 'PENDING') {
+    if (orderToCancel.status !== 'PENDING') {
       throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
     }
 
     // Prisma transaction: Update status to CANCELLED and restore stock
     const cancelled = await prisma.$transaction(async (tx) => {
-      for (const item of order.items) {
+      for (const item of orderToCancel!.items) {
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { increment: item.quantity } },

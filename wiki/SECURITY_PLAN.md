@@ -31,7 +31,7 @@ lab/OWASP hoặc branch lab tương đương
 
 | Scenario | Trạng thái | Chi tiết triển khai & Công cụ |
 | :--- | :--- | :--- |
-| **A01: Broken Access Control (IDOR)** | **Implemented** | Đã xây dựng hoàn chỉnh kịch bản đọc trộm đơn hàng `GET /api/orders/:id`. Kiểm soát qua cờ môi trường `VULN_IDOR_ENABLED` (`.env`), tự động hóa khai thác qua script [`scripts/attacker/exploit_idor.py`](../scripts/attacker/exploit_idor.py). |
+| **A01: Broken Access Control (IDOR)** | **Completed (Verified with Evidence)** | Chu trình toàn vẹn: Đọc (`GET`), Sửa địa chỉ (`PATCH`), Hủy đơn (`POST`). Phòng thủ tầng DB (*Database-level Scoping*), cờ `VULN_IDOR_ENABLED`, UI trực quan ([`OrderDetailPage`](../website/frontend/src/pages/OrderDetailPage.tsx)), 3 script attacker và 7 file bằng chứng tại [`evidence/OWASP-01/`](../evidence/OWASP-01/). |
 | **A01: Admin Authorization** | **Implemented (Baseline)** | Phân quyền nghiêm ngặt qua middleware `requireAdmin`; Admin bị chặn đặt hàng (`ADMIN_CANNOT_ORDER`) và chặn tự review sản phẩm. |
 | **A03: Injection (SQLi)** | **Planned** | Ô tìm kiếm `GET /api/products?search=...` (chuẩn bị kịch bản `VULN_SQLI_ENABLED` với query ghép chuỗi thô). |
 | **A03: Stored XSS** | **Planned** | Bình luận sản phẩm `POST /api/products/:id/reviews` (chuẩn bị kịch bản `VULN_XSS_ENABLED`). |
