@@ -1,0 +1,25 @@
+======================================================================
+PBL4-517 OWASP A01 Evidence — 05: Write IDOR Update Defense (Secure Baseline)
+Target: PATCH /api/orders/:id
+Environment: VULN_IDOR_ENABLED=false (Secure Baseline - Default)
+Defense Technique: Database-level Query Scoping (where: { id, userId })
+Execution Date: 2026-09-22
+======================================================================
+
+$ python scripts/attacker/exploit_idor_update.py --id ef96b070-9fe3-4d81-a2b8-5cb98b83f337 --address "Kho hàng bí mật của Hacker, 999 Đường Cướp Hàng, Quận 1, TP.HCM" --phone "0999888777"
+
+[*] Attacker session: hacker@example.com
+[*] Target request  : PATCH http://127.0.0.1:3000/api/orders/ef96b070-9fe3-4d81-a2b8-5cb98b83f337
+[*] Payload hijack  : shippingAddress = 'Kho hàng bí mật của Hacker, 999 Đường Cướp Hàng, Quận 1, TP.HCM', customerPhone = '0999888777'
+[*] Response Status : HTTP 403
+[*] Response Body   :
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Bạn không có quyền chỉnh sửa đơn hàng này."
+  }
+}
+
+[-] SECURE: Access control enforced (403 Forbidden - Order modification blocked).
+======================================================================
+Verification: Attacker request denied with HTTP 403 Forbidden. Order shipping details remained untouched. Write IDOR (Update) mitigated.

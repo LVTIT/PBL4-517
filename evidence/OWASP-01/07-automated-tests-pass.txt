@@ -1,0 +1,39 @@
+======================================================================
+PBL4-517 OWASP A01 Evidence — 07: Automated Integration Tests Verification
+Target: website/backend/tests/api.integration.test.mjs
+Execution Date: 2026-09-22
+======================================================================
+
+$ npm run test:integration
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+▶ real PostgreSQL API and session authentication
+  ✔ health and security headers (44.729ms)
+  ✔ products match database rows with exact decimal money (95.4482ms)
+  ✔ anonymous user and rejected missing CSRF token (314.7975ms)
+  ✔ wrong password and unknown email have same error (727.6067ms)
+  ✔ strict input validation, malformed JSON and body size limit (22.1961ms)
+  ✔ correct login rotates session and stores only password hash (593.4368ms)
+  ✔ new client with existing cookie restores the session (7.9487ms)
+  ✔ logout invalidates session including replayed cookie (17.8873ms)
+  ✔ unknown API paths keep JSON error format (1.5433ms)
+  ✔ user registration and duplicate detection (381.5513ms)
+  ✔ product search and detail with reviews (30.0967ms)
+  ✔ orders, server-side pricing, and IDOR protection (882.6898ms)
+  ✔ admin authorization guard (372.4726ms)
+  ✔ guest checkout without authentication (27.5905ms)
+  ✔ role boundaries: admin cannot place orders or post reviews (394.375ms)
+✔ real PostgreSQL API and session authentication (3919.1505ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4054.7721
+
+======================================================================
+Verification: 16/16 backend tests passed, including full IDOR protection checks across read, update, and cancel operations.
