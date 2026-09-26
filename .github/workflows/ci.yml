@@ -142,5 +142,6 @@ jobs:
       - name: Validate Python syntax without executing scanners or exploits
         run: |
           test -f scanner/scan.py
+          test -f alerts/notifier.py
           test -f scripts/attacker/exploit_idor.py
-          python -m compileall -q scanner scripts/attacker scripts/ci
+          python -m compileall -q scanner alerts scripts/attacker scripts/ci
