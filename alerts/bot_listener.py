@@ -1,8 +1,10 @@
 """PBL4-517: Interactive Telegram Bot Listener (Issue #10).
 
 Cho phép tương tác hai chiều (ChatOps) trực tiếp từ nhóm Telegram:
-- Nhận lệnh từ người dùng (/scan, /status, /help, /ping).
-- Tự động kích hoạt module scanner/scan.py và trả kết quả về nhóm chat.
+- Tự động đồng bộ danh sách lệnh (setMyCommands) và nút Menu với Telegram API.
+- Tự động gợi ý danh sách lệnh (Autocomplete Menu) khi người dùng gõ ký tự '/'.
+- Nhận lệnh từ tin nhắn (/scan, /status, /help, /ping) hoặc nút bấm Inline (Callback Queries).
+- Tự động kích hoạt module scanner/scan.py và phản hồi tức thì về nhóm chat.
 - Sử dụng phương pháp Long Polling thuần của Python standard library (không cần cài thêm thư viện ngoài).
 """
 
@@ -32,40 +34,120 @@ if str(ROOT_DIR) not in sys.path:
 from alerts.notifier import get_credentials, send_telegram_alert
 
 
+def register_bot_commands(bot_token: str, chat_id: str | None = None) -> None:
+    """Tự động đăng ký danh sách lệnh và nút Menu với Telegram API để hiển thị Menu và gợi ý khi gõ '/'."""
+    commands = [
+        {"command": "scan", "description": "Dò quét an ninh mục tiêu (VD: /scan 127.0.0.1)"},
+        {"command": "status", "description": "Xem trạng thái Baseline & các cổng đang mở"},
+        {"command": "ping", "description": "Kiểm tra kết nối và độ trễ của Bot"},
+        {"command": "help", "description": "Xem danh sách lệnh và menu tương tác"},
+    ]
+
+    scopes = [
+        {"type": "default"},
+        {"type": "all_group_chats"},
+    ]
+    if chat_id:
+        scopes.append({"type": "chat", "chat_id": chat_id})
+
+    for scope in scopes:
+        try:
+            payload = {"commands": commands, "scope": scope}
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{bot_token}/setMyCommands",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                pass
+        except Exception as exc:
+            print(f"[-] Không thể đăng ký lệnh với scope {scope}: {exc}", file=sys.stderr)
+
+    # Đăng ký nút Menu mở danh sách lệnh
+    try:
+        req_menu = urllib.request.Request(
+            f"https://api.telegram.org/bot{bot_token}/setChatMenuButton",
+            data=json.dumps({"menu_button": {"type": "commands"}}).encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req_menu, timeout=10) as resp:
+            pass
+    except Exception as exc:
+        print(f"[-] Không thể thiết lập ChatMenuButton: {exc}", file=sys.stderr)
+
+
+def answer_callback_query(bot_token: str, query_id: str, text: str = "") -> None:
+    """Phản hồi Telegram callback query để tắt biểu tượng đang tải trên client."""
+    try:
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery",
+            data=json.dumps({"callback_query_id": query_id, "text": text}).encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            pass
+    except Exception:
+        pass
+
+
 def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
     """Xử lý các câu lệnh nhận được từ người dùng trên Telegram."""
     parts = command_text.strip().split()
     cmd = parts[0].lower().split("@")[0]  # Bỏ @bot_username nếu có
     args = parts[1:]
 
+    interactive_buttons = [
+        [
+            {"text": "🔍 Quét Cổng 127.0.0.1", "callback_data": "scan_local"},
+            {"text": "📊 Xem Baseline", "callback_data": "status"},
+        ],
+        [
+            {"text": "🏓 Ping Bot", "callback_data": "ping"},
+            {"text": "🛡️ Chuẩn OWASP A05", "url": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/"},
+        ],
+    ]
+
     if cmd in ("/start", "/help"):
         help_msg = (
             "🤖 *[PBL4-517 SECURITY SCANNER BOT]* 🤖\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "Danh sách các lệnh điều khiển từ xa:\n\n"
-            "🔍 `/scan [host]` — Chạy dò quét an ninh mạng cho mục tiêu (Mặc định: `127.0.0.1`)\n"
-            "📊 `/status` — Kiểm tra trạng thái Baseline và các cổng đang mở gần nhất\n"
+            "🔍 `/scan [host]` — Chạy dò quét an ninh mạng (Mặc định: `127.0.0.1`)\n"
+            "📊 `/status` — Xem trạng thái Baseline và các cổng đang mở\n"
             "🏓 `/ping` — Kiểm tra trạng thái hoạt động của Bot\n"
-            "❓ `/help` — Hiển thị hướng dẫn này\n"
+            "❓ `/help` — Hiển thị menu hướng dẫn này\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "💡 *Ví dụ:* Gõ `/scan 127.0.0.1` để bắt đầu quét ngay lập tức!"
+            "💡 *Mẹo:* Bạn có thể bấm trực tiếp các nút bên dưới hoặc gõ `/` để chọn lệnh từ menu gợi ý!"
         )
-        send_telegram_alert(bot_token, chat_id, help_msg)
+        send_telegram_alert(bot_token, chat_id, help_msg, buttons=interactive_buttons)
 
     elif cmd == "/ping":
-        send_telegram_alert(bot_token, chat_id, "🏓 *Pong!* Bot giám sát an ninh PBL4-517 đang hoạt động bình thường.")
+        send_telegram_alert(
+            bot_token,
+            chat_id,
+            "🏓 *Pong!* Bot giám sát an ninh PBL4-517 đang hoạt động bình thường.",
+            buttons=interactive_buttons,
+        )
 
     elif cmd == "/status":
         state_file = ROOT_DIR / "scanner" / "scanner_state.json"
         if not state_file.is_file():
-            send_telegram_alert(bot_token, chat_id, "ℹ️ *Chưa có dữ liệu Baseline.* Vui lòng chạy lệnh `/scan` để khởi tạo.")
+            send_telegram_alert(
+                bot_token,
+                chat_id,
+                "ℹ️ *Chưa có dữ liệu Baseline.* Vui lòng chạy lệnh `/scan` để khởi tạo.",
+                buttons=interactive_buttons,
+            )
             return
 
         try:
             with open(state_file, "r", encoding="utf-8") as f:
                 state_data = json.load(f)
             if not state_data:
-                send_telegram_alert(bot_token, chat_id, "ℹ️ File trạng thái rỗng.")
+                send_telegram_alert(bot_token, chat_id, "ℹ️ File trạng thái rỗng.", buttons=interactive_buttons)
                 return
 
             msg_lines = [
@@ -81,7 +163,7 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
                 msg_lines.append(f"🔓 *Cổng đang mở:* `{ports_str}`")
                 msg_lines.append("────────────────────")
 
-            send_telegram_alert(bot_token, chat_id, "\n".join(msg_lines))
+            send_telegram_alert(bot_token, chat_id, "\n".join(msg_lines), buttons=interactive_buttons)
         except Exception as exc:
             send_telegram_alert(bot_token, chat_id, f"[-] Lỗi đọc trạng thái: `{exc}`")
 
@@ -107,6 +189,29 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             send_telegram_alert(bot_token, chat_id, f"[-] Lỗi khi thực thi scanner: `{exc}`")
 
 
+def handle_callback_query(bot_token: str, callback: dict) -> None:
+    """Xử lý tương tác khi người dùng bấm vào các nút Inline Keyboard."""
+    query_id = callback.get("id", "")
+    data = callback.get("data", "")
+    message = callback.get("message", {})
+    chat = message.get("chat", {})
+    chat_id = str(chat.get("id", ""))
+
+    if not chat_id:
+        return
+
+    answer_callback_query(bot_token, query_id, f"Đang thực hiện: {data}")
+
+    if data == "scan_local":
+        handle_command(bot_token, chat_id, "/scan 127.0.0.1")
+    elif data == "status":
+        handle_command(bot_token, chat_id, "/status")
+    elif data == "ping":
+        handle_command(bot_token, chat_id, "/ping")
+    elif data == "help":
+        handle_command(bot_token, chat_id, "/help")
+
+
 def run_listener() -> None:
     """Vòng lặp lắng nghe lệnh từ Telegram (Long Polling)."""
     _, tele_token, tele_chat_id = get_credentials()
@@ -114,6 +219,32 @@ def run_listener() -> None:
     if not tele_token:
         print("[-] Lỗi: Không tìm thấy TELEGRAM_BOT_TOKEN trong file .env!", file=sys.stderr)
         return
+
+    print("[*] Đang đồng bộ danh sách lệnh và nút Menu với Telegram API...")
+    register_bot_commands(tele_token, tele_chat_id)
+    print("[+] Đã đăng ký lệnh gợi ý (Autocomplete Menu) thành công!")
+
+    # Gửi tin nhắn thông báo sẵn sàng vào nhóm
+    if tele_chat_id:
+        ready_buttons = [
+            [
+                {"text": "🔍 Quét Cổng 127.0.0.1", "callback_data": "scan_local"},
+                {"text": "📊 Xem Baseline", "callback_data": "status"},
+            ],
+            [
+                {"text": "🏓 Ping Bot", "callback_data": "ping"},
+                {"text": "🛡️ Chuẩn OWASP A05", "url": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/"},
+            ],
+        ]
+        send_telegram_alert(
+            tele_token,
+            tele_chat_id,
+            "🤖 *[PBL4 CHATOPS BOT ĐÃ SẴN SÀNG]* 🤖\n\n"
+            "Hệ thống điều khiển từ xa đã kết nối. Quản trị viên có thể:\n"
+            "• Gõ `/` để xem menu danh sách lệnh tự động gợi ý.\n"
+            "• Bấm trực tiếp các nút chọn nhanh bên dưới để thao tác tức thì!",
+            buttons=ready_buttons,
+        )
 
     print("[*] Đang khởi động Telegram Bot Interactive Listener (ChatOps PBL4-517)...")
     print(f"[*] Đang lắng nghe tin nhắn trên kênh/nhóm chat... (Nhấn Ctrl + C để dừng)\n")
@@ -132,6 +263,15 @@ def run_listener() -> None:
 
             for update in data.get("result", []):
                 offset = max(offset, update["update_id"] + 1)
+
+                # 1. Xử lý Callback Query (khi bấm nút inline)
+                callback = update.get("callback_query")
+                if callback:
+                    print(f"[+] Nhận nút bấm tương tác: '{callback.get('data')}'")
+                    handle_callback_query(tele_token, callback)
+                    continue
+
+                # 2. Xử lý tin nhắn văn bản thường (/scan, /status, v.v.)
                 msg = update.get("message") or update.get("channel_post")
                 if not msg:
                     continue
@@ -156,3 +296,4 @@ def run_listener() -> None:
 
 if __name__ == "__main__":
     run_listener()
+
