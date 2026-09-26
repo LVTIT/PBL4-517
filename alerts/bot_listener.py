@@ -101,7 +101,11 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
 
     interactive_buttons = [
         [
-            {"text": "🔍 Quét Cổng 127.0.0.1", "callback_data": "scan_local"},
+            {"text": "🔍 Quét Mặc Định", "callback_data": "scan_default"},
+            {"text": "🎯 Quét Web (80,443,8080)", "callback_data": "scan_web"},
+        ],
+        [
+            {"text": "🗄️ Quét DB (5432,3306,6379)", "callback_data": "scan_db"},
             {"text": "📊 Xem Baseline", "callback_data": "status"},
         ],
         [
@@ -115,12 +119,16 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             "🤖 *[PBL4-517 SECURITY SCANNER BOT]* 🤖\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "Danh sách các lệnh điều khiển từ xa:\n\n"
-            "🔍 `/scan [host]` — Chạy dò quét an ninh mạng (Mặc định: `127.0.0.1`)\n"
+            "🔍 `/scan [host] [ports]` — Quét an ninh mạng:\n"
+            "   • `/scan` : Quét các cổng mặc định trên `127.0.0.1`\n"
+            "   • `/scan 8080` : Quét cổng cụ thể `8080`\n"
+            "   • `/scan 80,443,8080` : Quét nhóm cổng Web\n"
+            "   • `/scan 127.0.0.1 5432` : Quét cổng DB trên máy chủ chỉ định\n"
             "📊 `/status` — Xem trạng thái Baseline và các cổng đang mở\n"
             "🏓 `/ping` — Kiểm tra trạng thái hoạt động của Bot\n"
             "❓ `/help` — Hiển thị menu hướng dẫn này\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "💡 *Mẹo:* Bạn có thể bấm trực tiếp các nút bên dưới hoặc gõ `/` để chọn lệnh từ menu gợi ý!"
+            "💡 *Mẹo:* Bạn có thể bấm trực tiếp các nút chọn nhanh bên dưới hoặc gõ `/` để chọn lệnh từ menu gợi ý!"
         )
         send_telegram_alert(bot_token, chat_id, help_msg, buttons=interactive_buttons)
 
@@ -168,12 +176,30 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             send_telegram_alert(bot_token, chat_id, f"[-] Lỗi đọc trạng thái: `{exc}`")
 
     elif cmd == "/scan":
-        target = args[0] if args else "127.0.0.1"
-        ack_msg = f"⏳ *Đang tiến hành dò quét an ninh cho mục tiêu:* `{target}`...\n*Vui lòng đợi vài giây!*"
+        target = "127.0.0.1"
+        ports_arg = None
+
+        if len(args) == 1:
+            first = args[0].strip()
+            # Nếu người dùng truyền số hoặc chuỗi port (VD: 8080 hoặc 80,443)
+            if all(c.isdigit() or c in ",-" for c in first):
+                ports_arg = first
+                target = "127.0.0.1"
+            else:
+                target = first
+        elif len(args) >= 2:
+            target = args[0].strip()
+            ports_arg = args[1].strip()
+
+        ports_desc = f" (Cổng: `{ports_arg}`)" if ports_arg else " (Mặc định 6 cổng)"
+        ack_msg = f"⏳ *Đang tiến hành dò quét an ninh cho mục tiêu:* `{target}`{ports_desc}...\n*Vui lòng đợi vài giây!*"
         send_telegram_alert(bot_token, chat_id, ack_msg)
 
         # Chạy scanner/scan.py dưới dạng subprocess
         cmd_run = [sys.executable, str(ROOT_DIR / "scanner" / "scan.py"), target]
+        if ports_arg:
+            cmd_run.extend(["--ports", ports_arg])
+
         try:
             proc = subprocess.run(
                 cmd_run,
@@ -184,9 +210,65 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
                 errors="replace",
                 timeout=30,
             )
-            print(f"[+] Hoàn tất lệnh /scan {target} (Exit code: {proc.returncode})")
+            print(f"[+] Hoàn tất lệnh /scan {target} {ports_arg or ''} (Exit code: {proc.returncode})")
+
+            if proc.returncode == 0:
+                duration_str = "1.0s"
+                posture_str = "An toàn"
+                open_ports_str = "Không có cổng nào mở"
+
+                for line in proc.stdout.splitlines():
+                    if "Thời gian quét" in line:
+                        parts_dur = line.split("|")
+                        duration_str = parts_dur[0].replace("Thời gian quét :", "").strip()
+                        if len(parts_dur) > 1:
+                            raw_open = parts_dur[1].replace("Cổng đang mở", "").strip(" :()")
+                            if raw_open and raw_open != "0":
+                                open_ports_str = raw_open
+                    elif "Đánh giá rủi ro" in line:
+                        posture_str = line.replace("Đánh giá rủi ro :", "").strip()
+
+                is_no_change = "EVENT: NO_CHANGE" in proc.stdout
+                is_initial = "EVENT: INITIAL_SCAN" in proc.stdout
+
+                summary_lines = [
+                    "✅ *[HOÀN TẤT DÒ QUÉT AN NINH]*",
+                    "━━━━━━━━━━━━━━━━━━━━",
+                    f"🎯 *Mục tiêu:* `{target}`" + (f" (Cổng: `{ports_arg}`)" if ports_arg else ""),
+                    f"⏱️ *Thời gian:* `{duration_str}`",
+                    f"🛡️ *Đánh giá rủi ro:* `{posture_str}`",
+                    f"🔓 *Cổng đang mở:* `{open_ports_str}`",
+                    "━━━━━━━━━━━━━━━━━━━━",
+                ]
+
+                if is_no_change:
+                    summary_lines.append("ℹ️ *Trạng thái:* An toàn, không có cổng mới mở so với Baseline.")
+                elif is_initial:
+                    summary_lines.append("ℹ️ *Trạng thái:* Đã khởi tạo mốc Baseline ban đầu thành công.")
+                else:
+                    summary_lines.append("⚠️ *Trạng thái:* Đã phát hiện thay đổi cổng và gửi thông báo chi tiết!")
+
+                send_telegram_alert(
+                    bot_token,
+                    chat_id,
+                    "\n".join(summary_lines),
+                    buttons=interactive_buttons,
+                )
+            else:
+                err_text = proc.stderr.strip() or proc.stdout.strip() or f"Mã lỗi: {proc.returncode}"
+                send_telegram_alert(
+                    bot_token,
+                    chat_id,
+                    f"❌ *Lỗi khi quét mục tiêu:* `{err_text}`",
+                    buttons=interactive_buttons,
+                )
         except Exception as exc:
-            send_telegram_alert(bot_token, chat_id, f"[-] Lỗi khi thực thi scanner: `{exc}`")
+            send_telegram_alert(
+                bot_token,
+                chat_id,
+                f"[-] Lỗi khi thực thi scanner: `{exc}`",
+                buttons=interactive_buttons,
+            )
 
 
 def handle_callback_query(bot_token: str, callback: dict) -> None:
@@ -202,8 +284,12 @@ def handle_callback_query(bot_token: str, callback: dict) -> None:
 
     answer_callback_query(bot_token, query_id, f"Đang thực hiện: {data}")
 
-    if data == "scan_local":
+    if data in ("scan_local", "scan_default"):
         handle_command(bot_token, chat_id, "/scan 127.0.0.1")
+    elif data == "scan_web":
+        handle_command(bot_token, chat_id, "/scan 127.0.0.1 80,443,3000,8080")
+    elif data == "scan_db":
+        handle_command(bot_token, chat_id, "/scan 127.0.0.1 5432,3306,6379")
     elif data == "status":
         handle_command(bot_token, chat_id, "/status")
     elif data == "ping":

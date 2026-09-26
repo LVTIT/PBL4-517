@@ -143,6 +143,7 @@ def evaluate_diff_and_notify(
     banners: dict[int, str | None],
     reset_baseline: bool = False,
     no_alert: bool = False,
+    scanned_ports: list[int] | None = None,
 ) -> str:
     """So sánh với Baseline cũ, phân loại sự kiện và kích hoạt gửi cảnh báo."""
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -165,16 +166,18 @@ def evaluate_diff_and_notify(
     else:
         prev_open_set = set(host_record.get("baseline_open_ports", []))
         curr_open_set = set(current_open_ports)
+        scanned_set = set(scanned_ports) if scanned_ports is not None else (curr_open_set | prev_open_set)
 
         new_ports = sorted(curr_open_set - prev_open_set)
-        closed_ports = sorted(prev_open_set - curr_open_set)
+        # Chỉ đánh dấu closed nếu port đó nằm trong danh sách các port THỰC SỰ ĐƯỢC QUÉT lần này
+        closed_ports = sorted((prev_open_set & scanned_set) - curr_open_set)
+        updated_open_ports = sorted((prev_open_set - scanned_set) | curr_open_set)
 
         if new_ports:
             event_type = "NEW_PORT_DETECTED"
-            # Cập nhật baseline mới bao gồm cả cổng mới
             state[host_key] = {
                 "last_scan_at": now_str,
-                "baseline_open_ports": current_open_ports,
+                "baseline_open_ports": updated_open_ports,
             }
             save_state(state_file, state)
             print(f"\n[!] [EVENT: NEW_PORT_DETECTED] CẢNH BÁO: Phát hiện cổng mới mở: {new_ports}")
@@ -182,7 +185,7 @@ def evaluate_diff_and_notify(
             event_type = "PORT_CLOSED"
             state[host_key] = {
                 "last_scan_at": now_str,
-                "baseline_open_ports": current_open_ports,
+                "baseline_open_ports": updated_open_ports,
             }
             save_state(state_file, state)
             print(f"\n[+] [EVENT: PORT_CLOSED] Cổng đã đóng an toàn: {closed_ports}")
@@ -261,6 +264,7 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
         banners=banners,
         reset_baseline=args.reset_baseline,
         no_alert=args.no_alert,
+        scanned_ports=ports,
     )
 
     # Xuất Báo cáo HTML tự chứa (Living Dashboard + Snapshot nếu có sự cố)
