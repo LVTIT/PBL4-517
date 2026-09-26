@@ -35,7 +35,7 @@ lab/OWASP hoặc branch lab tương đương
 | **A01: Admin Authorization** | **Implemented (Baseline)** | Phân quyền nghiêm ngặt qua middleware `requireAdmin`; Admin bị chặn đặt hàng (`ADMIN_CANNOT_ORDER`) và chặn tự review sản phẩm. |
 | **A03: Injection (SQLi)** | **Planned** | Ô tìm kiếm `GET /api/products?search=...` (chuẩn bị kịch bản `VULN_SQLI_ENABLED` với query ghép chuỗi thô). |
 | **A03: Stored XSS** | **Planned** | Bình luận sản phẩm `POST /api/products/:id/reviews` (chuẩn bị kịch bản `VULN_XSS_ENABLED`). |
-| **A05: Security Misconfiguration** | **Planned** | Module `scanner/` dò quét cổng mở trên AWS Security Group và gửi cảnh báo về Telegram/Discord. |
+| **A05: Security Misconfiguration** | **Implemented (Verified with Dual Alerts)** | Module `scanner/` dò quét cổng mở đa luồng trên AWS Security Group, lưu baseline chênh lệch (`scanner_state.json`) và gửi cảnh báo tức thì về cả Discord Webhook và Telegram Group Bot. |
 | **A07: Authentication & Brute Force** | **Implemented (Baseline)** | Đã triển khai rate limiter, bcrypt hash mật khẩu, kiểm tra phiên session phía server. |
 
 Cơ chế thực nghiệm sử dụng cờ môi trường (`VULN_*_ENABLED=true/false`) để đảm bảo nhánh `main` luôn là **Secure Baseline** khi deploy lên AWS Cloud, đồng thời cho phép bật nhanh chế độ có lỗ hổng khi demo khai thác và kiểm chứng bịt lỗi.
