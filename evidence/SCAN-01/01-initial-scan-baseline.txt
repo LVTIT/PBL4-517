@@ -1,0 +1,22 @@
+=== PBL4-517 EVIDENCE SCAN-01: INITIAL BASELINE SCAN ===
+Date: 2026-09-26 (UTC+7)
+Target: 127.0.0.1
+Command: python scanner/scan.py 127.0.0.1 --reset-baseline
+
+[>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 6 ports (Đa luồng 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+     22/tcp  FILTERED [SSH (Quản trị từ xa)]
+     80/tcp  FILTERED [HTTP (Nginx Web Server)]
+    443/tcp  FILTERED [HTTPS (Web bảo mật TLS)]
+   3000/tcp  FILTERED [Node.js Express API (Backend thô)]
+   5432/tcp  FILTERED [PostgreSQL Database]
+   8080/tcp  FILTERED [HTTP Alt / Proxy]
+-----------------------------------------------------------------
+Thời gian quét : 1.02s | Cổng đang mở (0): Không có
+Đánh giá rủi ro : Xếp hạng [A+] - AN TOÀN TUYỆT ĐỐI (Max CVSS: 0.0)
+
+[+] [EVENT: INITIAL_SCAN] Đã ghi nhận Baseline ban đầu cho 127.0.0.1: []
+[*] Đang gửi thông báo sự kiện 'INITIAL_SCAN' tới Discord & Telegram...
+    - Discord  : ĐÃ GỬI
+    - Telegram : ĐÃ GỬI
+[+] Báo cáo HTML (Living Dashboard) đã cập nhật: scanner/reports/latest.html

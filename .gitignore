@@ -15,6 +15,10 @@ website/backend/src/generated/
 .local/
 playwright-report/
 test-results/
+scanner_state.json
+*.state.json
+scanner/reports/*
+!scanner/reports/.gitkeep
 
 # Logs and editor settings
 *.log

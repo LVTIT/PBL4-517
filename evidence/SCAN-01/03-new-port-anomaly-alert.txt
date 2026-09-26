@@ -1,0 +1,24 @@
+=== PBL4-517 EVIDENCE SCAN-01: NEW PORT DETECTED (SECURITY MISCONFIGURATION) ===
+Date: 2026-09-26 (UTC+7)
+Target: 127.0.0.1
+Simulated Incident: Unauthorized port 8080 opened
+Command: python scanner/scan.py 127.0.0.1
+
+[>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 6 ports (Đa luồng 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+     22/tcp  FILTERED [SSH (Quản trị từ xa)]
+     80/tcp  FILTERED [HTTP (Nginx Web Server)]
+    443/tcp  FILTERED [HTTPS (Web bảo mật TLS)]
+   3000/tcp  FILTERED [Node.js Express API (Backend thô)]
+   5432/tcp  FILTERED [PostgreSQL Database]
+   8080/tcp  OPEN     [HTTP Alt / Proxy] » Server: SimpleHTTP/0.6 Python/3.13.7 [HIGH - CVSS 7.0]
+-----------------------------------------------------------------
+Thời gian quét : 1.02s | Cổng đang mở (1): [8080]
+Đánh giá rủi ro : Xếp hạng [D] - RỦI RO ĐÁNG KỂ (HIGH) (Max CVSS: 7.0)
+
+[!] [EVENT: NEW_PORT_DETECTED] CẢNH BÁO: Phát hiện cổng mới mở: [8080]
+[*] Đang gửi thông báo sự kiện 'NEW_PORT_DETECTED' tới Discord & Telegram...
+    - Discord  : ĐÃ GỬI
+    - Telegram : ĐÃ GỬI
+[+] Báo cáo HTML (Living Dashboard) đã cập nhật: scanner/reports/latest.html
+[+] Đã lưu snapshot lịch sử sự cố vào thư mục reports/ (tự động lưu tối đa 10 bản gần nhất).
