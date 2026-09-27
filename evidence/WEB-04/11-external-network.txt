@@ -1,0 +1,12 @@
+2026-09-27T08:32:19.929475+00:00
+External Windows TCP connect checks; only authorized EC2 target; 3-second timeout
+22/tcp: OPEN
+80/tcp: OPEN
+443/tcp: OPEN
+3000/tcp: TIMEOUT (not proof of SG policy)
+5432/tcp: TIMEOUT (not proof of SG policy)
+8080/tcp: TIMEOUT (not proof of SG policy)
+http://47.129.214.70/: HTTP 308, curl exit 0, TLS verification enabled
+https://47.129.214.70/: HTTP 200, curl exit 0, TLS verification enabled
+https://47.129.214.70/api/health: HTTP 200, curl exit 0, TLS verification enabled
+3000/5432/8080 not reachable in this sample; no AWS SG API inspection

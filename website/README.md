@@ -358,6 +358,10 @@ Khi triển khai production ở issue sau: cài dependency/build trên môi trư
 
 ### Production start (EC2 Linux)
 
+Issue #14 deployment/configuration and temporary-process handoff are recorded in
+[EC2 deployment](../docs/aws/ec2-deployment-review.md), with [verified evidence](../evidence/WEB-04/README.md).
+Persistent backend service remains Issue #15; do not infer continuous availability from the completed temporary verification run.
+
 Trong `website/backend` trên máy EC2 (đã có `.env` production với `NODE_ENV=production`, `VULN_IDOR_ENABLED=false`):
 
 ```sh

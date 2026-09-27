@@ -1,0 +1,93 @@
+2026-09-27 UTC; sequential EC2 installs/builds/migration
+
+added 251 packages, and audited 252 packages in 15s
+
+48 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> pbl517-backend@0.1.0 build
+> prisma generate && tsc -p tsconfig.json
+
+
+✔ Generated Prisma Client (7.10.0) to ./src/generated/prisma in 199ms
+
+
+> pbl517-backend@0.1.0 prisma:migrate
+> prisma migrate deploy
+
+Datasource "db": PostgreSQL database "pbl517_prod", schema "public" at "127.0.0.1:5432"
+
+3 migrations found in prisma/migrations
+
+Applying migration `20260914000000_initial`
+Applying migration `20260918000000_expand_ecommerce`
+Applying migration `20260918140000_guest_checkout`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260914000000_initial/
+    └─ migration.sql
+  └─ 20260918000000_expand_ecommerce/
+    └─ migration.sql
+  └─ 20260918140000_guest_checkout/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+
+added 30 packages, and audited 31 packages in 4s
+
+9 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> pbl4-517-frontend@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 93 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.67 kB │ gzip:  0.42 kB
+dist/assets/index-DQxJU7bz.css   25.78 kB │ gzip:  6.56 kB
+dist/assets/index-ggfYMJl0.js   328.87 kB │ gzip: 97.18 kB
+
+✓ built in 445ms
+               total        used        free      shared  buff/cache   available
+Mem:           909Mi       386Mi       196Mi        29Mi       485Mi       522Mi
+Swap:             0B          0B          0B
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       6.8G  3.9G  2.9G  58% /
+npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+npm warn install-scripts   @prisma/engines@7.10.0 (postinstall: node scripts/postinstall.js)
+npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn install-scripts   prisma@7.10.0 (preinstall: node scripts/preinstall-entry.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+npm notice
+npm notice New major version of npm available! 11.19.0 -> 12.1.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0
+npm notice To update run: npm install -g npm@12.1.0
+npm notice
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.10.0 -> 8.0.0-rc.17                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+Exit code: 0

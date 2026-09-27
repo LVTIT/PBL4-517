@@ -1,0 +1,42 @@
+Verification product final stock: 0
+Product count: 1
+User count: 1
+Admin count: 0
+Order count: 1
+Cancelled order count: 1
+NODE_ENV=production
+PORT=3000
+TRUST_PROXY=loopback
+VULN_IDOR_ENABLED=false
+Env permission 0600 and secret/DB host requirements: PASS; secrets omitted
+     rolname     | rolsuper | rolcreatedb | rolcreaterole
+-----------------+----------+-------------+---------------
+ pbl517_app_prod | f        | f           | f
+(1 row)
+
+{"data":{"status":"ok","database":"connected"}}
+{"data":{"status":"ok","database":"connected"}}
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*    users:(("postgres",pid=4243,fd=6))
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=887,fd=3),("systemd",pid=1,fd=218))
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=372,fd=15))
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*    users:(("MainThread",pid=44946,fd=24))
+LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=44967,fd=5),("nginx",pid=44966,fd=5),("nginx",pid=632,fd=5))
+LISTEN 0      511          0.0.0.0:443       0.0.0.0:*    users:(("nginx",pid=44967,fd=13),("nginx",pid=44966,fd=13),("nginx",pid=632,fd=13))
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=372,fd=17))
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=887,fd=4),("systemd",pid=1,fd=226))
+LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=44967,fd=6),("nginx",pid=44966,fd=6),("nginx",pid=632,fd=6))
+LISTEN 0      511             [::]:443          [::]:*    users:(("nginx",pid=44967,fd=14),("nginx",pid=44966,fd=14),("nginx",pid=632,fd=14))
+Id=nginx.service
+NeedDaemonReload=no
+
+Id=postgresql.service
+NeedDaemonReload=no
+
+Id=postgresql@16-main.service
+NeedDaemonReload=no
+e0f783b619def8c7123ec417239e32866ff72ee7
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+Exit code: 0

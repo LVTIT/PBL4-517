@@ -1,0 +1,15 @@
+2026-09-27T08:30:00.643366+00:00
+External vantage: Windows Chrome, TLS verification enabled
+Browser /: HTTP 200, React content rendered
+Browser /products: HTTP 200, React content rendered
+Browser /login: HTTP 200, React content rendered
+HTTPS /api/health: 200 database connected
+HTTPS /api/products: 200 empty list (no seed)
+Browser register: 201; /me CUSTOMER: PASS
+Cookie attributes: Secure=true, HttpOnly=true, SameSite=Lax, Path=/api (values omitted)
+Refresh preserves session; authenticated profile update: PASS
+Logout then /me anonymous: PASS
+Browser login using private random password: PASS
+Profile browser route: rendered
+Final logout: PASS; browser uncaught JS errors: 0
+Customer test account retained; credential stored only in local private temp file, not evidence

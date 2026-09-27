@@ -19,7 +19,7 @@ Frontend gọi `/api/...` bằng relative URL. Express tách routes, controllers
 
 ## Website production trên EC2
 
-**Status: Planned.** Source Issue #8 hỗ trợ kiến trúc này; chưa có Nginx config, systemd service hay bằng chứng EC2 trong scope Issue #8.
+**Status: Partially implemented / verified in Issue #14 (2026-09-27).** Nginx phục vụ frontend và HTTPS/API với chứng chỉ IP, PostgreSQL và Express chỉ loopback. Backend đã kiểm chứng trong phiên tạm rồi dừng; systemd backend vẫn Planned ở #15. [Evidence, trạng thái hiện tại và giới hạn](../evidence/WEB-04/README.md), [cấu hình/bàn giao](../docs/aws/ec2-deployment-review.md). Sơ đồ systemd bên dưới vẫn thể hiện kiến trúc đích.
 
 ```mermaid
 flowchart LR

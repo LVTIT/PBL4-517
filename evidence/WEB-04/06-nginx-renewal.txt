@@ -1,0 +1,24 @@
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/pbl4-517-ip.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for 47.129.214.70
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Congratulations, all simulated renewals succeeded:
+  /etc/letsencrypt/live/pbl4-517-ip/fullchain.pem (success)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Sun 2026-09-27 15:46:00 UTC       7h -                                      - snap.certbot.renew.timer       snap.certbot.renew.service
+issuer=C = US, O = Let's Encrypt, CN = YE2
+notBefore=Sep 27 07:28:57 2026 GMT
+notAfter=Oct  3 23:28:56 2026 GMT
+X509v3 Subject Alternative Name: critical
+    IP Address:47.129.214.70
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Hook 'deploy-hook' ran with error output:
+ nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+ nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+Exit code: 0
