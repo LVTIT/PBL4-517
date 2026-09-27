@@ -1,0 +1,3 @@
+Approved verification product created: price 10000.00, stock 2; no seed/admin account
+
+Exit code: 0

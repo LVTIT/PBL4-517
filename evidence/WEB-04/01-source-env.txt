@@ -1,0 +1,20 @@
+2026-09-27 UTC; approved checkpoints A/B
+bash: line 1: set: -
+: invalid option
+set: usage: set [-abefhkmnptuvxBCEHPT] [-o option-name] [--] [-] [arg ...]
+bash: line 3: set: -
+: invalid option
+set: usage: set [-abefhkmnptuvxBCEHPT] [-o option-name] [--] [-] [arg ...]
+cp: cannot create directory '/var/backups/pbl4-517-issue14/nginx'$'\r': No such file or directory
+Unknown command verb 'daemon-reload
+', did you mean 'daemon-reload'?
+fatal: could not create work tree dir '/var/www/pbl4-517?': Permission denied
+bash: line 8: cd: $'/var/www/pbl4-517\r': No such file or directory
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+createdb: error: database creation failed: ERROR:  role "pbl517_app_prod" does not exist
+Password setup failed; stop without printing credentials
+
+Exit code: 1

@@ -1,0 +1,10 @@
+2026-09-27T08:32:51.033206+00:00
+Approved temporary backend stopped with SIGINT after verification; persistent service belongs to #15.
+State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+active
+active
+enabled
+
+HTTPS /: HTTP 200, curl exit 0
+HTTPS /api/health: HTTP 502, curl exit 0
+Expected handoff: static frontend/TLS remain available; API returns 502 until controlled npm start or #15 service. No reboot persistence claimed.

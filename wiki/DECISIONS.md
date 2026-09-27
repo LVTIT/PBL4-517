@@ -2,6 +2,28 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-09-27 — IP HTTPS for the initial EC2 deployment
+
+**Status: Accepted** — human explicitly approved the Issue #14 checkpoints A/B proposal.
+
+**Decision:** With no domain supplied, terminate HTTPS on Nginx using a publicly
+trusted Let's Encrypt IP certificate, Certbot webroot validation, automatic
+renewal and a deploy hook that validates Nginx before reload. Keep production
+Secure cookies, loopback-only Express/PostgreSQL and VULN_IDOR_ENABLED=false.
+
+**Reason:** Production session/CSRF behavior requires HTTPS; public HTTP cannot
+verify authentication without weakening the accepted baseline.
+
+**Consequences:** IP certificates are short-lived; renewal must remain enabled
+and tested. If EC2 public IP changes, certificate and site configuration need
+review. Certbot's renewal timer is explicitly within #14; persistent application
+service remains #15. No domain purchase, Elastic IP or new AWS network policy.
+Human separately approved minimal synthetic product/order verification data;
+development seed and public demo credentials remain prohibited.
+
+**Related:** [deployment/handoff](../docs/aws/ec2-deployment-review.md),
+[verified results and limitations](../evidence/WEB-04/README.md).
+
 ## 2026-09-22 — CI bắt buộc và human-reviewed delivery
 
 **Status: Accepted** — yêu cầu trực tiếp của người dùng, [Issue #28](https://github.com/LVTIT/PBL4-517/issues/28).
