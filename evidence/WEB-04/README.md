@@ -2,7 +2,8 @@
 
 **Deployment verified in a controlled temporary backend session on 2026-09-27.**
 Human approved checkpoints A/B and separately approved minimal test product/order
-data. Latest PR CI/human review pending; no merge or Issue closure.
+data. [PR #32](https://github.com/LVTIT/PBL4-517/pull/32) awaits human review;
+latest revision checks are authoritative. No merge or Issue closure.
 
 **Current handoff:** backend stopped with SIGINT after verification, as approved.
 Static HTTPS is 200; API is now 502, no listener on 3000. Persistent service belongs
@@ -21,6 +22,11 @@ Pre-existing untracked Python caches were preserved in a local stash.
 queried via GitHub REST: completed/success on this exact SHA.
 `repo-policy`, `backend-build`, `frontend-build`, `backend-integration`,
 `python-check`: all PASS. This does not verify production deployment.
+
+Initial PR head `f6c534eccd878d1c6469aeacccf206a13d773445` also passed all five jobs
+in [run 36306790859](https://github.com/LVTIT/PBL4-517/actions/runs/36306790859).
+This CI snapshot precedes the documentation update linking the PR. Any later
+commit must pass its own checks; see [latest PR checks](https://github.com/LVTIT/PBL4-517/pull/32/checks).
 
 ## Preflight observations (before deployment)
 

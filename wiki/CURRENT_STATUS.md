@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-09-27 (Asia/Bangkok; deployment #14 verified during a temporary session)
 
-**Current phase:** #14 đã deploy đúng baseline và kiểm chứng HTTPS/auth/cart/order trong phiên backend tạm trên EC2. Phiên đã dừng theo scope được duyệt: frontend HTTPS còn hoạt động, API hiện 502; #15 quản lý service lâu dài. Chờ PR CI và human review, chưa đóng #14. Chi tiết/evidence bên dưới.
+**Current phase:** #14 đã deploy đúng baseline và kiểm chứng HTTPS/auth/cart/order trong phiên backend tạm trên EC2. Phiên đã dừng theo scope được duyệt: frontend HTTPS còn hoạt động, API hiện 502; #15 quản lý service lâu dài. Chờ human review ở [PR #32](https://github.com/LVTIT/PBL4-517/pull/32); CI revision mới nhất xem checks của PR. Chưa đóng #14.
 
 **Completed:**
 
@@ -36,7 +36,7 @@
 
 **In progress:**
 
-- [#14 — Deploy Website to EC2](https://github.com/LVTIT/PBL4-517/issues/14): **Implemented / verified trong phiên tạm 2026-09-27; chờ PR CI và human review.** Deployed SHA `e0f783b619def8c7123ec417239e32866ff72ee7`; dependency/build cả hai project và 3 migration PASS. Human duyệt HTTPS cho IP, gia hạn tự động, DB/env production riêng và dữ liệu kiểm thử tối thiểu. Chrome ngoài EC2: register/login/session/profile/logout, product/cart/order/cancel PASS; Secure cookie và `VULN_IDOR_ENABLED=false` verified. Express/PostgreSQL loopback; external 3000/5432/8080 không kết nối được. Backend tạm đã dừng sau test: static HTTPS 200, API 502; chưa có persistent service (#15), chưa kiểm chứng admin. [Evidence và giới hạn](../evidence/WEB-04/README.md), [lệnh/rollback/bàn giao](../docs/aws/ec2-deployment-review.md). Không merge/đóng issue; #15–#17 chưa hoàn thành.
+- [#14 — Deploy Website to EC2](https://github.com/LVTIT/PBL4-517/issues/14): **Implemented / verified trong phiên tạm 2026-09-27; chờ human review ở [PR #32](https://github.com/LVTIT/PBL4-517/pull/32).** Deployed SHA `e0f783b619def8c7123ec417239e32866ff72ee7`; dependency/build cả hai project và 3 migration PASS. Human duyệt HTTPS cho IP, gia hạn tự động, DB/env production riêng và dữ liệu kiểm thử tối thiểu. Chrome ngoài EC2: register/login/session/profile/logout, product/cart/order/cancel PASS; Secure cookie và `VULN_IDOR_ENABLED=false` verified. Express/PostgreSQL loopback; external 3000/5432/8080 không kết nối được. Backend tạm đã dừng sau test: static HTTPS 200, API 502; chưa có persistent service (#15), chưa kiểm chứng admin. [Evidence và giới hạn](../evidence/WEB-04/README.md), [lệnh/rollback/bàn giao](../docs/aws/ec2-deployment-review.md). CI revision mới nhất xem checks của PR; chưa merge/đóng issue; #15–#17 chưa hoàn thành.
 
 - [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **Implemented / hosted CI verified; chờ human review và Team Leader merge ở [PR #29](https://github.com/LVTIT/PBL4-517/pull/29)**. [Run triển khai](https://github.com/LVTIT/PBL4-517/actions/runs/35713164678) PASS cả 5 checks; PostgreSQL 16.15 thật, 3 migration, seed, health, integration 16/16 PASS; audit cả hai project 0 vulnerabilities. Đã thêm PR template, policy/evidence governance và [CI/CD docs](../docs/devops/ci-cd.md). [Evidence và giới hạn](../evidence/DEVOPS-01/README.md) ghi rõ SHA; trước merge phải đối chiếu latest PR checks, kể cả commit cập nhật docs. Branch protection hiện chưa bật; [đề xuất settings](../docs/devops/github-branch-protection.md) chờ human review trước áp dụng. CD chưa triển khai, không deploy EC2 hay tự đóng Issue.
 
