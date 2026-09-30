@@ -2,6 +2,7 @@
 # Run from website/backend, on an isolated Linux CI runner only.
 set -Eeuo pipefail
 test "${VULN_IDOR_ENABLED:?}" = false
+test "${VULN_SQLI_ENABLED:?}" = false
 test "${NODE_ENV:?}" = development
 log_dir="$(mktemp -d)"
 backend_pid=''

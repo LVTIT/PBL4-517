@@ -1,0 +1,178 @@
+OWASP-02 Evidence - A03:2021 Injection (SQL Injection)
+Scenario      : automated regression for the product search input
+Captured      : 2026-09-30 01:40:56 UTC
+Branch        : feature/37-sqli-lab (Refs #37)
+Command       : cd website/backend && npm run test:integration
+Test file     : website/backend/tests/api.integration.test.mjs
+                sub-test "product search rejects SQL injection payloads"
+Note          : the same suite was run twice against the same code revision and the
+                same seeded database, differing only in the VULN_SQLI_ENABLED flag.
+                This proves the new sub-test actually detects the vulnerability
+                instead of passing unconditionally.
+
+--- RUN 1: Secure Baseline (VULN_SQLI_ENABLED=false, TEST_API_URL=http://127.0.0.1:3002) ---
+ℹ tests 17, ℹ pass 17, ℹ fail 0
+  sub-test "product search rejects SQL injection payloads": PASS
+  tautology payload returns 0 rows
+  UNION payload (which selects the "User" table) returns 0 rows
+  stacked-statement payload does not remove the "Product" table
+
+--- RUN 2: OWASP lab (VULN_SQLI_ENABLED=true, TEST_API_URL=http://127.0.0.1:3001) ---
+ℹ tests 17, ℹ pass 15, ℹ fail 2
+  sub-test "product search rejects SQL injection payloads": FAIL
+  AssertionError: SQL injection must not return rows on the secure baseline.
+
+Interpretation
+  The suite is meaningful only when it fails in vulnerable mode. Run 2 is the
+  negative control: it shows the assertion catches the injected tautology.
+  The canonical verified result for the repository is Run 1 on the Secure Baseline.
+
+--- FULL RUN 1 OUTPUT (Secure Baseline) ---
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+▶ real PostgreSQL API and session authentication
+  ✔ health and security headers (49.0304ms)
+  ✔ products match database rows with exact decimal money (93.5775ms)
+  ✔ anonymous user and rejected missing CSRF token (69.4939ms)
+  ✔ wrong password and unknown email have same error (983.1629ms)
+  ✔ strict input validation, malformed JSON and body size limit (59.2489ms)
+  ✔ correct login rotates session and stores only password hash (868.3027ms)
+  ✔ new client with existing cookie restores the session (15.2166ms)
+  ✔ logout invalidates session including replayed cookie (52.4607ms)
+  ✔ unknown API paths keep JSON error format (4.0464ms)
+  ✔ user registration and duplicate detection (546.7957ms)
+  ✔ product search and detail with reviews (53.4161ms)
+  ✔ product search rejects SQL injection payloads (32.3331ms)
+  ✔ orders, server-side pricing, and IDOR protection (1335.3494ms)
+  ✔ admin authorization guard (466.3543ms)
+  ✔ guest checkout without authentication (61.4216ms)
+  ✔ role boundaries: admin cannot place orders or post reviews (647.2976ms)
+✔ real PostgreSQL API and session authentication (5342.6214ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5466.5533
+
+--- FULL RUN 2 OUTPUT (OWASP lab, expected failure) ---
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+▶ real PostgreSQL API and session authentication
+  ✔ health and security headers (120.0609ms)
+  ✔ products match database rows with exact decimal money (211.4357ms)
+  ✔ anonymous user and rejected missing CSRF token (103.9205ms)
+  ✔ wrong password and unknown email have same error (1971.3356ms)
+  ✔ strict input validation, malformed JSON and body size limit (88.4593ms)
+  ✔ correct login rotates session and stores only password hash (1613.7318ms)
+  ✔ new client with existing cookie restores the session (19.3091ms)
+  ✔ logout invalidates session including replayed cookie (76.4353ms)
+  ✔ unknown API paths keep JSON error format (6.3844ms)
+  ✔ user registration and duplicate detection (876.8893ms)
+  ✔ product search and detail with reviews (57.5471ms)
+  ✖ product search rejects SQL injection payloads (19.6671ms)
+  ✔ orders, server-side pricing, and IDOR protection (2013.9547ms)
+  ✔ admin authorization guard (800.9573ms)
+  ✔ guest checkout without authentication (92.0788ms)
+  ✔ role boundaries: admin cannot place orders or post reviews (801.9722ms)
+✖ real PostgreSQL API and session authentication (8886.167ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 15
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9154.7436
+
+✖ failing tests:
+
+test at tests\api.integration.test.mjs:199:17
+✖ product search rejects SQL injection payloads (19.6671ms)
+  AssertionError [ERR_ASSERTION]: SQL injection must not return rows on the secure baseline.
+  + actual - expected
+  
+  + [
+  +   {
+  +     category: 'Bàn phím',
+  +     createdAt: '2026-09-20T11:07:30.539Z',
+  +     description: 'Bàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.',
+  +     id: '10000000-0000-4000-8000-000000000001',
+  +     name: 'Bàn phím cơ Mini 68',
+  +     price: '790000.00',
+  +     stock: 5,
+  +     updatedAt: '2026-09-30T01:39:51.062Z'
+  +   },
+  +   {
+  +     category: 'Chuột',
+  +     createdAt: '2026-09-20T11:07:30.549Z',
+  +     description: 'Chuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.',
+  +     id: '10000000-0000-4000-8000-000000000002',
+  +     name: 'Chuột không dây Everyday',
+  +     price: '290000.00',
+  +     stock: 32,
+  +     updatedAt: '2026-09-20T11:07:30.549Z'
+  +   },
+  +   {
+  +     category: 'Âm thanh',
+  +     createdAt: '2026-09-20T11:07:30.557Z',
+  +     description: 'Tai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.',
+  +     id: '10000000-0000-4000-8000-000000000003',
+  +     name: 'Tai nghe Studio Lite',
+  +     price: '590000.00',
+  +     stock: 12,
+  +     updatedAt: '2026-09-20T11:07:30.557Z'
+  +   },
+  +   {
+  +     category: 'Phụ kiện',
+  +     createdAt: '2026-09-20T11:07:30.570Z',
+  +     description: 'Mở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.',
+  +     id: '10000000-0000-4000-8000-000000000004',
+  +     name: 'Hub USB-C 5 trong 1',
+  +     price: '450000.00',
+  +     stock: 9,
+  +     updatedAt: '2026-09-20T11:07:30.570Z'
+  +   },
+  +   {
+  +     category: 'Phụ kiện',
+  +     createdAt: '2026-09-20T11:07:30.582Z',
+  +     description: 'Giá đỡ có thể gấp gọn, nâng màn hình và tạo khoảng thoáng dưới laptop.',
+  +     id: '10000000-0000-4000-8000-000000000005',
+  +     name: 'Giá đỡ laptop nhôm',
+  +     price: '350000.00',
+  +     stock: 13,
+  +     updatedAt: '2026-09-21T07:54:27.981Z'
+  +   },
+  +   {
+  +     category: 'Đèn bàn',
+  +     createdAt: '2026-09-20T11:07:30.596Z',
+  +     description: 'Đèn LED để bàn với ba mức ánh sáng và cần đèn có thể điều chỉnh.',
+  +     id: '10000000-0000-4000-8000-000000000006',
+  +     name: 'Đèn bàn Focus',
+  +     price: '390000.00',
+  +     stock: 0,
+  +     updatedAt: '2026-09-20T11:07:30.596Z'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/PBL4/PBL4-517/website/backend/tests/api.integration.test.mjs:203:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4/PBL4-517/website/backend/tests/api.integration.test.mjs:199:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '10000000-0000-4000-8000-000000000001', name: 'Bàn phím cơ Mini 68', description: 'Bàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.', price: '790000.00', stock: 5, category: 'Bàn phím', createdAt: '2026-09-20T11:07:30.539Z', updatedAt: '2026-09-30T01:39:51.062Z' }, { id: '10000000-0000-4000-8000-000000000002', name: 'Chuột không dây Everyday', description: 'Chuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.', price: '290000.00', stock: 32, category: 'Chuột', createdAt: '2026-09-20T11:07:30.549Z', updatedAt: '2026-09-20T11:07:30.549Z' }, { id: '10000000-0000-4000-8000-000000000003', name: 'Tai nghe Studio Lite', description: 'Tai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.', price: '590000.00', stock: 12, category: 'Âm thanh', createdAt: '2026-09-20T11:07:30.557Z', updatedAt: '2026-09-20T11:07:30.557Z' }, { id: '10000000-0000-4000-8000-000000000004', name: 'Hub USB-C 5 trong 1', description: 'Mở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.', price: '450000.00', stock: 9, category: 'Phụ kiện', createdAt: '2026-09-20T11:07:30.570Z', updatedAt: '2026-09-20T11:07:30.570Z' }, { id: '10000000-0000-4000-8000-000000000005', name: 'Giá đỡ laptop nhôm', description: 'Giá đỡ có thể gấp gọn, nâng màn hình và tạo khoảng thoáng dưới laptop.', price: '350000.00', stock: 13, category: 'Phụ kiện', createdAt: '2026-09-20T11:07:30.582Z', updatedAt: '2026-09-21T07:54:27.981Z' }, { id: '10000000-0000-4000-8000-000000000006', name: 'Đèn bàn Focus', description: 'Đèn LED để bàn với ba mức ánh sáng và cần đèn có thể điều chỉnh.', price: '390000.00', stock: 0, category: 'Đèn bàn', createdAt: '2026-09-20T11:07:30.596Z', updatedAt: '2026-09-20T11:07:30.596Z' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+

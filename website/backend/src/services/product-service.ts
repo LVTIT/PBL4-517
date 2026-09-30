@@ -1,8 +1,36 @@
+import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
 import { AppError, databaseUnavailable } from '../lib/errors.js';
 
+function isSqlInjectionVulnerable(): boolean {
+  return config.VULN_SQLI_ENABLED === 'true';
+}
+
+/**
+ * OWASP A03 lab path only. Reached exclusively when VULN_SQLI_ENABLED=true,
+ * which config.ts refuses to load under NODE_ENV=production. `search` is
+ * concatenated into the statement on purpose so a lab can demonstrate the
+ * injection; the Secure Baseline below never builds SQL from user input.
+ */
+async function listProductsWithRawSql(search: string, category?: string) {
+  const trimmedSearch = search.trim();
+  const trimmedCategory = category && category !== 'ALL' ? category.trim() : '';
+  const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+    `SELECT id, name, description, price::text AS price, stock, category, "createdAt", "updatedAt"
+     FROM "Product"
+     WHERE (name ILIKE '%${trimmedSearch}%' OR description ILIKE '%${trimmedSearch}%')
+       ${trimmedCategory ? `AND category = '${trimmedCategory}'` : ''}
+     ORDER BY "createdAt" ASC, id ASC`,
+  );
+  return rows.map((row) => ({ ...row, price: String(row.price) }));
+}
+
 export async function listProducts(search?: string, category?: string) {
   try {
+    if (isSqlInjectionVulnerable() && search && search.trim()) {
+      return await listProductsWithRawSql(search, category);
+    }
+
     const where: Record<string, unknown> = {};
     if (category && category !== 'ALL') {
       where.category = category;
