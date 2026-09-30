@@ -33,9 +33,11 @@ lab/OWASP hoặc branch lab tương đương
 | :--- | :--- | :--- |
 | **A01: Broken Access Control (IDOR)** | **Completed (Verified with Evidence)** | Chu trình toàn vẹn: Đọc (`GET`), Sửa địa chỉ (`PATCH`), Hủy đơn (`POST`). Phòng thủ tầng DB (*Database-level Scoping*), cờ `VULN_IDOR_ENABLED`, UI trực quan ([`OrderDetailPage`](../website/frontend/src/pages/OrderDetailPage.tsx)), 3 script attacker và 7 file bằng chứng tại [`evidence/OWASP-01/`](../evidence/OWASP-01/). |
 | **A01: Admin Authorization** | **Implemented (Baseline)** | Phân quyền nghiêm ngặt qua middleware `requireAdmin`; Admin bị chặn đặt hàng (`ADMIN_CANNOT_ORDER`) và chặn tự review sản phẩm. |
-| **A03: Injection (SQLi)** | **Planned** | Ô tìm kiếm `GET /api/products?search=...` (chuẩn bị kịch bản `VULN_SQLI_ENABLED` với query ghép chuỗi thô). |
+| **A03: Injection (SQLi)** | **Implemented (Verified with Evidence)** | Chu trình đầy đủ trên `GET /api/products?search=...` (public): `prisma.$queryRawUnsafe` nối thẳng `search` khi `VULN_SQLI_ENABLED=true`, Secure Baseline dùng `findMany` + `contains` khi `false`. Script [`exploit_sqli.py`](../scripts/attacker/exploit_sqli.py) chạy 2 scenario (tautology, UNION sang bảng `User`), evidence 3 file tại [`evidence/OWASP-02/`](../evidence/OWASP-02/). `config.ts` từ chối khởi động khi `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bật. |
 | **A03: Stored XSS** | **Planned** | Bình luận sản phẩm `POST /api/products/:id/reviews` (chuẩn bị kịch bản `VULN_XSS_ENABLED`). |
 | **A05: Security Misconfiguration** | **Implemented (Verified with Dual Alerts)** | Module `scanner/` dò quét cổng mở đa luồng trên AWS Security Group, lưu baseline chênh lệch (`scanner_state.json`) và gửi cảnh báo tức thì về cả Discord Webhook và Telegram Group Bot. |
 | **A07: Authentication & Brute Force** | **Implemented (Baseline)** | Đã triển khai rate limiter, bcrypt hash mật khẩu, kiểm tra phiên session phía server. |
 
 Cơ chế thực nghiệm sử dụng cờ môi trường (`VULN_*_ENABLED=true/false`) để đảm bảo nhánh `main` luôn là **Secure Baseline** khi deploy lên AWS Cloud, đồng thời cho phép bật nhanh chế độ có lỗ hổng khi demo khai thác và kiểm chứng bịt lỗi.
+
+Mọi cờ `VULN_*_ENABLED` có mặc định `false`. [`website/backend/src/lib/config.ts`](../website/backend/src/lib/config.ts) dùng `superRefine` để từ chối khởi động backend khi `NODE_ENV=production` mà bất kỳ cờ lab nào bằng `true`, nên không thể vô tình triển khai lab lên production bằng cách chỉ sửa `.env`.

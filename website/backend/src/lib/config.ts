@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-const environmentSchema = z.object({
+const environmentSchemaBase = z.object({
   DATABASE_URL: z.url().refine(
     (value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol),
     'Use a PostgreSQL connection URL.',
@@ -11,6 +11,23 @@ const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   TRUST_PROXY: z.enum(['0', 'loopback']).default('0'),
   VULN_IDOR_ENABLED: z.enum(['true', 'false']).default('false'),
+  VULN_SQLI_ENABLED: z.enum(['true', 'false']).default('false'),
+});
+
+const environmentSchema = environmentSchemaBase.superRefine((value, ctx) => {
+  // OWASP lab toggles must never be reachable in production. A misconfigured
+  // production host fails fast here instead of exposing raw SQL to the Internet.
+  if (value.NODE_ENV === 'production') {
+    for (const flag of ['VULN_IDOR_ENABLED', 'VULN_SQLI_ENABLED'] as const) {
+      if (value[flag] === 'true') {
+        ctx.addIssue({
+          code: 'custom',
+          path: [flag],
+          message: 'OWASP lab vulnerabilities must stay disabled when NODE_ENV=production.',
+        });
+      }
+    }
+  }
 });
 
 const parsed = environmentSchema.safeParse(process.env);

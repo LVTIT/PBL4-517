@@ -196,6 +196,29 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.ok(Array.isArray(detailRes.body.data.reviews));
     });
 
+    await suite.test('product search rejects SQL injection payloads', async () => {
+      // Secure Baseline: payload must be treated as a literal search value.
+      const tautology = await browser.request(`/products?search=${encodeURIComponent("' OR '1'='1")}`);
+      assert.equal(tautology.status, 200);
+      assert.deepEqual(tautology.body.data, [], 'SQL injection must not return rows on the secure baseline.');
+
+      // The UNION payload selects the "User" table, so leaking it would surface an
+      // `email` field that the products API must never expose.
+      const union = await browser.request(
+        `/products?search=${encodeURIComponent(`') UNION SELECT id, name, email, NULL::text, 0, 'CUSTOMER', "createdAt", "updatedAt" FROM "User" --`)}`,
+      );
+      assert.equal(union.status, 200);
+      assert.deepEqual(union.body.data, [], 'UNION injection must not return rows on the secure baseline.');
+
+      // A stacked statement must not execute, and the table must survive it.
+      const stacked = await browser.request(
+        `/products?search=${encodeURIComponent(`'; DROP TABLE "Product"; --`)}`,
+      );
+      assert.ok([200, 400, 500].includes(stacked.status));
+      const surviving = await database.query('SELECT count(*)::int AS count FROM "Product"');
+      assert.ok(surviving.rows[0].count >= 6, 'Product table must survive injection attempts.');
+    });
+
     await suite.test('orders, server-side pricing, and IDOR protection', async () => {
       // Login as demo user
       const userA = new BrowserSession();

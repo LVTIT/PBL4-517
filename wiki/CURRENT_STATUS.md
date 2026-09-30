@@ -1,6 +1,6 @@
 # Current Project Status
 
-**Last updated:** 2026-09-27 (Asia/Bangkok; deployment #14 verified during a temporary session)
+**Last updated:** 2026-09-30 (Asia/Bangkok; #37 SQL injection lab implemented and verified locally)
 
 **Current phase:** #14 đã deploy đúng baseline và kiểm chứng HTTPS/auth/cart/order trong phiên backend tạm trên EC2. Phiên đã dừng theo scope được duyệt: frontend HTTPS còn hoạt động, API hiện 502; #15 quản lý service lâu dài. Chờ human review ở [PR #32](https://github.com/LVTIT/PBL4-517/pull/32); CI revision mới nhất xem checks của PR. Chưa đóng #14.
 
@@ -31,6 +31,13 @@
     - Bộ công cụ khai thác hoàn chỉnh trong [`scripts/attacker/`](../scripts/attacker/): [`exploit_idor.py`](../scripts/attacker/exploit_idor.py), [`exploit_idor_update.py`](../scripts/attacker/exploit_idor_update.py), [`exploit_idor_cancel.py`](../scripts/attacker/exploit_idor_cancel.py).
     - Thu thập đầy đủ 7 file log bằng chứng thực nghiệm thực tế tại [`evidence/OWASP-01/`](../evidence/OWASP-01/) bao phủ cả 2 chiều (Vulnerable 200 OK vs Secure Defense 403 Forbidden) và kết quả kiểm thử tự động.
     - Bộ kiểm thử tự động [`tests/api.integration.test.mjs`](../website/backend/tests/api.integration.test.mjs) đạt 16/16 test PASS; cả Frontend (`npm run build`) và Backend (`npm run build`) biên dịch 100% không lỗi.
+  - **Hoàn tất kịch bản OWASP A03 (SQL Injection) trên product search (2026-09-30, Issue #37):**
+    - **Bề mặt tấn công:** `GET /api/products?search=...` là endpoint **public**, không cần đăng nhập hay CSRF token, nên bất kỳ ai cũng gọi được.
+    - **Cơ chế lab:** Thêm cờ `VULN_SQLI_ENABLED` (mặc định `false`) tại [`config.ts`](../website/backend/src/lib/config.ts). Khi `true`, [`product-service.ts`](../website/backend/src/services/product-service.ts) chạy `prisma.$queryRawUnsafe` nối thẳng `search` vào SQL; khi `false`, Secure Baseline dùng `findMany` + `contains` (parameterized query) như trước.
+    - **Phòng thủ tầng cấu hình:** `config.ts` dùng `superRefine` từ chối khởi động backend nếu `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bật. Áp dụng cho cả `VULN_IDOR_ENABLED` lẫn `VULN_SQLI_ENABLED`.
+    - **Script khai thác:** [`scripts/attacker/exploit_sqli.py`](../scripts/attacker/exploit_sqli.py) chỉ dùng thư viện chuẩn Python (`urllib`), chạy 2 scenario — tautology `' OR '1'='1` (lộ toàn bộ bảng `Product`) và `UNION` sang bảng `User` (lộ email). Script tự so sánh với từ khóa baseline, che email trong output, và **không dùng payload phá hủy dữ liệu**.
+    - **Evidence thực nghiệm:** 3 file tại [`evidence/OWASP-02/`](../evidence/OWASP-02/) — exploit ở vulnerable mode (6 sản phẩm / 17 hàng, HTTP 200), retest ở Secure Baseline (0 hàng), và log test tự động. Không chứa PII thô, session cookie, token hay credential.
+    - **Regression test:** Sub-test `product search rejects SQL injection payloads` trong [`api.integration.test.mjs`](../website/backend/tests/api.integration.test.mjs) kiểm tautology/UNION trả về rỗng và xác nhận bảng `"Product"` còn nguyên sau payload stacked-statement. Đã chạy 2 lần trên cùng revision: Secure Baseline **17/17 PASS**; lab mode sub-test mới **FAIL** (`SQL injection must not return rows on the secure baseline`) — negative control chứng minh assertion bắt được lỗi thật.
   - **Database & Prisma:** Migration `20260918000000_expand_ecommerce` và `20260918140000_guest_checkout` (hỗ trợ `userId String?`, lưu `customerName`, `customerEmail`, `customerPhone` cho đơn hàng khách vãng lai). Cập nhật `seed.ts` với tài khoản Admin demo (`admin@example.com` / `AdminOnly517!`).
   - **Kiểm thử & Build:** Đã bổ sung bộ kiểm thử tự động, 16/16 backend integration tests chạy thành công (`npm run test:integration`); cả frontend (`npm run build`) và backend (`npm run build`) biên dịch 100% không lỗi.
 
@@ -46,6 +53,7 @@
 
 - Tiếp tục các backlog đã giao:
   - [#10](https://github.com/LVTIT/PBL4-517/issues/10): Ninh tiếp tục học/phát triển scanner; task #12 chỉ dùng prototype để verification phụ, không đóng #10. Alert Telegram/Discord thuộc giai đoạn sau.
+  - [#37](https://github.com/LVTIT/PBL4-517/issues/37): Implementation + evidence đã hoàn tất trên nhánh `feature/37-sqli-lab`; chờ CI và human review. PR chưa merge, issue chưa đóng.
   - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1.
   - [#14](https://github.com/LVTIT/PBL4-517/issues/14): Deploy source website lên EC2; [#15](https://github.com/LVTIT/PBL4-517/issues/15): systemd backend; [#16](https://github.com/LVTIT/PBL4-517/issues/16): verify deployment; [#17](https://github.com/LVTIT/PBL4-517/issues/17): tài liệu/evidence triển khai.
   - Chuẩn bị lab branch riêng cho kịch bản OWASP (vulnerable → exploit → evidence → fix → retest) theo đúng [SECURITY_PLAN.md](SECURITY_PLAN.md).
