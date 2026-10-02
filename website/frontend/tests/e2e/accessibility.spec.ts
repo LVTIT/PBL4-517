@@ -2,6 +2,11 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('WCAG 2.2 AA Accessibility Audits', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({
+      json: { data: { user: null } },
+    }));
+  });
   test('Home page passes automated axe accessibility scan', async ({ page }) => {
     // Mock products for deterministic testing
     await page.route('**/api/products', (route) => {
@@ -30,14 +35,10 @@ test.describe('WCAG 2.2 AA Accessibility Audits', () => {
     await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .disableRules(['color-contrast']) // Color contrast verified with tokens
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
 
-    const criticalViolations = accessibilityScanResults.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious'
-    );
-    expect(criticalViolations).toEqual([]);
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
   test('Catalog page passes automated accessibility scan', async ({ page }) => {
@@ -67,13 +68,9 @@ test.describe('WCAG 2.2 AA Accessibility Audits', () => {
     await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
 
-    const criticalViolations = accessibilityScanResults.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious'
-    );
-    expect(criticalViolations).toEqual([]);
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

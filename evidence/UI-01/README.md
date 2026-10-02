@@ -117,19 +117,29 @@ Running 28 tests using 2 workers
 
 ## 6. Hướng dẫn bàn giao & Triển khai EC2
 
+**Đã được kiểm tra lại:** Xem [audit nhánh, CI và EC2](deployment-audit.md).
+EC2 chưa deploy UI mới và đang detached HEAD tại `e0f783b`. Các bước dưới đây
+là hướng dẫn dự kiến sau review/merge và phê duyệt production; không phải bằng
+chứng đã triển khai. Dùng exact tested commit thay cho `git pull` trên server.
+Lệnh setup/build canonical ở [website README](../../website/README.md#build).
+
 1. **Chuẩn bị trước khi phát hành:**
    - Sau khi PR được Team Leader phê duyệt và hợp nhất vào `main`.
    - Kết nối SSH vào máy chủ EC2 Singapore.
 2. **Các bước trên EC2:**
    ```bash
    cd /var/www/pbl4-517
-   git pull origin main
+   # Sau khi xác nhận working tree sạch và commit đã qua CI/phê duyệt:
+   git fetch origin
+   git checkout --detach <approved-tested-commit-sha>
    cd website/backend
    npm ci
    npm run build
    npm run prisma:migrate
+   npm run catalog:import
+   # Chỉ apply sau khi kiểm tra dry-run và duyệt catalog của bản phát hành:
    npm run catalog:import -- --apply
-   sudo systemctl restart pbl517-backend
+   sudo systemctl restart pbl4-backend
    cd ../frontend
    npm ci
    npm run build

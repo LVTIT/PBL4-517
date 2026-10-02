@@ -20,9 +20,17 @@ export function KeviloSymbol({ size = 32, className = '' }: { size?: number; cla
 
 export function KeviloWordmark({ className = '' }: { className?: string }) {
   return (
-    <span className={`brand-wordmark ${className}`}>
-      KEVILO
-    </span>
+    <svg
+      className={`brand-wordmark ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 105 28"
+      width="105"
+      height="28"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <text x="0" y="21" fill="currentColor">KEVILO</text>
+    </svg>
   );
 }
 

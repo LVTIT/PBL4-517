@@ -342,14 +342,16 @@ Trong thư mục `website/frontend`:
 npm run test:e2e
 ```
 
-Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless (desktop 1440px và mobile 390px), bao phủ 28 test cases:
+Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless: 14 test ở hai cấu hình desktop 1440px và mobile 390px, tổng cộng 28 lượt chạy. Build frontend trước khi chạy vì suite dùng Vite preview. Phạm vi assertion hiện tại:
 - Nhận diện thương hiệu KEVILO: title, meta description, wordmark & biểu tượng SVG, footer disclaimer, kiểm tra không xuất hiện chuỗi thương hiệu cũ.
 - Responsive breakpoints: 320px, 390px, 768px, 1024px, 1440px không tràn ngang (`scrollWidth <= innerWidth`).
-- Menu điều hướng mobile drawer: mở nút, đóng nút, đóng phím Escape.
-- Kiểm toán trợ năng WCAG 2.2 AA tự động đạt 0 lỗi nghiêm trọng (critical/serious).
-- Tìm kiếm có debounce, bộ lọc danh mục và đồng bộ hai chiều query parameters trong URL (`search`, `category`, `sort`).
-- Thêm giỏ hàng, giới hạn tồn kho, cô lập phiên (cart session isolation), form đặt hàng với địa chỉ ban đầu để trống và thông báo lưu mã đơn cho khách vãng lai.
+- Menu điều hướng mobile drawer: mở bằng nút, đóng bằng phím Escape.
+- Axe trên Home và Catalog: tag WCAG 2.0/2.1/2.2 A/AA, bật kiểm tra tương phản màu, yêu cầu không có violation. Đây không phải chứng nhận toàn bộ website đạt WCAG; các luồng còn lại và kiểm tra thủ công vẫn cần review.
+- Lọc danh mục đồng bộ URL; hiển thị nhãn hết hàng.
+- Thêm sản phẩm vào giỏ, thông báo thành công, địa chỉ ban đầu để trống và thông báo cho khách vãng lai. Chưa bao phủ toàn bộ checkout thật, debounce/sort hay cô lập phiên qua login/logout.
 - Khả năng phục hồi khi lỗi mạng/API 500 với panel lỗi và nút "Thử lại"; trang 404 chuẩn nhận diện KEVILO.
+
+Các test catalog/cart dùng API mock. Kết quả API với PostgreSQL thật được kiểm tra riêng bằng backend integration suite; không chạy suite này trên production.
 
 ## Build
 

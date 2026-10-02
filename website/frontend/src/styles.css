@@ -120,7 +120,7 @@
   --color-surface-hover: #F8FAFC;
   --color-text: #111827;
   --color-text-muted: #526071;
-  --color-text-subtle: #7A889B;
+  --color-text-subtle: #606F82;
   
   --color-primary: #1D4ED8;
   --color-primary-hover: #1E40AF;
@@ -135,7 +135,7 @@
   --color-danger-subtle: #FEF2F2;
   --color-danger-border: #FECACA;
   
-  --color-success: #16A34A;
+  --color-success: #15803D;
   --color-success-subtle: #F0FDF4;
   --color-success-border: #BBF7D0;
   
@@ -1847,7 +1847,7 @@ a {
 
 .footer-note {
   font-size: 0.8125rem;
-  color: #64748B;
+  color: #94A3B8;
   border-top: 1px solid #1E293B;
   padding-top: var(--space-4);
   margin-top: var(--space-6);
