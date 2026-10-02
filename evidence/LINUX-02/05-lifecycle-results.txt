@@ -1,0 +1,60 @@
+Issue #15 lifecycle verification over SSH from Windows
+Commands: 05-lifecycle-commands.sh, sent as LF bytes over SSH stdin
+
+2026-10-02T08:06:49Z
+active
+enabled
+Preflight: clean deployed SHA, exact unit, permissions and unit syntax PASS
+Initial PID=82662
+{"data":{"status":"ok","database":"connected"}}
+STOP: inactive, PID=0, port 3000 absent, exit status=0, result=success PASS
+EC2 trusted HTTPS /: 200 (expected 200)
+EC2 trusted HTTPS /api/health: 502 (expected 502)
+{"data":{"status":"ok","database":"connected"}}
+START: new PID=83101 PASS
+EC2 trusted HTTPS /api/health: 200 (expected 200)
+{"data":{"status":"ok","database":"connected"}}
+RESTART: new PID=83122 PASS
+● pbl4-backend.service - PBL4-517 Express Backend
+     Loaded: loaded (/etc/systemd/system/pbl4-backend.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-02 08:06:51 UTC; 1s ago
+   Main PID: 83122 (MainThread)
+      Tasks: 11 (limit: 627)
+     Memory: 63.0M (peak: 66.3M)
+        CPU: 1.133s
+     CGroup: /system.slice/pbl4-backend.service
+             └─83122 /usr/bin/node /var/www/pbl4-517/website/backend/dist/server.js
+enabled
+Restart=on-failure
+Result=success
+NRestarts=0
+User=ubuntu
+Group=ubuntu
+ActiveState=active
+SubState=running
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*
+active
+active
+EC2 trusted HTTPS /: 200 (expected 200)
+EC2 trusted HTTPS /api/health: 200 (expected 200)
+EC2 trusted HTTPS /api/products: 200 (expected 200)
+Journal: allowlisted lifecycle messages only; not a full log export
+2026-10-02T08:06:49+00:00 ip-172-31-11-224 systemd[1]: Stopping pbl4-backend.service - PBL4-517 Express Backend...
+2026-10-02T08:06:49+00:00 ip-172-31-11-224 systemd[1]: pbl4-backend.service: Deactivated successfully.
+2026-10-02T08:06:49+00:00 ip-172-31-11-224 systemd[1]: Stopped pbl4-backend.service - PBL4-517 Express Backend.
+2026-10-02T08:06:49+00:00 ip-172-31-11-224 systemd[1]: Started pbl4-backend.service - PBL4-517 Express Backend.
+2026-10-02T08:06:50+00:00 ip-172-31-11-224 pbl4-backend[83101]: Backend listening on http://127.0.0.1:3000
+2026-10-02T08:06:51+00:00 ip-172-31-11-224 systemd[1]: Stopping pbl4-backend.service - PBL4-517 Express Backend...
+2026-10-02T08:06:51+00:00 ip-172-31-11-224 systemd[1]: pbl4-backend.service: Deactivated successfully.
+2026-10-02T08:06:51+00:00 ip-172-31-11-224 systemd[1]: Stopped pbl4-backend.service - PBL4-517 Express Backend.
+2026-10-02T08:06:51+00:00 ip-172-31-11-224 systemd[1]: Started pbl4-backend.service - PBL4-517 Express Backend.
+2026-10-02T08:06:52+00:00 ip-172-31-11-224 pbl4-backend[83122]: Backend listening on http://127.0.0.1:3000
+Journal priority err or higher entries in test window: 0
+LIFECYCLE PASS; boot unchanged; deployed source remains clean
+2026-10-02T08:06:52Z
+
+STDERR:
+
+SSH exit code: 0

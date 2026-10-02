@@ -360,7 +360,9 @@ Khi triển khai production ở issue sau: cài dependency/build trên môi trư
 
 Issue #14 deployment/configuration and temporary-process handoff are recorded in
 [EC2 deployment](../docs/aws/ec2-deployment-review.md), with [verified evidence](../evidence/WEB-04/README.md).
-Persistent backend service remains Issue #15; do not infer continuous availability from the completed temporary verification run.
+Issue #15 now has an active/enabled systemd backend with verified stop/start/restart
+and journal checks (2026-10-02). [Service operations and approved reboot verification](../docs/aws/linux-service-review.md),
+[evidence](../evidence/LINUX-02/README.md). Automatic startup after one reboot and external HTTPS were verified.
 
 Trong `website/backend` trên máy EC2 (đã có `.env` production với `NODE_ENV=production`, `VULN_IDOR_ENABLED=false`):
 

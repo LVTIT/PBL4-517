@@ -1,0 +1,7 @@
+Issue #15 external verification after approved EC2 reboot
+2026-10-02T08:17:55.264386+00:00
+Windows curl.exe, normal TLS validation; response bodies omitted.
+GET /: HTTP 200, curl exit=0
+GET /api/health: HTTP 200, curl exit=0
+GET /api/products: HTTP 200, curl exit=0
+POST-REBOOT EXTERNAL HTTPS PASS

@@ -1,0 +1,16 @@
+Issue #15 proposed unit validation, 2026-09-27 UTC
+
+Exact proposed definition: ../../docs/aws/pbl4-backend.service
+Review/security/rollback: ../../docs/aws/linux-service-review.md
+Status: PROPOSED, not installed; human checkpoint A pending.
+
+Sent exact local unit content over SSH binary stdin into a unique temporary
+directory on the existing EC2 host. Ran systemd-analyze verify against that
+file using systemd 255.4-1ubuntu8.17. Exit 0, no warnings/errors.
+Temporary file/directory removed by EXIT trap.
+Output:
+Unit syntax verification PASS; temporary copy removed on exit; service not installed.
+
+This validates unit syntax and referenced executable on the target host.
+It does not establish successful EnvironmentFile loading, service lifecycle,
+journal capture, enablement or reboot recovery; those require approved execution.
