@@ -1,0 +1,9 @@
+Issue #15 lifecycle verification over SSH from Windows
+Commands: 05-lifecycle-commands.sh
+
+
+STDERR:
+bash: line 4: set: pipefail
+: invalid option name
+
+SSH exit code: 2

@@ -8,7 +8,7 @@
 | Backend | Node.js 24 LTS + Express 5 + TypeScript |
 | Database | PostgreSQL 16 |
 | ORM | Prisma ORM 7; CLI, Client và adapter khóa phiên bản tương thích |
-| Production target | Ubuntu Server 24.04 LTS trên AWS EC2, Nginx, systemd — Planned |
+| Production target | Ubuntu Server 24.04 LTS trên AWS EC2, Nginx, systemd — Implemented; lifecycle và reboot/autostart verified, xem [trạng thái](CURRENT_STATUS.md) |
 
 Lý do: tận dụng TypeScript từ PBL3, chia source dễ học cho nhóm ba người, dữ liệu quan hệ phù hợp PostgreSQL, frontend build static và backend Node phù hợp Linux service. Đánh đổi: phải học React/Express/Prisma, quản lý hai project npm và tự cấu hình validation, session, CSRF, migration, vận hành database. Không tự đổi sang Next.js, framework CSS hoặc database khác khi chưa có quyết định thay thế được chấp nhận.
 

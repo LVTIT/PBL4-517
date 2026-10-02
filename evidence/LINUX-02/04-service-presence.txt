@@ -1,0 +1,46 @@
+Issue #15 direct verification requested by human, 2026-09-27 10:35 UTC
+SSH used the existing human-supplied private key with BatchMode and strict
+known-host verification. Authentication succeeded. No remote changes made.
+
+systemctl show pbl4-backend (selected properties):
+LoadState=not-found
+ActiveState=inactive
+SubState=dead
+FragmentPath=
+UnitFileState=
+MainPID=0
+
+systemctl status pbl4-backend --no-pager --lines=0:
+Unit pbl4-backend.service could not be found.
+
+sudo journalctl -u pbl4-backend --no-pager -n 30:
+-- No entries --
+
+sudo ss -lntp:
+No listener on 3000.
+PostgreSQL: 127.0.0.1:5432.
+Nginx: wildcard 80/443, IPv4 and IPv6.
+SSH: 22; local DNS: 53.
+
+systemctl is-active nginx postgresql postgresql@16-main:
+active
+active
+active
+systemctl is-enabled nginx postgresql:
+enabled
+enabled
+
+EC2 git status --short: empty
+EC2 source SHA: e0f783b619def8c7123ec417239e32866ff72ee7
+
+External Windows curl with default TLS certificate verification,
+connect timeout 5 seconds / total timeout 15 seconds:
+https://47.129.214.70/             HTTP 200
+https://47.129.214.70/api/health   HTTP 502
+https://47.129.214.70/api/products HTTP 502
+
+Conclusion: SSH access works. The systemd backend has not been installed;
+there is no backend process or service journal to verify. Nginx serves static
+frontend but cannot reach its backend upstream. Start/stop/restart, enablement
+and reboot acceptance remain unverified. No reboot or service mutation attempted.
+The earlier installation execution rejection remains recorded in 03-install-blocked.txt.

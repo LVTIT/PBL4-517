@@ -1,0 +1,117 @@
+Issue #15 checkpoint B; human approved 2026-10-02 in chat.
+Strict host-key checks, same SSH key; no EC2 stop/start.
+
+Preflight commands:
+set -eu
+date -u +%FT%TZ
+cat /proc/sys/kernel/random/boot_id
+systemctl is-active pbl4-backend nginx postgresql@16-main
+systemctl is-enabled pbl4-backend nginx postgresql
+cd /var/www/pbl4-517
+test -z "$(git status --porcelain)"
+test "$(git rev-parse HEAD)" = e0f783b619def8c7123ec417239e32866ff72ee7
+sha256sum /etc/systemd/system/pbl4-backend.service
+curl --max-time 10 -fsS https://47.129.214.70/api/health
+printf '\n'
+token=$(curl --max-time 3 -fsS -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token)
+public_ip=$(curl --max-time 3 -fsS -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4)
+printf 'IMDS public IPv4: %s\n' "$public_ip"
+test "$public_ip" = 47.129.214.70
+echo 'PRE-REBOOT PASS'
+
+Output:
+2026-10-02T08:15:44Z
+0a347f8c-d107-452f-8bc7-03717e984512
+active
+active
+active
+enabled
+enabled
+enabled
+a9f81fdbb5cf3d01a41e8e00a44a86c86c5e3f4103d6ee353ba15118b26af24b  /etc/systemd/system/pbl4-backend.service
+{"data":{"status":"ok","database":"connected"}}
+IMDS public IPv4: 47.129.214.70
+PRE-REBOOT PASS
+
+Exit: 0
+
+Approved reboot command: sudo -n systemctl reboot
+
+SSH exit: 0
+
+Reconnect probe 2026-10-02T08:16:42.042925+00:00
+f2097aea-cd8b-426e-8985-633aa4b82e27
+SSH exit: 0
+
+Post-reboot commands (read-only):
+set -eu
+date -u +%FT%TZ
+printf 'Boot ID: '
+cat /proc/sys/kernel/random/boot_id
+test "$(cat /proc/sys/kernel/random/boot_id)" != 0a347f8c-d107-452f-8bc7-03717e984512
+uptime -s
+systemctl is-active pbl4-backend nginx postgresql@16-main
+systemctl is-enabled pbl4-backend nginx postgresql
+systemctl status pbl4-backend --no-pager --lines=0
+systemctl show pbl4-backend -p Result -p ActiveEnterTimestamp -p ExecMainStartTimestamp -p NRestarts -p User -p Group
+ss -lnt 'sport = :3000 or sport = :5432'
+test "$(ss -H -lnt 'sport = :3000' | awk '{print $4}')" = 127.0.0.1:3000
+test "$(ss -H -lnt 'sport = :5432' | awk '{print $4}')" = 127.0.0.1:5432
+curl --max-time 10 -fsS http://127.0.0.1:3000/api/health
+printf '\n'
+curl --max-time 10 -fsS https://47.129.214.70/api/health
+printf '\n'
+token=$(curl --max-time 3 -fsS -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token)
+public_ip=$(curl --max-time 3 -fsS -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4)
+printf 'IMDS public IPv4: %s\n' "$public_ip"
+test "$public_ip" = 47.129.214.70
+cd /var/www/pbl4-517
+git rev-parse HEAD
+test "$(git rev-parse HEAD)" = e0f783b619def8c7123ec417239e32866ff72ee7
+test -z "$(git status --porcelain)"
+test "$(sha256sum /etc/systemd/system/pbl4-backend.service | cut -d ' ' -f 1)" = a9f81fdbb5cf3d01a41e8e00a44a86c86c5e3f4103d6ee353ba15118b26af24b
+test "$(stat -c '%a:%U:%G' website/backend/.env)" = 600:ubuntu:ubuntu
+sudo -n journalctl -b -u pbl4-backend --utc --no-pager -o short-iso --grep='Started pbl4-backend\.service|Backend listening on http://127\.0\.0\.1:3000'
+errors=$(sudo -n journalctl -b -u pbl4-backend -p err --no-pager -o json | wc -l)
+printf 'Backend journal err-or-higher entries in this boot: %s\n' "$errors"
+test "$errors" = 0
+echo 'POST-REBOOT PASS; no manual service start/restart used after reboot'
+
+Output:
+2026-10-02T08:17:28Z
+Boot ID: f2097aea-cd8b-426e-8985-633aa4b82e27
+2026-10-02 08:15:57
+active
+active
+active
+enabled
+enabled
+enabled
+● pbl4-backend.service - PBL4-517 Express Backend
+     Loaded: loaded (/etc/systemd/system/pbl4-backend.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-02 08:16:10 UTC; 1min 17s ago
+   Main PID: 911 (MainThread)
+      Tasks: 11 (limit: 627)
+     Memory: 124.3M (peak: 124.8M)
+        CPU: 1.449s
+     CGroup: /system.slice/pbl4-backend.service
+             └─911 /usr/bin/node /var/www/pbl4-517/website/backend/dist/server.js
+Result=success
+NRestarts=0
+ExecMainStartTimestamp=Fri 2026-10-02 08:16:10 UTC
+User=ubuntu
+Group=ubuntu
+ActiveEnterTimestamp=Fri 2026-10-02 08:16:10 UTC
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*
+{"data":{"status":"ok","database":"connected"}}
+{"data":{"status":"ok","database":"connected"}}
+IMDS public IPv4: 47.129.214.70
+e0f783b619def8c7123ec417239e32866ff72ee7
+2026-10-02T08:16:10+00:00 ip-172-31-11-224 systemd[1]: Started pbl4-backend.service - PBL4-517 Express Backend.
+2026-10-02T08:16:13+00:00 ip-172-31-11-224 pbl4-backend[911]: Backend listening on http://127.0.0.1:3000
+Backend journal err-or-higher entries in this boot: 0
+POST-REBOOT PASS; no manual service start/restart used after reboot
+
+SSH exit: 0

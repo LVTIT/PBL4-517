@@ -1,0 +1,33 @@
+Issue #15 read-only recheck, 2026-09-28 09:02 UTC
+
+After human corrected SSH access, authentication with the existing key passed.
+Strict known-host verification and BatchMode enabled.
+Hostname: ip-172-31-11-224
+
+systemctl show/status pbl4-backend:
+LoadState=not-found
+ActiveState=inactive
+SubState=dead
+UnitFileState=
+MainPID=0
+Unit pbl4-backend.service could not be found.
+
+Upload path /home/ubuntu/pbl4-backend.service: absent.
+Installed path /etc/systemd/system/pbl4-backend.service: absent.
+sudo journalctl -u pbl4-backend --no-pager -n 20: -- No entries --
+No listener on 3000.
+PostgreSQL listening at 127.0.0.1:5432.
+Nginx listening on wildcard 80/443 IPv4/IPv6.
+nginx, postgresql, postgresql@16-main: active.
+nginx, postgresql: enabled.
+
+EC2 git status --short: empty.
+EC2_SOURCE_SHA=e0f783b619def8c7123ec417239e32866ff72ee7
+
+External Windows curl with normal TLS validation:
+HTTPS /: 200
+HTTPS /api/health: 502
+HTTPS /api/products: 502
+
+Conclusion: SSH connectivity restored; service installation still pending.
+No system configuration changes, service lifecycle tests or reboot performed.

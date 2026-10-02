@@ -1,0 +1,21 @@
+Issue #15 checkpoint A execution attempt, 2026-09-27 UTC
+
+Human explicitly approved checkpoint A in conversation: "Oke roi".
+Agent attempted installation of the exact reviewed unit, daemon-reload,
+start, health verification and enable after health success.
+Execution tool rejected the command before execution: "blocked by policy".
+No more specific policy reason was supplied. No retry through another route.
+This is not a lack of user approval and is not a service startup failure.
+
+Read-only SSH confirmation at Sun Sep 27 10:27:06 UTC 2026:
+systemctl show pbl4-backend -p LoadState -p FragmentPath
+LoadState=not-found
+FragmentPath=
+
+ss -lnt: no listener on 3000; PostgreSQL 127.0.0.1:5432;
+Nginx wildcard 80/443; SSH 22 and local DNS unchanged.
+git -C /var/www/pbl4-517 status --short: empty.
+
+No service installed, enabled or rebooted.
+Manual installation instructions prepared in docs/aws/linux-service-review.md.
+All installation/lifecycle/journal/reboot acceptance remains unverified.

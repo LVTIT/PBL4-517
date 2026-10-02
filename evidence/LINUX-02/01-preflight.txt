@@ -1,0 +1,90 @@
+Issue #15 preflight, observed 2026-09-27 UTC
+
+Local repository:
+Initial branch: feature/14-ec2-deployment
+Initial working tree: clean (git status --short produced no entries)
+git switch main
+git fetch origin --prune
+git pull --ff-only origin main
+Fast-forward: e0f783b -> 70253f9
+BASELINE_MAIN_SHA=70253f958c6d76a65ac579133fa68b59a75a45fc
+HEAD and origin/main matched before branch creation.
+git switch -c feature/15-linux-service
+New branch confirmed; no development on main.
+Reviewed latest 15 commits and deployment/application/CI changes.
+git diff e0f783b..HEAD -- website/backend website/frontend .github
+Result: no differences. Latest merge adds deployment evidence/docs only.
+No existing systemd backend unit tracked in repository.
+
+GitHub queried live through GitHub connector and REST API:
+Issue #14: closed / completed, closed_at 2026-09-27T10:05:48Z
+PR #32: merged, merged_at 2026-09-27T10:04:46Z
+Merge commit: 70253f958c6d76a65ac579133fa68b59a75a45fc
+Deployment evidence exists: evidence/WEB-04/README.md
+Main push CI: https://github.com/LVTIT/PBL4-517/actions/runs/36311382350
+Exact head SHA: 70253f958c6d76a65ac579133fa68b59a75a45fc
+Status: completed / success
+repo-policy: success
+backend-build: success
+frontend-build: success
+backend-integration: success
+python-check: success
+Issues #15, #16, #17: open; scopes read separately.
+Issue #14 body/wiki contain pre-merge wording; live state is authoritative.
+
+Production command from package.json: node dist/server.js
+Source server.ts binds 127.0.0.1 and handles SIGINT/SIGTERM gracefully.
+Actual EC2 inputs verified below.
+
+SSH without an explicit identity (BatchMode, strict known-host verification):
+ubuntu@47.129.214.70: Permission denied (publickey).
+Human supplied existing private key path outside repository; retry succeeded.
+No key content read or recorded.
+
+EC2 preflight at 2026-09-27 10:20 UTC (SSH with strict known-host checking):
+hostname=ip-172-31-11-224
+OS=Ubuntu 24.04.5 LTS
+kernel=7.0.0-1012-aws
+whoami=ubuntu
+command -v node=/usr/bin/node
+node --version=v24.21.0
+npm --version=11.19.0
+systemd=255.4-1ubuntu8.17
+Nginx active (running), enabled
+postgresql active (exited), enabled; postgresql@16-main active (running)
+Listeners: Nginx wildcard 80/443; PostgreSQL 127.0.0.1:5432; no 3000 listener.
+RAM 909 MiB total, 503 MiB available; swap 0
+Root disk 6.8 GiB total, 2.8 GiB available
+EC2_SOURCE_SHA=e0f783b619def8c7123ec417239e32866ff72ee7
+EC2 git status --short: empty
+Origin=https://github.com/LVTIT/PBL4-517.git
+dist/server.js exists; .env exists
+stat: .env 600 ubuntu ubuntu; backend directory 775 ubuntu ubuntu;
+      dist/server.js 664 ubuntu ubuntu
+Initial stat quoting lost format arguments in Windows SSH transport;
+rerun via binary-stdin Python subprocess confirmed full mode/owner/path above.
+ubuntu uid/gid=1000; existing account includes sudo group membership.
+Existing pbl4-backend LoadState=not-found; FragmentPath empty.
+Compiled config assertion PASS (secret values suppressed): production,
+PORT 3000, TRUST_PROXY loopback, VULN_IDOR_ENABLED false, DB host 127.0.0.1.
+Before temporary start: trusted HTTPS root 200, health 502.
+Deployed SHA push CI queried live: completed/success
+https://github.com/LVTIT/PBL4-517/actions/runs/36216679158
+Decision: retain existing deployed source/artifact; app source unchanged on main.
+
+Controlled foreground preflight, separate SSH PTY:
+cd /var/www/pbl4-517/website/backend
+exec /usr/bin/node dist/server.js
+Output: Backend listening on http://127.0.0.1:3000
+PID observed: 45969, listening only 127.0.0.1:3000
+Second SSH session:
+curl -fsS http://127.0.0.1:3000/api/health
+curl -fsS https://47.129.214.70/api/health
+Both: {"data":{"status":"ok","database":"connected"}}
+External Windows curl, normal TLS verification (no -k):
+https://47.129.214.70/api/health: same successful JSON
+https://47.129.214.70/: HTTP 200
+SIGINT through original PTY: process exited, SSH closed normally.
+After stop: ss -lntp confirms no port 3000, PostgreSQL/Nginx remain listening.
+EC2 git status still clean.
+No persistent service creation or reboot performed; checkpoint A pending.

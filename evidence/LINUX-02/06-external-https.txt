@@ -1,0 +1,7 @@
+Issue #15 external verification after lifecycle tests
+2026-10-02T08:07:15.664476+00:00
+Source: Windows curl.exe; normal TLS certificate validation; response bodies omitted.
+GET /: HTTP 200, curl exit=0
+GET /api/health: HTTP 200, curl exit=0
+GET /api/products: HTTP 200, curl exit=0
+EXTERNAL HTTPS PASS

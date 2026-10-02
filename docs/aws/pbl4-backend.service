@@ -1,0 +1,22 @@
+[Unit]
+Description=PBL4-517 Express Backend
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/var/www/pbl4-517/website/backend
+EnvironmentFile=/var/www/pbl4-517/website/backend/.env
+ExecStart=/usr/bin/node /var/www/pbl4-517/website/backend/dist/server.js
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pbl4-backend
+
+[Install]
+WantedBy=multi-user.target
