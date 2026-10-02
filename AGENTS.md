@@ -15,6 +15,8 @@ The `wiki/` directory is the project's Single Source of Truth for persistent pro
 
 ## Working rules
 
+- For UI design, implementation or review, use the project-local [UI UX Pro Max skill](.agents/skills/ui-ux-pro-max/SKILL.md). [Installation and usage](.agents/skills/ui-ux-pro-max/INSTALLATION.md) are canonical. Its recommendations must follow the Accepted React/TypeScript/Vite/plain-CSS stack and repository decisions.
+
 - Do not contradict an Accepted decision in `wiki/DECISIONS.md` unless the task explicitly requires changing that decision.
 - Do not silently change the technology stack.
 - Distinguish **Implemented**, **Planned** and **Proposed**. Do not claim planned functionality is implemented or infer successful testing from the presence of source.

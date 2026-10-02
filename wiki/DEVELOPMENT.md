@@ -16,6 +16,8 @@ cd PBL4-517
 
 ## Website
 
+UI design/review guidance is installed locally in [UI UX Pro Max](../.agents/skills/ui-ux-pro-max/SKILL.md). See its [installation and usage](../.agents/skills/ui-ux-pro-max/INSTALLATION.md) for search commands and pinned upstream provenance. This development tool does not change the accepted website stack.
+
 **Canonical setup: [website/README.md](../website/README.md).** Tài liệu này có lệnh Windows/Linux, tạo database/user, `.env`, tài khoản demo và troubleshooting; không sao chép toàn bộ lệnh setup vào wiki.
 
 Luồng chuẩn: tạo PostgreSQL database → tạo `.env` và secret riêng → backend `npm ci` → Prisma generate/migrate/seed → chạy backend → frontend `npm ci` → chạy frontend. Prisma migration đã commit dùng cho clone mới; `migrate dev` chỉ khi tạo migration mới và có shadow database phù hợp.

@@ -145,3 +145,8 @@ jobs:
           test -f alerts/notifier.py
           test -f scripts/attacker/exploit_idor.py
           python -m compileall -q scanner alerts scripts/attacker scripts/ci
+      - name: Validate project-local UI UX Pro Max skill
+        run: |
+          python -m compileall -q .agents/skills/ui-ux-pro-max/scripts
+          python .agents/skills/ui-ux-pro-max/scripts/validate_data.py
+          python -m unittest discover -s .agents/skills/ui-ux-pro-max/scripts/tests -p test_core.py -v
