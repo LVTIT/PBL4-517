@@ -5,9 +5,16 @@ import { get, messageFrom, post } from '../services/api';
 import { useAuth } from '../services/auth';
 import { useCart } from '../services/cart';
 import type { Product, Review } from '../types/api';
-import { BoxIcon, CheckIcon } from '../components/Icon';
+import { ProductMedia } from '../components/ProductMedia';
+import { StarIcon, RefreshIcon } from '../components/Icon';
+import { LiveToast, type ToastMessage } from '../components/LiveToast';
+import { getPageTitle } from '../config/brand';
 
-const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+const currency = new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+  maximumFractionDigits: 0,
+});
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +26,7 @@ export function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
-  const [addedNotice, setAddedNotice] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   // Review form state
   const [rating, setRating] = useState(5);
@@ -28,14 +35,14 @@ export function ProductDetailPage() {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchProduct = () => {
     if (!id) return;
     setLoading(true);
     setError(null);
     get<Product>(`/products/${id}`)
       .then((data) => {
         setProduct(data);
-        setError(null);
+        document.title = getPageTitle(data.name);
       })
       .catch((err) => {
         setError(messageFrom(err));
@@ -43,13 +50,22 @@ export function ProductDetailPage() {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchProduct();
   }, [id]);
 
   function handleAddToCart() {
-    if (!product || product.stock <= 0) return;
+    if (!product || product.stock <= 0 || user?.role === 'ADMIN') return;
     addToCart(product, quantity);
-    setAddedNotice(true);
-    setTimeout(() => setAddedNotice(false), 3000);
+    setToast({
+      id: String(Date.now()),
+      type: 'success',
+      message: `Đã thêm ${quantity} × "${product.name}" vào giỏ hàng.`,
+      actionText: 'Xem giỏ hàng',
+      actionHref: '/cart',
+    });
   }
 
   async function handleAddReview(e: FormEvent) {
@@ -60,14 +76,18 @@ export function ProductDetailPage() {
     setReviewError(null);
     setReviewSuccess(null);
     try {
-      const newReview = await post<Review>(`/products/${id}/reviews`, { rating, comment: comment.trim() });
-      setReviewSuccess('Cảm ơn bạn đã gửi đánh giá!');
+      const newReview = await post<Review>(`/products/${id}/reviews`, {
+        rating,
+        comment: comment.trim(),
+      });
+      setReviewSuccess('Cảm ơn bạn đã gửi đánh giá cho sản phẩm!');
       setComment('');
       setRating(5);
-      // Append to product reviews
       if (product) {
         const updatedReviews = [newReview, ...(product.reviews ?? [])];
-        const newAvg = Number((updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length).toFixed(1));
+        const newAvg = Number(
+          (updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length).toFixed(1)
+        );
         setProduct({
           ...product,
           reviews: updatedReviews,
@@ -96,88 +116,129 @@ export function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="container page-content">
-        <div className="notice notice-error" role="alert">
-          <span>{error ?? 'Sản phẩm không tồn tại.'}</span>
-          <Link className="button button-primary" to="/products" style={{ marginLeft: '16px' }}>Quay lại danh sách</Link>
+        <div className="state-panel" role="alert">
+          <h2>Chưa thể tải thông tin sản phẩm</h2>
+          <p>{error ?? 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'}</p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <button type="button" className="button button-secondary" onClick={fetchProduct}>
+              <RefreshIcon size={16} />
+              <span>Thử lại</span>
+            </button>
+            <Link className="button button-primary" to="/products">
+              Quay lại danh mục
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
+  const isOutOfStock = product.stock <= 0;
+  const hasReviews = (product.reviewCount ?? 0) > 0;
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
     <div className="container page-content">
-      <nav className="breadcrumb" aria-label="Đường dẫn">
+      {/* Breadcrumb */}
+      <nav className="breadcrumb" aria-label="Đường dẫn trang">
         <Link to="/">Trang chủ</Link>
-        <span aria-hidden="true">/</span>
-        <Link to="/products">Sản phẩm</Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{product.name}</span>
+        <span className="breadcrumb-separator" aria-hidden="true">/</span>
+        <Link to="/products">Phụ kiện cho góc làm việc</Link>
+        <span className="breadcrumb-separator" aria-hidden="true">/</span>
+        <span aria-current="page" style={{ color: 'var(--color-text)', fontWeight: 500 }}>
+          {product.name}
+        </span>
       </nav>
 
-      <div className="product-detail-grid">
-        <div className="product-detail-visual">
-          <div className="detail-artwork">
-            <span className="product-visual-label">{product.category ?? '517 ESSENTIAL'}</span>
-            <div className="artwork-icon"><BoxIcon /></div>
-            <span className="product-number">517 PRODUCT</span>
-          </div>
+      {/* Main Product Info Grid */}
+      <div className="detail-grid">
+        {/* Media Column */}
+        <div className="detail-media-card">
+          <ProductMedia
+            imageKey={product.imageKey}
+            name={product.name}
+            category={product.category}
+            aspectRatio="1/1"
+            priority={true}
+          />
         </div>
 
-        <div className="product-detail-info">
-          <div className="product-header-row">
-            <span className={`stock ${product.stock === 0 ? 'stock-empty' : ''}`}>
-              <span />
-              {product.stock > 0 ? `Còn ${product.stock} sản phẩm sẵn sàng` : 'Tạm hết hàng'}
+        {/* Info & Purchase Column */}
+        <div className="detail-info">
+          <div className="product-category-row">
+            <span className="product-category-tag">{product.category ?? 'Phụ kiện'}</span>
+            <span className={`stock-badge ${isOutOfStock ? 'stock-empty' : 'stock-available'}`}>
+              {isOutOfStock ? 'Tạm hết hàng' : `Còn ${product.stock} sản phẩm`}
             </span>
-            {product.category && <span className="product-category-tag">{product.category}</span>}
           </div>
 
-          <h1>{product.name}</h1>
+          <h1 className="detail-title">{product.name}</h1>
 
-          <div className="rating-summary">
-            <span className="star-rating">★ {product.averageRating ?? 5}</span>
-            <span className="muted small">({product.reviewCount ?? 0} lượt đánh giá)</span>
+          {/* Rating Summary */}
+          <div className="rating-bar">
+            {hasReviews ? (
+              <>
+                <span className="star-rating">
+                  <StarIcon size={18} />
+                  <span>{product.averageRating?.toFixed(1) ?? '5.0'}</span>
+                </span>
+                <span className="small muted">({product.reviewCount} đánh giá từ khách hàng)</span>
+              </>
+            ) : (
+              <span className="rating-none">Chưa có đánh giá nào</span>
+            )}
           </div>
 
           <p className="detail-price">{currency.format(Number(product.price))}</p>
 
           <p className="detail-description">{product.description}</p>
 
-          {user?.role === 'ADMIN' ? (
-            <div className="notice" style={{ marginTop: '24px', background: 'var(--color-bg-secondary, #f8f9fa)', border: '1px solid var(--color-border, #e5e5e5)', padding: '16px', borderRadius: '8px' }}>
-              <strong>Tài khoản Quản trị viên</strong>
-              <p className="muted small" style={{ marginTop: '4px', marginBottom: '12px' }}>
-                Quản trị viên quản lý danh mục và tồn kho của sản phẩm, không thực hiện mua sắm hay đặt hàng cá nhân.
-              </p>
-              <Link to="/admin" className="button button-primary">
-                Quản lý tại Bảng điều khiển Admin
-              </Link>
+          {/* Admin vs Customer Purchase Block */}
+          {isAdmin ? (
+            <div className="notice" style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+              <div>
+                <strong>Tài khoản Quản trị viên</strong>
+                <p className="small muted" style={{ margin: '4px 0 12px 0' }}>
+                  Quản trị viên quản lý danh mục và kho hàng tại Bảng điều khiển, không thực hiện mua sắm.
+                </p>
+                <Link to="/admin" className="button button-primary button-small">
+                  Đến Bảng điều khiển Admin
+                </Link>
+              </div>
             </div>
           ) : (
-            <div className="purchase-panel">
-              <div className="quantity-selector">
-                <label htmlFor="quantity-input" className="small muted">Số lượng:</label>
-                <div className="qty-controls">
+            <div className="detail-purchase-box">
+              <div className="quantity-control-group">
+                <label htmlFor="qty-input" className="form-label" style={{ margin: 0 }}>
+                  Số lượng:
+                </label>
+                <div className="quantity-selector">
                   <button
                     type="button"
-                    disabled={quantity <= 1 || product.stock <= 0}
+                    className="qty-btn"
+                    disabled={quantity <= 1 || isOutOfStock}
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     aria-label="Giảm số lượng"
                   >
                     −
                   </button>
                   <input
-                    id="quantity-input"
+                    id="qty-input"
                     type="number"
+                    className="qty-input"
                     min={1}
                     max={product.stock}
                     value={quantity}
-                    disabled={product.stock <= 0}
-                    onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value) || 1)))}
+                    disabled={isOutOfStock}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value) || 1)))
+                    }
+                    aria-label="Số lượng sản phẩm cần mua"
                   />
                   <button
                     type="button"
-                    disabled={quantity >= product.stock || product.stock <= 0}
+                    className="qty-btn"
+                    disabled={quantity >= product.stock || isOutOfStock}
                     onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
                     aria-label="Tăng số lượng"
                   >
@@ -189,119 +250,136 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 className="button button-primary button-large"
-                disabled={product.stock <= 0}
+                disabled={isOutOfStock}
                 onClick={handleAddToCart}
               >
-                {product.stock > 0 ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}
+                {isOutOfStock ? 'Sản phẩm tạm hết hàng' : 'Thêm vào giỏ hàng'}
               </button>
-            </div>
-          )}
-
-          {addedNotice && (
-            <div className="notice notice-success" role="status">
-              <CheckIcon />
-              <span>Đã thêm <strong>{quantity} x {product.name}</strong> vào giỏ hàng!</span>
-              <Link to="/cart" className="inline-link" style={{ marginLeft: 'auto' }}>Xem giỏ hàng →</Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* Reviews Section */}
+      {/* Customer Reviews Section */}
       <section className="reviews-section" aria-labelledby="reviews-heading">
-        <div className="section-header">
-          <h2 id="reviews-heading">Đánh giá từ khách hàng ({product.reviews?.length ?? 0})</h2>
-          <p className="muted small">Chia sẻ trải nghiệm sử dụng thực tế của bạn về sản phẩm này.</p>
+        <div className="reviews-header">
+          <p className="section-eyebrow">TRẢI NGHIỆM KHÁCH HÀNG</p>
+          <h2 id="reviews-heading" className="section-title" style={{ fontSize: '1.5rem' }}>
+            Đánh giá sản phẩm ({product.reviewCount ?? 0})
+          </h2>
         </div>
 
-        {/* Add Review Form */}
-        <div className="review-form-card">
-          {user?.role === 'ADMIN' ? (
-            <div className="login-to-review">
-              <p>Tài khoản <strong>Quản trị viên</strong> không thể gửi đánh giá cho sản phẩm của cửa hàng.</p>
-              <p className="muted small">Vui lòng đăng nhập với tài khoản Khách hàng để chia sẻ trải nghiệm sản phẩm.</p>
-            </div>
-          ) : user ? (
+        {/* Submit Review Form (Customers Only) */}
+        {user && user.role !== 'ADMIN' && (
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-card)',
+              padding: '24px',
+              marginBottom: '32px',
+            }}
+          >
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: '0 0 16px 0' }}>
+              Chia sẻ cảm nhận của bạn
+            </h3>
             <form onSubmit={(e) => void handleAddReview(e)}>
-              <h3>Gửi nhận xét của bạn</h3>
-              <div className="rating-picker">
-                <label className="small">Đánh giá:</label>
-                <div className="stars-input">
+              <div className="form-group">
+                <label htmlFor="review-rating" className="form-label">
+                  Mức độ hài lòng:
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
-                      type="button"
                       key={star}
-                      className={`star-button ${star <= rating ? 'active' : ''}`}
+                      type="button"
                       onClick={() => setRating(star)}
-                      title={`${star} sao`}
+                      aria-label={`${star} sao`}
+                      style={{
+                        padding: '6px',
+                        color: star <= rating ? '#D97706' : '#D1D5DB',
+                      }}
                     >
-                      ★
+                      <StarIcon size={24} />
                     </button>
                   ))}
-                  <span className="rating-label">{rating} / 5 sao</span>
                 </div>
               </div>
 
-              <div className="form-field" style={{ marginTop: '12px' }}>
-                <label htmlFor="review-comment">Nhận xét chi tiết</label>
+              <div className="form-group">
+                <label htmlFor="review-comment" className="form-label">
+                  Nhận xét của bạn:
+                </label>
                 <textarea
                   id="review-comment"
+                  className="form-textarea"
                   rows={3}
                   required
                   maxLength={1000}
-                  placeholder="Chia sẻ cảm nhận về độ hoàn thiện, cảm giác cầm nắm, chất lượng..."
+                  placeholder="Chia sẻ trải nghiệm của bạn về thiết kế, chất liệu, cảm giác sử dụng…"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   disabled={submittingReview}
                 />
               </div>
 
-              {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
-              {reviewSuccess && <p className="form-success" role="status">{reviewSuccess}</p>}
+              {reviewError && <p className="form-error">{reviewError}</p>}
+              {reviewSuccess && <p className="form-success">{reviewSuccess}</p>}
 
               <button
                 type="submit"
-                className="button button-primary"
+                className="button button-primary button-small"
                 disabled={submittingReview || !comment.trim()}
+                style={{ marginTop: '8px' }}
               >
-                {submittingReview ? 'Đang gửi…' : 'Gửi nhận xét'}
+                {submittingReview ? 'Đang gửi…' : 'Gửi đánh giá'}
               </button>
             </form>
-          ) : (
-            <div className="login-to-review">
-              <p>Bạn cần đăng nhập để gửi nhận xét về sản phẩm.</p>
-              <Link to="/login" className="button button-primary">Đăng nhập để đánh giá</Link>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {!user && (
+          <div className="notice" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            <span>Đăng nhập để chia sẻ đánh giá của bạn về sản phẩm này.</span>
+            <Link to="/login" className="button button-secondary button-small">
+              Đăng nhập
+            </Link>
+          </div>
+        )}
 
         {/* Reviews List */}
-        <div className="reviews-list">
-          {product.reviews && product.reviews.length > 0 ? (
-            product.reviews.map((rev) => (
-              <article key={rev.id} className="review-item">
-                <div className="review-header">
-                  <div className="reviewer-info">
-                    <span className="account-avatar small-avatar" aria-hidden="true">
-                      {(rev.user?.name ?? 'K').slice(0, 1)}
+        {!hasReviews ? (
+          <div className="state-panel" style={{ padding: '32px' }}>
+            <p className="muted" style={{ margin: 0 }}>
+              Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên chia sẻ cảm nhận!
+            </p>
+          </div>
+        ) : (
+          <div className="reviews-list">
+            {product.reviews?.map((r) => (
+              <div key={r.id} className="review-item">
+                <div className="review-meta">
+                  <span className="review-author">{r.user?.name ?? 'Khách hàng'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="star-rating">
+                      {[...Array(r.rating)].map((_, i) => (
+                        <StarIcon key={i} size={14} />
+                      ))}
+                    </div>
+                    <span className="review-date">
+                      {new Date(r.createdAt).toLocaleDateString('vi-VN')}
                     </span>
-                    <strong>{rev.user?.name ?? 'Khách hàng'}</strong>
-                  </div>
-                  <div className="review-meta">
-                    <span className="star-rating">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
-                    <time className="muted small" dateTime={rev.createdAt}>
-                      {new Date(rev.createdAt).toLocaleDateString('vi-VN')}
-                    </time>
                   </div>
                 </div>
-                <p className="review-comment">{rev.comment}</p>
-              </article>
-            ))
-          ) : (
-            <p className="muted" style={{ paddingBlock: '24px' }}>Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên nhận xét!</p>
-          )}
-        </div>
+                <p className="review-comment">{r.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
+      {/* Toast Feedback */}
+      <LiveToast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

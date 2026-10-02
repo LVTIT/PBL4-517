@@ -1,6 +1,6 @@
-# Website PBL4-517
+# Website KEVILO (PBL4-517)
 
-Website thương mại điện tử cho đồ án PBL4-517: trang chủ, sản phẩm, chi tiết, đánh giá, giỏ hàng, đơn hàng (kể cả khách vãng lai), đăng ký/đăng nhập, hồ sơ và trang quản trị, kết nối Express và PostgreSQL thật qua Prisma.
+Website thương mại điện tử phụ kiện bàn làm việc và không gian công nghệ **KEVILO** thuộc đồ án PBL4-517: trang chủ thương hiệu, danh mục sản phẩm, chi tiết sản phẩm, đánh giá, giỏ hàng (hỗ trợ cả khách vãng lai và thành viên), quản lý đơn hàng, đăng ký/đăng nhập, hồ sơ cá nhân và bảng điều khiển quản trị, kết nối Express và PostgreSQL thật qua Prisma.
 
 ## Requirements
 
@@ -9,7 +9,7 @@ Website thương mại điện tử cho đồ án PBL4-517: trang chủ, sản p
 - **PostgreSQL 16** đang chạy, kèm công cụ `psql`; hoặc Docker để chạy PostgreSQL 16 theo lựa chọn bên dưới.
 - Hai terminal để chạy backend và frontend.
 
-Frontend dùng React, TypeScript, Vite và CSS thuần. Backend dùng Express 5, TypeScript và Prisma ORM 7. Hai project có `package-lock.json` riêng; dùng `npm ci` để cài đúng phiên bản đã khóa.
+Frontend dùng React, TypeScript, Vite và CSS thuần (tuân thủ design system KEVILO, font tự host Be Vietnam Pro, hỗ trợ WCAG 2.2 AA và Playwright/axe e2e tests). Backend dùng Express 5, TypeScript và Prisma ORM 7. Hai project có `package-lock.json` riêng; dùng `npm ci` để cài đúng phiên bản đã khóa.
 
 Trên Windows PowerShell, nếu `npm` bị chặn bởi execution policy, dùng **`npm.cmd`** thay cho `npm` trong mọi lệnh bên dưới. Không cần đổi execution policy của máy.
 
@@ -185,6 +185,7 @@ Giữ terminal này mở. Backend bind loopback `127.0.0.1`, chạy tại **http
 | `npm run prisma:generate` | Tạo Prisma Client từ schema. Chạy lại khi sửa schema hoặc sau khi cài dependency. |
 | `npm run prisma:migrate` | Chạy `prisma migrate deploy`, áp dụng các migration đã commit; dùng khi clone mới và khi triển khai. |
 | `npm run prisma:seed` | Chạy seed rõ ràng sau migration, tạo tài khoản và sáu sản phẩm demo. |
+| `npm run catalog:import` | Nhập 10 sản phẩm catalog KEVILO demo (mặc định dry-run). Dùng `npm run catalog:import -- --apply` để ghi vào database mà không tạo trùng tài khoản hay đặt lại tồn kho. |
 | `npm run prisma:migrate:dev -- --name describe_change` | Tạo migration mới khi phát triển schema. Cần quyền tạo shadow database hoặc cấu hình shadow database riêng. Commit SQL migration sinh ra. |
 
 Prisma 7 lấy URL từ `prisma.config.ts`, dùng PostgreSQL driver adapter và client được generate; không dùng cấu hình URL theo tutorial Prisma 5/6. CLI và Client được khóa cùng phiên bản 7.x. Không cần `prisma db push` để chạy project. Đối chiếu [hướng dẫn chính thức Prisma ORM 7](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7) khi sửa cấu hình hoặc nâng cấp dependency.
@@ -332,6 +333,23 @@ npm run test:integration
 ```
 
 Suite kiểm tra health, dữ liệu sản phẩm khớp SQL, validation/body limit, CSRF, đăng nhập đúng/sai, hash password, PostgreSQL session, cookie, session fixation và logout/replay. Test gọi backend ở `http://127.0.0.1:3000` mặc định; nếu server test dùng port khác, đặt `TEST_API_URL` theo URL đó (PowerShell: `$env:TEST_API_URL='http://127.0.0.1:3002'`; Linux: `TEST_API_URL=http://127.0.0.1:3002 npm run test:integration`). Không chạy suite trên production. Chạy lặp quá nhanh có thể chạm rate limit từ các login lỗi; chờ 15 phút hoặc restart backend local trước một lượt kiểm thử mới.
+
+### E2E & Accessibility test tự động (Playwright + Axe)
+
+Trong thư mục `website/frontend`:
+
+```sh
+npm run test:e2e
+```
+
+Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless (desktop 1440px và mobile 390px), bao phủ 28 test cases:
+- Nhận diện thương hiệu KEVILO: title, meta description, wordmark & biểu tượng SVG, footer disclaimer, kiểm tra không xuất hiện chuỗi thương hiệu cũ.
+- Responsive breakpoints: 320px, 390px, 768px, 1024px, 1440px không tràn ngang (`scrollWidth <= innerWidth`).
+- Menu điều hướng mobile drawer: mở nút, đóng nút, đóng phím Escape.
+- Kiểm toán trợ năng WCAG 2.2 AA tự động đạt 0 lỗi nghiêm trọng (critical/serious).
+- Tìm kiếm có debounce, bộ lọc danh mục và đồng bộ hai chiều query parameters trong URL (`search`, `category`, `sort`).
+- Thêm giỏ hàng, giới hạn tồn kho, cô lập phiên (cart session isolation), form đặt hàng với địa chỉ ban đầu để trống và thông báo lưu mã đơn cho khách vãng lai.
+- Khả năng phục hồi khi lỗi mạng/API 500 với panel lỗi và nút "Thử lại"; trang 404 chuẩn nhận diện KEVILO.
 
 ## Build
 

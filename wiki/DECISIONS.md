@@ -2,6 +2,20 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-10-02 — Thương hiệu KEVILO và Kiến trúc Nâng cấp UI/UX Premium
+
+**Status: Accepted** — theo yêu cầu và phê duyệt trực tiếp của người dùng tại [Issue #51](https://github.com/LVTIT/PBL4-517/issues/51).
+
+**Decision:**
+1. Đổi tên thương mại giao diện website thành **KEVILO**, tagline *"Nâng chuẩn góc làm việc."*, định vị cửa hàng phụ kiện công nghệ cho góc làm việc. Giữ nguyên mã đề tài `PBL4-517`, khóa giỏ hàng `pbl517_cart_*`, cookie `pbl517.sid` và cơ sở dữ liệu hiện có.
+2. Thiết kế giao diện theo phong cách công nghệ cao cấp (Graphite `#111827`, Nền `#F6F7F9`, Card trắng `#FFFFFF`, Accent Cobalt `#1D4ED8`, Border `#DCE1E8`). Typography dùng font **Be Vietnam Pro** (OFL 1.1) tự host đầy đủ các tệp WOFF2. Giữ nguyên ràng buộc công nghệ React + TypeScript + Vite + CSS thuần, không thêm thư viện runtime CSS/animation.
+3. Bộ ảnh studio gồm 10 sản phẩm AI và 1 ảnh hero góc làm việc xuất định dạng WebP tối ưu (≤66KB, đạt chỉ tiêu dung lượng ≤180KB và ≤350KB). Mở rộng schema Prisma với trường nullable `imageKey` và script nạp catalog độc lập `npm run catalog:import` (mặc định dry-run) bảo toàn số lượng tồn kho và không tạo trùng tài khoản.
+4. Đáp ứng tiêu chuẩn trợ năng **WCAG 2.2 AA** (vùng tương tác chuẩn 44×44px, độ tương phản ≥ 4.5:1, hỗ trợ phím/Escape/aria-live) và bổ sung bộ kiểm thử tự động Playwright + axe-core trong `devDependencies` bao phủ toàn diện 28 kịch bản responsive, catalog, cart, resilience.
+
+**Reason:** Nâng tầm thẩm mỹ và trải nghiệm người dùng phục vụ báo cáo và bảo vệ đề tài PBL4-517, đồng thời đảm bảo chất lượng kỹ thuật, tính chịu lỗi và tính bảo mật theo chuẩn mực nghiêm ngặt của repository.
+
+**Consequences:** Frontend có bộ token hoàn chỉnh, tài liệu rõ ràng, sẵn sàng triển khai môi trường production sau khi hoàn thành quy trình review và phê duyệt.
+
 ## 2026-09-27 — IP HTTPS for the initial EC2 deployment
 
 **Status: Accepted** — human explicitly approved the Issue #14 checkpoints A/B proposal.

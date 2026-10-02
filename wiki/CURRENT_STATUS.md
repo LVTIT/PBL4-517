@@ -44,6 +44,24 @@
 
 **In progress:**
 
+- [#51 — Nâng cấp toàn diện UI/UX KEVILO Store theo phong cách công nghệ premium](https://github.com/LVTIT/PBL4-517/issues/51): **Implemented / locally verified.**
+  - **Nhận diện thương hiệu KEVILO (Phase B0):** Wordmark `KEVILO`, biểu tượng `K` hình học SVG, tagline "Nâng chuẩn góc làm việc.", favicon SVG chuẩn, module cấu hình thương hiệu tập trung `brand.ts`. Đã loại bỏ chuỗi thương hiệu cũ `517 Store` khỏi toàn bộ UI người dùng sở hữu nhưng vẫn bảo toàn mã định danh hệ thống (`PBL4-517`, `pbl517_cart_*`, `pbl517.sid`).
+  - **Hệ thống thiết kế & Typography:** Token CSS chuẩn hóa (nền `#F6F7F9`, card `#FFFFFF`, chữ `#111827`, phụ `#526071`, CTA `#1D4ED8`), font **Be Vietnam Pro** (OFL 1.1) tự host 12 file WOFF2, bộ icon SVG đồng bộ (thay emoji điều hướng), đáp ứng chuẩn tương phản và kích thước vùng bấm tối thiểu 44×44px.
+  - **Bộ ảnh studio chuyên nghiệp:** 10 ảnh sản phẩm studio AI và 1 ảnh hero WebP tối ưu (toàn bộ ≤66KB, đạt mục tiêu hiệu năng ≤180KB và ≤350KB), lưu hồ sơ nguồn gốc trong `IMAGE_PROVENANCE.md`.
+  - **Prisma Schema & Catalog Importer:** Migration SQL bổ sung cột nullable `imageKey` cho bảng `Product`, script importer độc lập `npm run catalog:import` (mặc định dry-run, `-- --apply` để thực thi ghi mà không ghi đè tồn kho hay tạo trùng tài khoản).
+  - **Tối ưu hóa các luồng giao diện:**
+    - *Home:* Hero góc làm việc, 5 danh mục trực quan, hiển thị tối đa 4 sản phẩm còn hàng từ API, giới thiệu triết lý và footer ghi chú demo.
+    - *Catalog & Tìm kiếm:* Lọc danh mục, tìm kiếm có debounce 300ms, đồng bộ hai chiều query URL (`search`, `category`, `sort`), sắp xếp theo giá.
+    - *Chi tiết sản phẩm:* Breadcrumb, layout 2 cột desktop, điều khiển số lượng, hiển thị "Chưa có đánh giá" chính xác khi 0 review (đã sửa hàm tính điểm).
+    - *Giỏ hàng & Đặt hàng:* Media thumbnail, cô lập giỏ hàng theo phiên, địa chỉ giao hàng ban đầu để trống, thông báo rõ ràng cho khách vãng lai và chặn submit lặp.
+    - *Tài khoản & Đơn hàng:* Form-first mobile, hiện/ẩn mật khẩu, chờ auth trước khi khởi tạo form hồ sơ, hiển thị trạng thái tiếng Việt, hộp thoại xác nhận hủy đơn `ConfirmDialog`.
+    - *Bảng điều khiển Admin:* Selector khóa ảnh studio có preview, chuyển trạng thái đơn hàng có pending per-order, danh sách hiển thị dạng bảng desktop và card mobile, xử lý lỗi tải rõ ràng với nút "Thử lại".
+  - **Kiểm thử tự động & Trợ năng:**
+    - Cài đặt `@playwright/test` và `@axe-core/playwright` ở `devDependencies`.
+    - 28/28 tests PASS trên desktop 1440px và mobile 390px bao gồm kiểm toán WCAG 2.2 AA (0 lỗi critical/serious), kiểm tra không tràn ngang tại 5 mốc breakpoint (320, 390, 768, 1024, 1440px), và khả năng phục hồi lỗi mạng API.
+    - Tích hợp vào job `backend-integration` trong `ci.yml` và script `backend-integration.sh`.
+    - Cả frontend và backend biên dịch 100% không lỗi (`npm run build`), `npm audit --audit-level=high` 0 lỗ hổng.
+
 - [#49 — Project-local UI UX Pro Max](https://github.com/LVTIT/PBL4-517/issues/49): **Installed / locally verified.** Pinned upstream `09170ee` in `.agents/skills/ui-ux-pro-max`, repository paths and plain-CSS stack constraints added. Data validation, 39 upstream core tests and design-system/UX/React smoke checks PASS. [Usage and provenance](../.agents/skills/ui-ux-pro-max/INSTALLATION.md), [evidence](../evidence/DEVTOOLS-01/README.md). Latest PR CI and required human review/merge remain delivery gates.
 
 - [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **Implemented / hosted CI verified; chờ human review và Team Leader merge ở [PR #29](https://github.com/LVTIT/PBL4-517/pull/29)**. [Run triển khai](https://github.com/LVTIT/PBL4-517/actions/runs/35713164678) PASS cả 5 checks; PostgreSQL 16.15 thật, 3 migration, seed, health, integration 16/16 PASS; audit cả hai project 0 vulnerabilities. Đã thêm PR template, policy/evidence governance và [CI/CD docs](../docs/devops/ci-cd.md). [Evidence và giới hạn](../evidence/DEVOPS-01/README.md) ghi rõ SHA; trước merge phải đối chiếu latest PR checks, kể cả commit cập nhật docs. Branch protection hiện chưa bật; [đề xuất settings](../docs/devops/github-branch-protection.md) chờ human review trước áp dụng. CD chưa triển khai, không deploy EC2 hay tự đóng Issue.

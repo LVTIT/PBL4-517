@@ -41,17 +41,19 @@ function saveCart(key: string, items: CartItem[]): void {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
-  const isInitialMount = useRef(true);
+  const isHydratedRef = useRef(false);
 
-  // Sync cart with current user authentication state
+  // Sync cart with current user authentication state once auth has resolved
   useEffect(() => {
+    if (authLoading) return;
+
     const currentUserId = user?.id ?? null;
 
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    if (!isHydratedRef.current) {
+      isHydratedRef.current = true;
       prevUserIdRef.current = currentUserId;
       setItems(loadCart(getStorageKey(currentUserId)));
       return;
@@ -94,11 +96,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems([]);                               // Empty in-memory cart
       }
     }
-  }, [user, items]);
+  }, [user, authLoading, items]);
 
   // Persist items whenever items change for the active user
   useEffect(() => {
-    if (!isInitialMount.current) {
+    if (isHydratedRef.current) {
       const key = getStorageKey(user?.id ?? null);
       saveCart(key, items);
     }

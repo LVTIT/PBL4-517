@@ -18,6 +18,7 @@ const productSchema = z.strictObject({
   price: z.number().min(0, 'Giá sản phẩm phải lớn hơn hoặc bằng 0.'),
   stock: z.number().int().min(0, 'Số lượng tồn kho phải là số nguyên không âm.'),
   category: z.string().trim().max(50).optional(),
+  imageKey: z.string().trim().regex(/^[a-z0-9-]+$/, 'Khóa ảnh chỉ chứa chữ thường, số và dấu gạch ngang.').max(50).nullable().optional(),
 });
 
 const updateProductSchema = productSchema.partial();
