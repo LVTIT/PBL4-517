@@ -411,7 +411,8 @@ curl --fail --silent --show-error https://47.129.214.70/api/health
 
 Kiểm tra frontend/assets/API qua HTTPS, quyền đọc static files của Nginx,
 loopback listeners và hash bản build. Giữ backup cho rollback, không reset
-database. [Evidence và giới hạn lần triển khai nhánh 51](../evidence/UI-01/ec2-20261003/README.md).
+database. [Evidence lần triển khai KEVILO đầu tiên](../evidence/UI-01/ec2-20261003/README.md),
+[cập nhật UI mobile tại `524c878`, kiểm tra public và rollback](../evidence/UI-01/ec2-ui-update-20261003/README.md).
 
 ## Troubleshooting
 

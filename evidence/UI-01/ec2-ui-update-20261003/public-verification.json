@@ -1,0 +1,274 @@
+{
+  "origin": "https://47.129.214.70",
+  "sha": "524c878c00570df76a1765f0d774361f18de021f",
+  "checkedAt": "2026-10-03T15:58:41.298Z",
+  "grids": [
+    {
+      "path": "/",
+      "viewport": 320,
+      "content": 320,
+      "columns": 2,
+      "first": {
+        "x": 12,
+        "y": 1365.65625,
+        "width": 144
+      },
+      "second": {
+        "x": 164,
+        "y": 1365.65625,
+        "width": 144
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 320,
+      "content": 320,
+      "columns": 2,
+      "first": {
+        "x": 12,
+        "y": 603,
+        "width": 144
+      },
+      "second": {
+        "x": 164,
+        "y": 603,
+        "width": 144
+      }
+    },
+    {
+      "path": "/",
+      "viewport": 375,
+      "content": 375,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 1353.09375,
+        "width": 165.5
+      },
+      "second": {
+        "x": 193.5,
+        "y": 1353.09375,
+        "width": 165.5
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 375,
+      "content": 375,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 579,
+        "width": 165.5
+      },
+      "second": {
+        "x": 193.5,
+        "y": 579,
+        "width": 165.5
+      }
+    },
+    {
+      "path": "/",
+      "viewport": 390,
+      "content": 390,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 1361.53125,
+        "width": 173
+      },
+      "second": {
+        "x": 201,
+        "y": 1361.53125,
+        "width": 173
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 390,
+      "content": 390,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 579,
+        "width": 173
+      },
+      "second": {
+        "x": 201,
+        "y": 579,
+        "width": 173
+      }
+    },
+    {
+      "path": "/",
+      "viewport": 414,
+      "content": 414,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 1336.03125,
+        "width": 185
+      },
+      "second": {
+        "x": 213,
+        "y": 1336.03125,
+        "width": 185
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 414,
+      "content": 414,
+      "columns": 2,
+      "first": {
+        "x": 16,
+        "y": 579,
+        "width": 185
+      },
+      "second": {
+        "x": 213,
+        "y": 579,
+        "width": 185
+      }
+    },
+    {
+      "path": "/",
+      "viewport": 768,
+      "content": 768,
+      "columns": 2,
+      "first": {
+        "x": 24,
+        "y": 1329.671875,
+        "width": 352
+      },
+      "second": {
+        "x": 392,
+        "y": 1329.671875,
+        "width": 352
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 768,
+      "content": 768,
+      "columns": 2,
+      "first": {
+        "x": 24,
+        "y": 447,
+        "width": 352
+      },
+      "second": {
+        "x": 392,
+        "y": 447,
+        "width": 352
+      }
+    },
+    {
+      "path": "/",
+      "viewport": 1440,
+      "content": 1440,
+      "columns": 4,
+      "first": {
+        "x": 112,
+        "y": 871.640625,
+        "width": 286
+      },
+      "second": {
+        "x": 422,
+        "y": 871.640625,
+        "width": 286
+      }
+    },
+    {
+      "path": "/products",
+      "viewport": 1440,
+      "content": 1440,
+      "columns": 4,
+      "first": {
+        "x": 112,
+        "y": 447,
+        "width": 286
+      },
+      "second": {
+        "x": 422,
+        "y": 447,
+        "width": 286
+      }
+    }
+  ],
+  "cart": [
+    {
+      "width": 320,
+      "content": 320,
+      "items": 1
+    },
+    {
+      "width": 390,
+      "content": 390,
+      "items": 1
+    }
+  ],
+  "accessibility": [
+    {
+      "path": "/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr",
+        "color-contrast"
+      ]
+    },
+    {
+      "path": "/products",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr",
+        "color-contrast"
+      ]
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr",
+        "color-contrast"
+      ]
+    },
+    {
+      "path": "/products",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr",
+        "color-contrast"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "/images/products/usb-c-hub.webp",
+      "sha256": "eea512731d616ff900a044e6303f46ef81181a27a748ab2c22136a4b451788da",
+      "bytes": 11608
+    },
+    {
+      "path": "/images/products/laptop-stand.webp",
+      "sha256": "a6b682c66b3fc800e93c6e97fbf17b68d2ec057cde0ffc53076123963ec324ed",
+      "bytes": 14186
+    },
+    {
+      "path": "/images/products/leather-desk-mat.webp",
+      "sha256": "d98fc1ff741ab1d2f4b13af28e0f9698b6fbb70e943205c6b0242fcadfe6950b",
+      "bytes": 19456
+    }
+  ],
+  "errors": [],
+  "health": {
+    "status": "ok",
+    "database": "connected"
+  },
+  "publicProducts": 10,
+  "result": "PASS",
+  "scope": "Real public API/catalog, client-only cart, mobile grid, filters, drawer, auth form rendering; no mocks, login, registration or order submission."
+}

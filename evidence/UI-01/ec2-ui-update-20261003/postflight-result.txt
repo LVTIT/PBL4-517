@@ -1,0 +1,19 @@
+2026-10-03T15:58:41Z
+## HEAD (no branch)
+MainPID=12885
+NRestarts=0
+ExecMainStartTimestamp=Sat 2026-10-03 15:58:31 UTC
+ActiveState=active
+SubState=running
+enabled
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*    users:(("MainThread",pid=12885,fd=22))
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*    users:(("postgres",pid=728,fd=6))
+website/backend/.env: OK
+600 ubuntu ubuntu
+755 ubuntu ubuntu
+644 ubuntu ubuntu
+{"health":"PASS","publicProducts":10,"verificationItemsHidden":true}
+BUILD_HASHES_AND_ENV=PASS

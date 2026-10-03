@@ -1,0 +1,90 @@
+active
+active
+active
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+Production secure baseline: PASS
+From https://github.com/LVTIT/PBL4-517
+ * branch            feature/51-kevilo-ui -> FETCH_HEAD
+   9f75879..524c878  feature/51-kevilo-ui -> origin/feature/51-kevilo-ui
+Preparing worktree (detached HEAD 524c878)
+HEAD is now at 524c878 docs(ui): record passing CI fixture verification (Refs #51)
+
+added 251 packages, and audited 252 packages in 23s
+
+48 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+npm warn install-scripts   @prisma/engines@7.10.0 (postinstall: node scripts/postinstall.js)
+npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn install-scripts   prisma@7.10.0 (preinstall: node scripts/preinstall-entry.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+
+> pbl517-backend@0.1.0 build
+> prisma generate && tsc -p tsconfig.json
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (7.10.0) to ./src/generated/prisma in 169ms
+
+# npm audit report
+
+fast-uri  3.0.0 - 3.1.7
+Severity: moderate
+fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets - https://github.com/advisories/GHSA-hrr3-gc8f-f4qj
+fix available via `npm audit fix`
+node_modules/fast-uri
+
+ip-address  <=10.7.0
+Severity: moderate
+ip-address: isInSubnet() and isHostInSubnet() compare addresses of different families as if they shared an address space, allowing an allowlist check to admit an address outside its range - https://github.com/advisories/GHSA-j6r3-76f7-8jcv
+ip-address: Address6 builds a parse diagnostic proportional to the input with no length bound, allowing a single long string to stall or crash the process - https://github.com/advisories/GHSA-h3mg-xc3c-68pw
+fix available via `npm audit fix`
+node_modules/ip-address
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+added 35 packages, and audited 36 packages in 2s
+
+9 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> pbl4-517-frontend@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 98 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.78 kB │ gzip:  0.44 kB
+dist/assets/index-CAi3WJtA.css            33.22 kB │ gzip:  6.18 kB
+dist/assets/ConfirmDialog-DfBj62O4.js      2.13 kB │ gzip:  0.96 kB
+dist/assets/RegisterPage-ij7ScF9S.js       5.48 kB │ gzip:  1.89 kB
+dist/assets/OrdersPage-CFUamkIP.js         6.61 kB │ gzip:  2.40 kB
+dist/assets/ProfilePage-CnaI2_cW.js        7.29 kB │ gzip:  2.22 kB
+dist/assets/OrderDetailPage-CEtirOMb.js   10.84 kB │ gzip:  3.41 kB
+dist/assets/AdminPage-BLR2Sd04.js         16.46 kB │ gzip:  4.65 kB
+dist/assets/index-CPUNMCjP.js            322.45 kB │ gzip: 97.31 kB
+
+✓ built in 506ms
+found 0 vulnerabilities
+website/backend/.env: OK
+active
+{"data":{"status":"ok","database":"connected"}}
+RELEASE_BUILT=524c878c00570df76a1765f0d774361f18de021f
