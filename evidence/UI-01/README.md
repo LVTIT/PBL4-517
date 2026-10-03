@@ -117,33 +117,14 @@ Running 28 tests using 2 workers
 
 ## 6. Hướng dẫn bàn giao & Triển khai EC2
 
-**Đã được kiểm tra lại:** Xem [audit nhánh, CI và EC2](deployment-audit.md).
-EC2 chưa deploy UI mới và đang detached HEAD tại `e0f783b`. Các bước dưới đây
-là hướng dẫn dự kiến sau review/merge và phê duyệt production; không phải bằng
-chứng đã triển khai. Dùng exact tested commit thay cho `git pull` trên server.
-Lệnh setup/build canonical ở [website README](../../website/README.md#build).
+**Cập nhật 2026-10-03:** Người dùng chỉ định deploy bản đã kiểm thử trên nhánh
+51 và giữ PR #52 chưa merge để tiếp tục UI. Xem [audit lịch sử](deployment-audit.md)
+và [evidence triển khai, kiểm tra public, backup và giới hạn](ec2-20261003/README.md).
+Lệnh setup/build/catalog/service chỉ duy trì ở
+[website README](../../website/README.md#production-start-ec2-linux).
 
-1. **Chuẩn bị trước khi phát hành:**
-   - Sau khi PR được Team Leader phê duyệt và hợp nhất vào `main`.
-   - Kết nối SSH vào máy chủ EC2 Singapore.
-2. **Các bước trên EC2:**
-   ```bash
-   cd /var/www/pbl4-517
-   # Sau khi xác nhận working tree sạch và commit đã qua CI/phê duyệt:
-   git fetch origin
-   git checkout --detach <approved-tested-commit-sha>
-   cd website/backend
-   npm ci
-   npm run build
-   npm run prisma:migrate
-   npm run catalog:import
-   # Chỉ apply sau khi kiểm tra dry-run và duyệt catalog của bản phát hành:
-   npm run catalog:import -- --apply
-   sudo systemctl restart pbl4-backend
-   cd ../frontend
-   npm ci
-   npm run build
-   ```
-3. **Rollback plan:**
-   - Trong trường hợp cần quay lại phiên bản trước: `git checkout <previous-sha>` và rebuild.
-   - Do migration thêm cột nullable `imageKey`, phiên bản backend trước vẫn hoạt động bình thường mà không cần drop cột database hay can thiệp vào các đơn hàng hiện có.
+Các kết quả 28/28 trong báo cáo ban đầu phía trên có phạm vi giới hạn. Audit
+phát hiện kiểm tra contrast bị tắt và test responsive đo trước khi auth/data
+hoàn tất; sửa contrast/wordmark/favicon ở `0cfed00`, còn regression header/menu
+được bổ sung trong lần triển khai này. Không dùng báo cáo lịch sử để khẳng định
+mọi luồng đã được kiểm thử hoặc toàn bộ website đạt WCAG 2.2 AA.

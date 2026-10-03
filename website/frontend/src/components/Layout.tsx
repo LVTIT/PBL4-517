@@ -96,15 +96,15 @@ export function Layout() {
                 aria-label={`Giỏ hàng, có ${totalCount} sản phẩm`}
               >
                 <CartIcon size={20} />
-                <span>Giỏ hàng</span>
+                <span className="cart-label">Giỏ hàng</span>
                 {totalCount > 0 && <span className="cart-badge">{totalCount}</span>}
               </Link>
             )}
 
             {loading ? (
-              <span className="small muted" role="status">Đang tải…</span>
+              <span className="small muted header-session-status" role="status">Đang tải…</span>
             ) : user ? (
-              <div className="account-dropdown-wrap" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="account-dropdown-wrap header-account-actions">
                 <NavLink
                   to="/profile"
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
@@ -124,7 +124,7 @@ export function Layout() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="header-account-actions">
                 <NavLink to="/login" className="button button-small button-secondary">
                   Đăng nhập
                 </NavLink>

@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { DEMO_CATALOG } from '../../../backend/src/data/catalog';
 
 test.describe('Brand Identity (B0) & Responsive Layout', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({
+      json: { data: { user: null } },
+    }));
+    await page.route('**/api/products', (route) => route.fulfill({
+      json: { data: DEMO_CATALOG.map(product => ({ ...product, stock: product.defaultStock })) },
+    }));
+  });
   test('Home page displays KEVILO brand identity and correct metadata', async ({ page }) => {
     await page.goto('/');
 
@@ -43,7 +52,11 @@ test.describe('Brand Identity (B0) & Responsive Layout', () => {
     test(`No horizontal overflow at ${bp.name} (${bp.width}px)`, async ({ page }) => {
       await page.setViewportSize({ width: bp.width, height: bp.height });
       await page.goto('/');
-      await page.waitForLoadState('domcontentloaded');
+      // Measure the populated page after auth controls and webfonts have loaded.
+      await expect(page.locator('.header-account-actions')).toBeAttached();
+      await expect(page.locator('.product-card')).toHaveCount(4);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator('.brand-link')).toBeVisible();
 
       const isOverflowing = await page.evaluate(() => {
         return document.documentElement.scrollWidth > window.innerWidth;
@@ -56,15 +69,17 @@ test.describe('Brand Identity (B0) & Responsive Layout', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
 
-    const menuToggle = page.locator('button[aria-label="Mở danh mục điều hướng"]');
-    if (await menuToggle.isVisible()) {
-      await menuToggle.click();
-      const drawer = page.locator('.mobile-drawer');
-      await expect(drawer).toBeVisible();
+    const menuToggle = page.getByRole('button', { name: 'Mở menu điều hướng', exact: true });
+    await expect(menuToggle).toBeVisible();
+    await menuToggle.click();
+    const drawer = page.locator('.mobile-drawer');
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole('link', { name: 'Đăng nhập', exact: true })).toBeVisible();
+    await expect(drawer.getByRole('link', { name: 'Đăng ký tài khoản', exact: true })).toBeVisible();
 
-      // Press Escape to dismiss
-      await page.keyboard.press('Escape');
-      await expect(drawer).not.toBeVisible();
-    }
+    // Press Escape to dismiss
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible();
+    await expect(menuToggle).toBeFocused();
   });
 });

@@ -59,3 +59,49 @@ Workflow hiện tại chạy CI, không có bước tự động deploy producti
 Đây là kết quả audit và thứ tự triển khai đề xuất; chưa phải evidence deploy
 KEVILO thành công. Các bước vận hành service ở
 [tài liệu #15](../../docs/aws/linux-service-review.md).
+
+## Tiếp tục ngày 2026-10-03
+
+Yêu cầu mới nhất của người dùng cho phép triển khai bản đã kiểm thử của
+`feature/51-kevilo-ui` lên EC2, migration `imageKey`, import catalog và restart
+`pbl4-backend`, đồng thời **giữ PR #52 chưa merge và không ghi lên main**.
+Thứ tự yêu cầu merge trước deploy ở phần audit lịch sử bên trên không áp dụng
+cho lần triển khai nhánh được người dùng chỉ định này. Không thay đổi quy tắc
+merge/review chung, cấu hình GitHub/AWS hoặc bật CD.
+
+- Candidate: `0cfed004b92168a2fb92c9b91d3fac78f8bc31e3`.
+- [CI 37038666755](https://github.com/LVTIT/PBL4-517/actions/runs/37038666755):
+  cả 5 required jobs PASS. Log integration xác nhận API 16/16 và Playwright
+  28/28 (15.0s), chạy với PostgreSQL thật cho API.
+- Candidate chứa wordmark SVG, favicon PNG và các sửa lỗi tương phản
+  `--color-text-subtle`, `--color-success`, `.footer-note`; axe không còn tắt
+  `color-contrast`, bổ sung tag `wcag22aa`, yêu cầu zero violations trên hai
+  trang Home/Catalog. Giới hạn phạm vi UI audit vẫn còn như mô tả ở README.
+- Candidate cũng có fallback dữ liệu trong Vite dev/preview. Nginx production
+  phải phục vụ static build và proxy Express thật; không chạy Vite preview
+  trên EC2 hoặc dùng dữ liệu fallback làm evidence database/checkout.
+- PR #52 OPEN/unmerged, main vẫn `4e5fb08`. Agent chưa thực hiện human review,
+  approve hay merge thay Owner.
+
+**Blocker ban đầu, đã được human khôi phục:** SSH với key hiện có, `StrictHostKeyChecking=yes`
+và `BatchMode=yes` timeout hai lần. TCP probe cổng 22 timeout, cổng 443 kết nối
+được; HTTPS health trả 200, database connected. Check-IP của AWS trả IP nguồn
+`117.3.122.139`. Đã yêu cầu human kiểm tra SSH TCP 22 allowlist cho IP này `/32`.
+Chưa đọc được Security Group qua AWS API nên chưa khẳng định rule là nguyên
+nhân. Không có thao tác thay đổi EC2 trong lượt bị chặn này.
+
+Bộ lệnh local tại `.local/kevilo-51-deploy/` đã chuẩn bị cho đúng candidate:
+build release trong worktree riêng; backup app/database riêng tư; migration và
+dry-run; apply catalog có đối chiếu stock/user/order counts; chuyển build và
+dependency, restart service, health check, rollback khi activation thất bại.
+Ba script shell đã PASS `bash -n`; browser verification script PASS `node --check`.
+Các kết quả đó chỉ xác nhận cú pháp, chưa chứng minh triển khai thành công.
+
+Sau khi human báo đã cập nhật SSH, kết nối được khôi phục. Đã triển khai
+candidate `0cfed00`, áp dụng migration, nạp 10 sản phẩm và restart service;
+xem [evidence EC2](ec2-20261003/README.md). Lượt kiểm tra browser thật phát hiện
+header tràn ngang tại 320px sau khi auth trả về. Bản sửa trên nhánh 51 đưa các
+thao tác tài khoản vào menu mobile và giữ cart icon 44px. Test responsive nay
+đợi auth, dữ liệu và font hoàn tất; test menu dùng đúng accessible name và
+không còn bỏ qua assertion bằng `if (isVisible())`. Bản sửa cần CI và cập nhật
+EC2 trước khi kết luận kiểm tra responsive public PASS.

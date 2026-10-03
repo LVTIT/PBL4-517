@@ -384,16 +384,30 @@ Issue #15 now has an active/enabled systemd backend with verified stop/start/res
 and journal checks (2026-10-02). [Service operations and approved reboot verification](../docs/aws/linux-service-review.md),
 [evidence](../evidence/LINUX-02/README.md). Automatic startup after one reboot and external HTTPS were verified.
 
-Trong `website/backend` trên máy EC2 (đã có `.env` production với `NODE_ENV=production`, `VULN_IDOR_ENABLED=false`):
+EC2 hiện dùng service `pbl4-backend`. Backend bind `127.0.0.1`, Nginx reverse
+proxy `/api/` và phục vụ `frontend/dist/`. Không chạy thêm `npm start` cạnh
+service đang chiếm port 3000.
+
+Khi cập nhật bản đã được duyệt: chốt exact tested SHA, build theo mục Build
+ở worktree riêng trên Linux (cài cả devDependencies để compile), giữ `.env`
+production riêng tư và secure baseline. Sao lưu app/database trước khi chạy
+`npm run prisma:migrate`. Với catalog KEVILO, xem trước bằng
+`npm run catalog:import`; chỉ dùng `npm run catalog:import -- --apply` khi
+catalog của bản phát hành đã được duyệt. Không chạy development seed trên EC2.
+
+Sau khi kiểm tra build và chuyển output/dependency tương ứng vào đường dẫn
+service/Nginx đang dùng:
 
 ```sh
-npm ci
-npm run build
-npm run prisma:migrate
-npm start
+sudo systemctl restart pbl4-backend
+systemctl is-active pbl4-backend
+systemctl is-enabled pbl4-backend
+curl --fail --silent --show-error https://47.129.214.70/api/health
 ```
 
-`npm start` chạy `node dist/server.js` (không dùng `tsx`); backend bind `127.0.0.1`, Nginx reverse proxy `/api/` và phục vụ `frontend/dist/`. Chi tiết Nginx/systemd thuộc các issue triển khai tiếp theo.
+Kiểm tra frontend/assets/API qua HTTPS, quyền đọc static files của Nginx,
+loopback listeners và hash bản build. Giữ backup cho rollback, không reset
+database. [Evidence và giới hạn lần triển khai nhánh 51](../evidence/UI-01/ec2-20261003/README.md).
 
 ## Troubleshooting
 

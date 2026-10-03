@@ -1,0 +1,43 @@
+2026-10-03T03:46:57Z
+0cfed004b92168a2fb92c9b91d3fac78f8bc31e3
+## HEAD (no branch)
+MainPID=7586
+NRestarts=0
+ExecMainStartTimestamp=Sat 2026-10-03 03:46:17 UTC
+ActiveState=active
+SubState=running
+enabled
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*    users:(("MainThread",pid=7586,fd=22))
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*    users:(("postgres",pid=728,fd=6))
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+            migration_name            | applied
+--------------------------------------+---------
+ 20260914000000_initial               | t
+ 20260918000000_expand_ecommerce      | t
+ 20260918140000_guest_checkout        | t
+ 20261002000000_add_product_image_key | t
+(4 rows)
+
+ total_products | products_with_images
+----------------+----------------------
+             11 |                   10
+(1 row)
+
+ users
+-------
+     1
+(1 row)
+
+ orders
+--------
+      1
+(1 row)
+
+600 ubuntu ubuntu
+755 ubuntu ubuntu
+644 ubuntu ubuntu
+/var/www/pbl4-517/website/backend/.env: OK
+Live build hash verification: PASS
+{"data":{"status":"ok","database":"connected"}}
