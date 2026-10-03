@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import { Pool } from 'pg';
 import { compare } from 'bcryptjs';
@@ -59,13 +60,14 @@ test('real PostgreSQL API and session authentication', async (suite) => {
     });
 
     await suite.test('public catalog excludes deployment verification items', async () => {
-      const testId = 'test-deploy-verify-synthetic';
+      const testId = randomUUID();
       await database.query(
-        'INSERT INTO "Product" (id, name, description, price, stock, category) VALUES ($1, $2, $3, $4, $5, $6)',
+        'INSERT INTO "Product" (id, name, description, price, stock, category, "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, NOW())',
         [testId, 'Deployment verification item - NOT FOR SALE', 'Verification item only', 10000, 0, 'Deployment verification']
       );
       try {
         const publicList = await browser.request('/products');
+        assert.equal(publicList.status, 200);
         const foundInPublic = publicList.body.data.some(
           (p) => p.id === testId || p.category === 'Deployment verification' || p.name.includes('NOT FOR SALE')
         );
@@ -75,6 +77,7 @@ test('real PostgreSQL API and session authentication', async (suite) => {
         assert.equal(singlePublic.status, 404, 'Direct public request for verification item must 404');
 
         const verificationList = await browser.request('/products?includeVerification=true');
+        assert.equal(verificationList.status, 200);
         const foundInVerification = verificationList.body.data.some((p) => p.id === testId);
         assert.equal(foundInVerification, true, 'Can query with includeVerification=true');
 
