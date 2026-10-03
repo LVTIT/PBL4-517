@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useLocation } from 'react-router';
 import { get, messageFrom, post } from '../services/api';
 import { useAuth } from '../services/auth';
 import { useCart } from '../services/cart';
@@ -18,12 +18,14 @@ const currency = new Intl.NumberFormat('vi-VN', {
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, getItemQuantity } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -39,13 +41,27 @@ export function ProductDetailPage() {
     if (!id) return;
     setLoading(true);
     setError(null);
+    setIsNotFound(false);
     get<Product>(`/products/${id}`)
       .then((data) => {
+        if (data.category === 'Deployment verification' || data.name.includes('NOT FOR SALE')) {
+          setIsNotFound(true);
+          setError('Sản phẩm không tồn tại.');
+          document.title = getPageTitle('Không tìm thấy sản phẩm');
+          return;
+        }
         setProduct(data);
         document.title = getPageTitle(data.name);
       })
-      .catch((err) => {
-        setError(messageFrom(err));
+      .catch((err: unknown) => {
+        const msg = messageFrom(err);
+        setError(msg);
+        if (msg.includes('không tồn tại') || msg.toLowerCase().includes('not found') || msg.includes('404')) {
+          setIsNotFound(true);
+          document.title = getPageTitle('Không tìm thấy sản phẩm');
+        } else {
+          document.title = getPageTitle('Lỗi tải sản phẩm');
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -58,11 +74,21 @@ export function ProductDetailPage() {
 
   function handleAddToCart() {
     if (!product || product.stock <= 0 || user?.role === 'ADMIN') return;
-    addToCart(product, quantity);
+    const result = addToCart(product, quantity);
+    if (!result.success) {
+      setToast({
+        id: String(Date.now()),
+        type: 'warning',
+        message: result.message,
+        actionText: 'Xem giỏ hàng',
+        actionHref: '/cart',
+      });
+      return;
+    }
     setToast({
       id: String(Date.now()),
       type: 'success',
-      message: `Đã thêm ${quantity} × "${product.name}" vào giỏ hàng.`,
+      message: result.message,
       actionText: 'Xem giỏ hàng',
       actionHref: '/cart',
     });
@@ -113,12 +139,28 @@ export function ProductDetailPage() {
     );
   }
 
+  if (isNotFound || (!loading && !product && !error)) {
+    return (
+      <div className="container page-content">
+        <div className="state-panel" role="alert">
+          <h2>Không tìm thấy sản phẩm</h2>
+          <p>Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.</p>
+          <div style={{ marginTop: '16px' }}>
+            <Link className="button button-primary" to="/products">
+              Quay lại danh mục
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !product) {
     return (
       <div className="container page-content">
         <div className="state-panel" role="alert">
           <h2>Chưa thể tải thông tin sản phẩm</h2>
-          <p>{error ?? 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'}</p>
+          <p>{error ?? 'Đã xảy ra sự cố khi kết nối.'}</p>
           <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
             <button type="button" className="button button-secondary" onClick={fetchProduct}>
               <RefreshIcon size={16} />
@@ -133,7 +175,10 @@ export function ProductDetailPage() {
     );
   }
 
+  const inCartCount = getItemQuantity(product.id);
   const isOutOfStock = product.stock <= 0;
+  const isMaxInCart = product.stock > 0 && inCartCount >= product.stock;
+  const maxAddable = Math.max(0, product.stock - inCartCount);
   const hasReviews = (product.reviewCount ?? 0) > 0;
   const isAdmin = user?.role === 'ADMIN';
 
@@ -216,7 +261,7 @@ export function ProductDetailPage() {
                   <button
                     type="button"
                     className="qty-btn"
-                    disabled={quantity <= 1 || isOutOfStock}
+                    disabled={quantity <= 1 || isOutOfStock || isMaxInCart}
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     aria-label="Giảm số lượng"
                   >
@@ -227,19 +272,19 @@ export function ProductDetailPage() {
                     type="number"
                     className="qty-input"
                     min={1}
-                    max={product.stock}
-                    value={quantity}
-                    disabled={isOutOfStock}
+                    max={maxAddable || 1}
+                    value={isMaxInCart ? 0 : quantity}
+                    disabled={isOutOfStock || isMaxInCart}
                     onChange={(e) =>
-                      setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value) || 1)))
+                      setQuantity(Math.max(1, Math.min(maxAddable, Number(e.target.value) || 1)))
                     }
                     aria-label="Số lượng sản phẩm cần mua"
                   />
                   <button
                     type="button"
                     className="qty-btn"
-                    disabled={quantity >= product.stock || isOutOfStock}
-                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                    disabled={quantity >= maxAddable || isOutOfStock || isMaxInCart}
+                    onClick={() => setQuantity((q) => Math.min(maxAddable, q + 1))}
                     aria-label="Tăng số lượng"
                   >
                     +
@@ -247,13 +292,23 @@ export function ProductDetailPage() {
                 </div>
               </div>
 
+              {inCartCount > 0 && (
+                <p className="small muted" style={{ margin: '0 0 12px 0' }}>
+                  Bạn đã có <strong>{inCartCount}</strong> sản phẩm này trong giỏ hàng (tồn kho: {product.stock}).
+                </p>
+              )}
+
               <button
                 type="button"
                 className="button button-primary button-large"
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isMaxInCart}
                 onClick={handleAddToCart}
               >
-                {isOutOfStock ? 'Sản phẩm tạm hết hàng' : 'Thêm vào giỏ hàng'}
+                {isOutOfStock
+                  ? 'Sản phẩm tạm hết hàng'
+                  : isMaxInCart
+                  ? 'Đã chọn tối đa số lượng trong giỏ'
+                  : 'Thêm vào giỏ hàng'}
               </button>
             </div>
           )}
@@ -341,7 +396,7 @@ export function ProductDetailPage() {
         {!user && (
           <div className="notice" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <span>Đăng nhập để chia sẻ đánh giá của bạn về sản phẩm này.</span>
-            <Link to="/login" className="button button-secondary button-small">
+            <Link to="/login" state={{ from: location.pathname }} className="button button-secondary button-small">
               Đăng nhập
             </Link>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../services/auth';
 import { useCart } from '../services/cart';
@@ -17,26 +17,71 @@ export function Layout() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
 
+  const drawerRef = useRef<HTMLElement>(null);
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    menuButtonRef.current?.focus();
+  };
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Handle Escape key to close drawer and lock body scroll
+  // Handle Escape key, focus trapping, and lock body scroll for mobile drawer
   useEffect(() => {
     if (!mobileMenuOpen) return;
 
+    document.body.style.overflow = 'hidden';
+
+    const focusTimer = window.setTimeout(() => {
+      if (drawerRef.current) {
+        const focusables = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          focusables[0]?.focus();
+        }
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setMobileMenuOpen(false);
-        menuButtonRef.current?.focus();
+        closeMobileMenu();
+        return;
+      }
+
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusables = Array.from(
+          drawerRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        );
+
+        if (focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
       }
     };
 
-    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      window.clearTimeout(focusTimer);
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -153,9 +198,10 @@ export function Layout() {
       {mobileMenuOpen && (
         <div
           className="mobile-drawer-overlay"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         >
           <aside
+            ref={drawerRef}
             className="mobile-drawer"
             role="dialog"
             aria-modal="true"
@@ -163,13 +209,13 @@ export function Layout() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="drawer-header">
-              <Link to="/" onClick={() => setMobileMenuOpen(false)} aria-label="KEVILO, trang chủ">
+              <Link to="/" onClick={closeMobileMenu} aria-label="KEVILO, trang chủ">
                 <BrandLogo size={28} />
               </Link>
               <button
                 type="button"
                 className="dialog-close-btn"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
                 aria-label="Đóng menu"
               >
                 <CloseIcon size={20} />
@@ -177,24 +223,24 @@ export function Layout() {
             </div>
 
             <nav className="drawer-nav" aria-label="Điều hướng di động">
-              <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>
+              <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMobileMenu}>
                 Trang chủ
               </NavLink>
-              <NavLink to="/products" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <NavLink to="/products" className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMobileMenu}>
                 Sản phẩm
               </NavLink>
               {user?.role === 'CUSTOMER' && (
-                <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMobileMenu}>
                   Đơn hàng của tôi
                 </NavLink>
               )}
               {user?.role === 'ADMIN' && (
-                <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMobileMenu}>
                   Bảng điều khiển Quản trị
                 </NavLink>
               )}
               {user && (
-                <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMobileMenu}>
                   Hồ sơ cá nhân
                 </NavLink>
               )}
@@ -212,10 +258,10 @@ export function Layout() {
                 </button>
               ) : (
                 <>
-                  <NavLink to="/login" className="button button-primary">
+                  <NavLink to="/login" className="button button-primary" onClick={closeMobileMenu}>
                     Đăng nhập
                   </NavLink>
-                  <NavLink to="/register" className="button button-secondary">
+                  <NavLink to="/register" className="button button-secondary" onClick={closeMobileMenu}>
                     Đăng ký tài khoản
                   </NavLink>
                 </>
@@ -245,7 +291,18 @@ export function Layout() {
       )}
 
       <main id="main-content">
-        <Outlet />
+        <Suspense
+          fallback={
+            <div className="container" style={{ padding: '80px 0', textAlign: 'center' }}>
+              <div className="state-panel" role="status">
+                <span className="spinner" />
+                <p>Đang tải trang…</p>
+              </div>
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="site-footer">

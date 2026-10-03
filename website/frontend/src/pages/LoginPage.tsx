@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../services/auth';
@@ -18,6 +18,8 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     document.title = getPageTitle('Đăng nhập');
   }, []);
@@ -34,6 +36,9 @@ export function LoginPage() {
       navigate(target, { replace: true });
     } catch (err) {
       setError(messageFrom(err));
+      setTimeout(() => {
+        passwordInputRef.current?.focus();
+      }, 0);
     } finally {
       setPassword('');
       setSubmitting(false);
@@ -113,6 +118,7 @@ export function LoginPage() {
                 </label>
                 <div className="form-input-password-wrap">
                   <input
+                    ref={passwordInputRef}
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
@@ -123,8 +129,12 @@ export function LoginPage() {
                     maxLength={72}
                     className="form-input"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      if (error) setError(null);
+                    }}
                     disabled={submitting}
+                    aria-invalid={Boolean(error)}
                     aria-describedby={error ? 'login-error' : undefined}
                   />
                   <button

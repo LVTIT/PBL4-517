@@ -1,11 +1,18 @@
 import { prisma } from '../lib/database.js';
 import { AppError, databaseUnavailable } from '../lib/errors.js';
 
-export async function listProducts(search?: string, category?: string) {
+export async function listProducts(search?: string, category?: string, includeVerification = false) {
   try {
     const where: Record<string, unknown> = {};
     if (category && category !== 'ALL') {
       where.category = category;
+    }
+    if (!includeVerification) {
+      where.NOT = [
+        { category: 'Deployment verification' },
+        { name: { contains: 'NOT FOR SALE', mode: 'insensitive' } },
+        { name: { contains: 'DO NOT BUY', mode: 'insensitive' } },
+      ];
     }
     if (search && search.trim()) {
       where.OR = [
@@ -23,7 +30,7 @@ export async function listProducts(search?: string, category?: string) {
   }
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string, includeVerification = false) {
   try {
     const product = await prisma.product.findUnique({
       where: { id },
@@ -35,6 +42,14 @@ export async function getProductById(id: string) {
       },
     });
     if (!product) {
+      throw new AppError(404, 'NOT_FOUND', 'Sản phẩm không tồn tại.');
+    }
+    if (
+      !includeVerification &&
+      (product.category === 'Deployment verification' ||
+        product.name.toUpperCase().includes('NOT FOR SALE') ||
+        product.name.toUpperCase().includes('DO NOT BUY'))
+    ) {
       throw new AppError(404, 'NOT_FOUND', 'Sản phẩm không tồn tại.');
     }
     const avgRating = product.reviews.length > 0

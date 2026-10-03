@@ -111,4 +111,53 @@ test.describe('Catalog, Search, and Cart Interactions', () => {
     await expect(guestNotice).toBeVisible();
     await expect(guestNotice).toContainText('Đặt hàng không cần tài khoản');
   });
+
+  test('Search reset immediately clears query and cancels pending debounce', async ({ page }) => {
+    await page.goto('/products');
+    const searchInput = page.locator('#catalog-search-input');
+    await searchInput.fill('không dây');
+
+    // Click "Đặt lại bộ lọc"
+    const resetBtn = page.getByRole('button', { name: 'Đặt lại bộ lọc', exact: true });
+    await expect(resetBtn).toBeVisible();
+    await resetBtn.click();
+
+    // Verify search input is cleared immediately
+    await expect(searchInput).toHaveValue('');
+
+    // Wait past debounce interval (350ms) to ensure debounce doesn't re-apply
+    await page.waitForTimeout(450);
+    await expect(searchInput).toHaveValue('');
+    expect(page.url()).not.toContain('search=');
+  });
+
+  test('Adding item up to stock saturation updates button state and shows warning toast', async ({ page }) => {
+    await page.goto('/products');
+
+    // Product with stock 10
+    const card = page.locator('.product-card:has-text("Bàn phím cơ Mini 68")');
+    const ctaBtn = card.locator('.product-card-cta');
+
+    // Add once
+    await ctaBtn.click();
+    await expect(page.locator('.live-toast')).toContainText('Đã thêm');
+
+    // Navigate to cart and set quantity to max (10)
+    await page.goto('/cart');
+    await expect(page.locator('.cart-item-row')).toBeVisible();
+
+    // Increase quantity to max
+    const plusBtn = page.locator('button[aria-label="Tăng số lượng Bàn phím cơ Mini 68"]');
+    for (let i = 1; i < 10; i++) {
+      await plusBtn.click();
+    }
+    await expect(page.locator('.qty-input')).toContainText('10');
+
+    // Back to products - button should now be disabled or indicate in-cart limit
+    await page.goto('/products');
+    const updatedCard = page.locator('.product-card:has-text("Bàn phím cơ Mini 68")');
+    const updatedCta = updatedCard.locator('.product-card-cta');
+    await expect(updatedCta).toBeDisabled();
+    await expect(updatedCta).toContainText('Đã đạt tối đa');
+  });
 });

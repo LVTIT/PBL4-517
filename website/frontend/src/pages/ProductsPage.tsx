@@ -5,6 +5,7 @@ import { LiveToast, type ToastMessage } from '../components/LiveToast';
 import { SearchIcon, CloseIcon, RefreshIcon } from '../components/Icon';
 import { get, messageFrom } from '../services/api';
 import type { Product } from '../types/api';
+import type { AddToCartResult } from '../services/cart';
 import { getPageTitle } from '../config/brand';
 
 type ProductState =
@@ -38,6 +39,15 @@ export function ProductsPage() {
   useEffect(() => {
     setSearchInput(urlSearch);
   }, [urlSearch]);
+
+  // Clean up debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        window.clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Debounced search input handler (300ms)
   const handleSearchChange = (val: string) => {
@@ -107,6 +117,9 @@ export function ProductsPage() {
   };
 
   const handleResetFilters = () => {
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
     setSearchInput('');
     setSearchParams({}, { replace: true });
   };
@@ -124,7 +137,10 @@ export function ProductsPage() {
 
     get<Product[]>(`/products${queryString}`, controller.signal)
       .then((products) => {
-        setState({ status: 'success', products });
+        const validProducts = products.filter(
+          (p) => p.category !== 'Deployment verification' && !p.name.includes('NOT FOR SALE')
+        );
+        setState({ status: 'success', products: validProducts });
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
@@ -147,11 +163,22 @@ export function ProductsPage() {
     return list;
   }, [state, urlSort]);
 
-  function handleProductAdded(productName: string) {
+  function handleProductAdded(productName: string, result?: AddToCartResult) {
+    if (result && !result.success) {
+      setToast({
+        id: String(Date.now()),
+        type: 'warning',
+        message: result.message,
+        actionText: 'Xem giỏ hàng',
+        actionHref: '/cart',
+      });
+      return;
+    }
+
     setToast({
       id: String(Date.now()),
       type: 'success',
-      message: `Đã thêm "${productName}" vào giỏ hàng.`,
+      message: result?.message ?? `Đã thêm "${productName}" vào giỏ hàng.`,
       actionText: 'Xem giỏ hàng',
       actionHref: '/cart',
     });
@@ -176,6 +203,7 @@ export function ProductsPage() {
             <SearchIcon size={18} />
           </span>
           <input
+            id="catalog-search-input"
             type="search"
             className="search-field-input"
             placeholder="Tìm kiếm theo tên hoặc mô tả…"
@@ -213,10 +241,10 @@ export function ProductsPage() {
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
+      {/* Category Filter Group */}
       <div
         className="filter-tabs"
-        role="tablist"
+        role="group"
         aria-label="Lọc theo danh mục"
         style={{ marginBottom: '24px' }}
       >
@@ -224,8 +252,7 @@ export function ProductsPage() {
           <button
             key={cat}
             type="button"
-            role="tab"
-            aria-selected={urlCategory === cat}
+            aria-pressed={urlCategory === cat}
             className={`filter-tab ${urlCategory === cat ? 'active' : ''}`}
             onClick={() => handleCategorySelect(cat)}
           >
@@ -239,9 +266,31 @@ export function ProductsPage() {
         <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)' }}>
           {urlCategory !== 'Tất cả' ? urlCategory : 'Tất cả sản phẩm'}
         </span>
-        <span className="small muted">
-          {state.status === 'success' ? `${sortedProducts.length} sản phẩm` : 'Đang tải…'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {(urlSearch || urlCategory !== 'Tất cả' || urlSort !== 'default') && (
+            <button
+              type="button"
+              className="text-button"
+              onClick={handleResetFilters}
+              style={{ fontSize: '0.8125rem' }}
+            >
+              Đặt lại bộ lọc
+            </button>
+          )}
+          <span className="small muted">
+            {state.status === 'success'
+              ? `${sortedProducts.length} sản phẩm`
+              : state.status === 'loading'
+              ? 'Đang tải…'
+              : 'Chưa thể tải dữ liệu'}
+          </span>
+        </div>
+      </div>
+
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {state.status === 'success'
+          ? `Đã tải ${sortedProducts.length} sản phẩm thuộc ${urlCategory !== 'Tất cả' ? urlCategory : 'tất cả danh mục'}`
+          : ''}
       </div>
 
       {/* Loading State */}

@@ -3,12 +3,21 @@ import type { ReactNode } from 'react';
 import type { CartItem, Product } from '../types/api';
 import { useAuth } from './auth';
 
+export interface AddToCartResult {
+  success: boolean;
+  added: number;
+  currentQuantity: number;
+  stock: number;
+  message: string;
+}
+
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number) => AddToCartResult;
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
+  getItemQuantity: (productId: string) => number;
   totalCount: number;
   totalAmount: number;
 }
@@ -106,22 +115,60 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, user?.id]);
 
-  function addToCart(product: Product, quantity = 1) {
-    if (product.stock <= 0) return;
+  function getItemQuantity(productId: string): number {
+    const item = items.find((i) => i.productId === productId);
+    return item ? item.quantity : 0;
+  }
+
+  function addToCart(product: Product, quantity = 1): AddToCartResult {
+    if (product.stock <= 0) {
+      return {
+        success: false,
+        added: 0,
+        currentQuantity: 0,
+        stock: 0,
+        message: `Sản phẩm "${product.name}" hiện đã hết hàng.`,
+      };
+    }
+
+    const requested = Math.max(1, quantity);
+    const existing = items.find((item) => item.productId === product.id);
+    const currentQty = existing ? existing.quantity : 0;
+    const canAdd = Math.max(0, Math.min(requested, product.stock - currentQty));
+
+    if (canAdd <= 0) {
+      return {
+        success: false,
+        added: 0,
+        currentQuantity: currentQty,
+        stock: product.stock,
+        message: `Bạn đã chọn tối đa số lượng hiện có (${product.stock}) trong giỏ hàng.`,
+      };
+    }
+
+    const newQty = currentQty + canAdd;
 
     setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id);
-      if (existing) {
-        const newQty = Math.min(product.stock, existing.quantity + quantity);
-        return prev.map((item) =>
-          item.productId === product.id
-            ? { ...item, quantity: newQty, product }
-            : item
+      const idx = prev.findIndex((item) => item.productId === product.id);
+      if (idx >= 0) {
+        return prev.map((item, i) =>
+          i === idx ? { ...item, quantity: newQty, product } : item
         );
       }
-      const initialQty = Math.min(product.stock, Math.max(1, quantity));
-      return [...prev, { productId: product.id, product, quantity: initialQty }];
+      return [...prev, { productId: product.id, product, quantity: newQty }];
     });
+
+    const msg = canAdd < requested
+      ? `Đã thêm ${canAdd} sản phẩm vào giỏ (đạt giới hạn tồn kho ${product.stock}).`
+      : `Đã thêm ${canAdd} × "${product.name}" vào giỏ hàng.`;
+
+    return {
+      success: true,
+      added: canAdd,
+      currentQuantity: newQty,
+      stock: product.stock,
+      message: msg,
+    };
   }
 
   function updateQuantity(productId: string, quantity: number) {
@@ -163,6 +210,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         removeFromCart,
         clearCart,
+        getItemQuantity,
         totalCount,
         totalAmount,
       }}

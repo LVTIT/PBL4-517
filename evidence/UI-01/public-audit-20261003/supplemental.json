@@ -1,0 +1,254 @@
+{
+  "assets": [
+    {
+      "url": "/assets/index-LQ7uQqz9.js",
+      "status": 200,
+      "headers": {
+        "accept-ranges": "bytes",
+        "connection": "keep-alive",
+        "content-length": "361175",
+        "content-type": "application/javascript",
+        "date": "Sat, 03 Oct 2026 09:26:26 GMT",
+        "etag": "\"6ac07d28-582d7\"",
+        "last-modified": "Sat, 03 Oct 2026 03:57:28 GMT",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      },
+      "decodedBytes": 361175,
+      "sha256": "6d4b43e104a492477b86a899f2c182b651e9207240514ef564d999c30446b30e",
+      "matchesLocalBuild": true
+    },
+    {
+      "url": "/assets/index-oAVxOHgT.css",
+      "status": 200,
+      "headers": {
+        "accept-ranges": "bytes",
+        "connection": "keep-alive",
+        "content-length": "31341",
+        "content-type": "text/css",
+        "date": "Sat, 03 Oct 2026 09:26:26 GMT",
+        "etag": "\"6ac07d28-7a6d\"",
+        "last-modified": "Sat, 03 Oct 2026 03:57:28 GMT",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      },
+      "decodedBytes": 31341,
+      "sha256": "179181af9b83e4cb5a1a8f1c6a96b3d48938ee915975aa58ede959c97ba7003c",
+      "matchesLocalBuild": true
+    },
+    {
+      "url": "/fonts/be-vietnam-pro-400-latin.woff2",
+      "status": 200,
+      "headers": {
+        "accept-ranges": "bytes",
+        "connection": "keep-alive",
+        "content-length": "21168",
+        "content-type": "font/woff2",
+        "date": "Sat, 03 Oct 2026 09:26:26 GMT",
+        "etag": "\"6ac07d28-52b0\"",
+        "last-modified": "Sat, 03 Oct 2026 03:57:28 GMT",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      },
+      "decodedBytes": 21168,
+      "sha256": "03d1b589cff172e1a670b3573e731d3380bc326f80cf83b0d3504e3188e2e074",
+      "matchesLocalBuild": true
+    },
+    {
+      "url": "/images/hero/hero-workspace.webp",
+      "status": 200,
+      "headers": {
+        "accept-ranges": "bytes",
+        "connection": "keep-alive",
+        "content-length": "66020",
+        "content-type": "image/webp",
+        "date": "Sat, 03 Oct 2026 09:26:26 GMT",
+        "etag": "\"6ac07d28-101e4\"",
+        "last-modified": "Sat, 03 Oct 2026 03:57:28 GMT",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      },
+      "decodedBytes": 66020,
+      "sha256": "d00a3b37e5ad7c4d8201e72e2d7dea87e0205c75d26e8dac545388d2a90818c7",
+      "matchesLocalBuild": true
+    }
+  ],
+  "navigation": [
+    {
+      "name": "catalog-to-detail",
+      "before": 2848,
+      "after": 0,
+      "heading": {
+        "x": 16,
+        "y": 603,
+        "width": 358,
+        "height": 33.59375
+      }
+    },
+    {
+      "name": "review-login-return",
+      "url": "https://47.129.214.70/login",
+      "historyState": {
+        "usr": null,
+        "key": "0aedvyfz",
+        "idx": 2
+      }
+    }
+  ],
+  "cart": [
+    {
+      "expected": 320,
+      "innerWidth": 399,
+      "clientWidth": 320,
+      "scrollWidth": 399,
+      "offenders": [
+        {
+          "cls": "cart-card",
+          "text": "Danh sách sản phẩm\nBàn phím cơ Mini 68\n790.000 ₫\n−",
+          "left": 16,
+          "right": 399.34375
+        },
+        {
+          "cls": "",
+          "text": "Danh sách sản phẩm",
+          "left": 41,
+          "right": 374.34375
+        },
+        {
+          "cls": "cart-items-wrapper",
+          "text": "Bàn phím cơ Mini 68\n790.000 ₫\n−\n1\n+",
+          "left": 41,
+          "right": 374.34375
+        },
+        {
+          "cls": "cart-item-row",
+          "text": "Bàn phím cơ Mini 68\n790.000 ₫\n−\n1\n+",
+          "left": 41,
+          "right": 374.34375
+        },
+        {
+          "cls": "cart-item-actions",
+          "text": "−\n1\n+",
+          "left": 216.34375,
+          "right": 374.34375
+        },
+        {
+          "cls": "quantity-selector",
+          "text": "−\n1\n+",
+          "left": 216.34375,
+          "right": 326.34375
+        },
+        {
+          "cls": "qty-btn",
+          "text": "+",
+          "left": 289.34375,
+          "right": 325.34375
+        },
+        {
+          "cls": "dialog-close-btn",
+          "text": "",
+          "left": 338.34375,
+          "right": 374.34375
+        },
+        {
+          "cls": {},
+          "left": 347.34375,
+          "right": 365.34375
+        },
+        {
+          "cls": {},
+          "left": 349.59375,
+          "right": 363.09375
+        },
+        {
+          "cls": "cart-card checkout-panel",
+          "text": "Thông tin đặt hàng\nTạm tính (1 sản phẩm):\n790.000 ",
+          "left": 16,
+          "right": 399.34375
+        },
+        {
+          "cls": "",
+          "text": "Thông tin đặt hàng",
+          "left": 41,
+          "right": 374.34375
+        },
+        {
+          "cls": "summary-row",
+          "text": "Tạm tính (1 sản phẩm):\n790.000 ₫",
+          "left": 41,
+          "right": 374.34375
+        },
+        {
+          "cls": "",
+          "text": "790.000 ₫",
+          "left": 297.90625,
+          "right": 374.34375
+        }
+      ]
+    },
+    {
+      "expected": 390,
+      "innerWidth": 399,
+      "clientWidth": 390,
+      "scrollWidth": 399,
+      "offenders": [
+        {
+          "cls": "cart-card",
+          "text": "Danh sách sản phẩm\nBàn phím cơ Mini 68\n790.000 ₫\n−",
+          "left": 16,
+          "right": 399.34375
+        },
+        {
+          "cls": "cart-card checkout-panel",
+          "text": "Thông tin đặt hàng\nTạm tính (1 sản phẩm):\n790.000 ",
+          "left": 16,
+          "right": 399.34375
+        }
+      ]
+    },
+    {
+      "expected": 768,
+      "innerWidth": 768,
+      "clientWidth": 768,
+      "scrollWidth": 768,
+      "offenders": []
+    },
+    {
+      "expected": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024,
+      "scrollWidth": 1024,
+      "offenders": []
+    },
+    {
+      "expected": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440,
+      "scrollWidth": 1440,
+      "offenders": []
+    }
+  ],
+  "visual": [
+    {
+      "name": "Hub USB-C 5 trong 1",
+      "image": "usb-c-hub",
+      "file": "product-mismatch-1-390.png"
+    },
+    {
+      "name": "Giá đỡ laptop nhôm",
+      "image": "laptop-stand",
+      "file": "product-mismatch-2-390.png"
+    },
+    {
+      "name": "Thảm bàn Desk Mat Da PU",
+      "image": "leather-desk-mat",
+      "file": "product-mismatch-3-390.png"
+    },
+    {
+      "name": "Chuột công thái học Ergo Master",
+      "image": "ergo-mouse",
+      "file": "product-mismatch-4-390.png"
+    },
+    {
+      "name": "Loa để bàn SoundBar Desk",
+      "image": "desk-speaker",
+      "file": "product-mismatch-5-390.png"
+    }
+  ]
+}

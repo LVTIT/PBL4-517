@@ -4,7 +4,7 @@ import { CheckIcon, AlertCircleIcon, CloseIcon } from './Icon';
 
 export interface ToastMessage {
   id: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
   message: string;
   actionText?: string;
   actionHref?: string;

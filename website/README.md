@@ -342,16 +342,20 @@ Trong thư mục `website/frontend`:
 npm run test:e2e
 ```
 
-Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless: 14 test ở hai cấu hình desktop 1440px và mobile 390px, tổng cộng 28 lượt chạy. Build frontend trước khi chạy vì suite dùng Vite preview. Phạm vi assertion hiện tại:
+Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless: 20 test ở hai cấu hình desktop 1440px và mobile 390px, tổng cộng 40 lượt chạy. Build frontend trước khi chạy vì suite dùng Vite preview. Phạm vi assertion hiện tại:
 - Nhận diện thương hiệu KEVILO: title, meta description, wordmark & biểu tượng SVG, footer disclaimer, kiểm tra không xuất hiện chuỗi thương hiệu cũ.
 - Responsive breakpoints: 320px, 390px, 768px, 1024px, 1440px không tràn ngang (`scrollWidth <= innerWidth`).
-- Menu điều hướng mobile drawer: mở bằng nút, đóng bằng phím Escape.
-- Axe trên Home và Catalog: tag WCAG 2.0/2.1/2.2 A/AA, bật kiểm tra tương phản màu, yêu cầu không có violation. Đây không phải chứng nhận toàn bộ website đạt WCAG; các luồng còn lại và kiểm tra thủ công vẫn cần review.
+- Menu điều hướng mobile drawer: mở bằng nút, giữ focus khi Tab/Shift+Tab, đóng bằng Escape và trả focus về nút mở.
+- Axe trên Home, Catalog, Cart trống, Login và Register: tag WCAG 2.0/2.1/2.2 A/AA, bật kiểm tra tương phản màu, yêu cầu không có violation. Đây không phải chứng nhận toàn bộ website đạt WCAG; các luồng còn lại và kiểm tra thủ công vẫn cần review.
 - Lọc danh mục đồng bộ URL; hiển thị nhãn hết hàng.
-- Thêm sản phẩm vào giỏ, thông báo thành công, địa chỉ ban đầu để trống và thông báo cho khách vãng lai. Chưa bao phủ toàn bộ checkout thật, debounce/sort hay cô lập phiên qua login/logout.
+- Thêm sản phẩm vào giỏ, giới hạn tồn kho, địa chỉ ban đầu để trống và thông báo cho khách vãng lai; reset hủy tìm kiếm đang debounce; catalog 2 cột và giỏ không tràn ngang ở 320/390px. Chưa bao phủ toàn bộ checkout thật, sort hay cô lập phiên qua login/logout.
 - Khả năng phục hồi khi lỗi mạng/API 500 với panel lỗi và nút "Thử lại"; trang 404 chuẩn nhận diện KEVILO.
 
 Các test catalog/cart dùng API mock. Kết quả API với PostgreSQL thật được kiểm tra riêng bằng backend integration suite; không chạy suite này trên production.
+
+Catalog và chi tiết sản phẩm mặc định loại bỏ item có nhãn kiểm chứng triển khai. Query `includeVerification=true` trên hai API vẫn cho phép đọc item đó và chưa yêu cầu quyền admin; đây là bộ lọc hiển thị, không phải ranh giới phân quyền. Xác nhận đặt hàng hiện lưu toàn bộ `createdOrder` trong `sessionStorage` (`pbl517_last_order`), có thao tác sao chép mã và in. Chưa xác minh cô lập bản lưu này khi đổi tài khoản và chưa có gửi email. Các route quản trị, đơn hàng, hồ sơ và đăng ký được tải bằng `React.lazy`.
+
+[Kết quả kiểm chứng 2026-10-03 và giới hạn](../evidence/UI-01/public-audit-20261003/commit-verification.md). Nghiệm thu với catalog đã kiểm duyệt và API/PostgreSQL thật vẫn **Planned** theo F14 trong [audit plan](../docs/ui/kevilo-public-audit-20261003.md); Vite dev/preview hiện vẫn có fallback dữ liệu khi backend không kết nối được.
 
 ## Build
 

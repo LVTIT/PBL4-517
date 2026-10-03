@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import type { Product } from '../types/api';
 import { ProductMedia } from './ProductMedia';
-import { useCart } from '../services/cart';
+import { useCart, type AddToCartResult } from '../services/cart';
 import { useAuth } from '../services/auth';
 
 const currency = new Intl.NumberFormat('vi-VN', {
@@ -12,23 +12,37 @@ const currency = new Intl.NumberFormat('vi-VN', {
 
 interface ProductCardProps {
   product: Product;
-  onAddedToCart?: (productName: string) => void;
+  onAddedToCart?: (productName: string, result?: AddToCartResult) => void;
 }
 
 export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const { addToCart, getItemQuantity } = useCart();
   const { user } = useAuth();
 
   const isOutOfStock = product.stock <= 0;
+  const inCartCount = getItemQuantity(product.id);
+  const isMaxInCart = product.stock > 0 && inCartCount >= product.stock;
   const isAdmin = user?.role === 'ADMIN';
 
   function handleAddToCart() {
     if (isOutOfStock || isAdmin) return;
-    addToCart(product, 1);
+    const result = addToCart(product, 1);
     if (onAddedToCart) {
-      onAddedToCart(product.name);
+      onAddedToCart(product.name, result);
     }
   }
+
+  const buttonLabel = isOutOfStock
+    ? 'Hết hàng'
+    : isMaxInCart
+    ? 'Đã đạt tối đa'
+    : '+ Giỏ hàng';
+
+  const buttonAriaLabel = isOutOfStock
+    ? `${product.name} đã hết hàng`
+    : isMaxInCart
+    ? `Đã có tối đa số lượng ${product.name} trong giỏ hàng`
+    : `Thêm ${product.name} vào giỏ hàng`;
 
   return (
     <article className="product-card">
@@ -49,7 +63,7 @@ export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
         <div className="product-category-row">
           <span className="product-category-tag">{product.category ?? 'Phụ kiện'}</span>
           <span className={`stock-badge ${isOutOfStock ? 'stock-empty' : 'stock-available'}`}>
-            {isOutOfStock ? 'Hết hàng' : `Còn ${product.stock}`}
+            {isOutOfStock ? 'Hết hàng' : isMaxInCart ? `Trong giỏ: ${inCartCount}/${product.stock}` : `Còn ${product.stock}`}
           </span>
         </div>
 
@@ -64,12 +78,12 @@ export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
           {!isAdmin && (
             <button
               type="button"
-              className="button button-small button-primary"
-              disabled={isOutOfStock}
+              className="button button-small button-primary product-card-cta"
+              disabled={isOutOfStock || isMaxInCart}
               onClick={handleAddToCart}
-              aria-label={isOutOfStock ? `${product.name} đã hết hàng` : `Thêm ${product.name} vào giỏ hàng`}
+              aria-label={buttonAriaLabel}
             >
-              {isOutOfStock ? 'Hết hàng' : '+ Giỏ hàng'}
+              {buttonLabel}
             </button>
           )}
         </div>

@@ -65,7 +65,7 @@ test.describe('Brand Identity (B0) & Responsive Layout', () => {
     });
   }
 
-  test('Mobile navigation drawer opens and closes properly with Escape', async ({ page }) => {
+  test('Mobile navigation drawer traps focus and closes properly with Escape', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
 
@@ -77,9 +77,61 @@ test.describe('Brand Identity (B0) & Responsive Layout', () => {
     await expect(drawer.getByRole('link', { name: 'Đăng nhập', exact: true })).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'Đăng ký tài khoản', exact: true })).toBeVisible();
 
-    // Press Escape to dismiss
+    // Verify first element is focused inside drawer
+    await page.waitForTimeout(100);
+    const isFocusInsideDrawer = await page.evaluate(() => {
+      const drawerEl = document.querySelector('.mobile-drawer');
+      return drawerEl ? drawerEl.contains(document.activeElement) : false;
+    });
+    expect(isFocusInsideDrawer).toBe(true);
+
+    // Press Escape to dismiss and verify focus restored to menuToggle
     await page.keyboard.press('Escape');
     await expect(drawer).not.toBeVisible();
     await expect(menuToggle).toBeFocused();
+  });
+
+  test('Product catalog displays in 2 columns on mobile viewports (320px & 390px)', async ({ page }) => {
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 750 });
+      await page.goto('/products');
+      await expect(page.locator('.product-card')).toHaveCount(DEMO_CATALOG.length);
+
+      const columnsCount = await page.evaluate(() => {
+        const grid = document.querySelector('.product-grid');
+        if (!grid) return 0;
+        const style = window.getComputedStyle(grid);
+        return style.gridTemplateColumns.split(' ').length;
+      });
+      expect(columnsCount).toBe(2);
+
+      // Verify no horizontal page overflow at this mobile width
+      const isOverflowing = await page.evaluate(() => {
+        return document.documentElement.scrollWidth > window.innerWidth;
+      });
+      expect(isOverflowing).toBe(false);
+    }
+  });
+
+  test('Cart page has no horizontal overflow on mobile viewports (320px & 390px)', async ({ page }) => {
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 750 });
+      await page.goto('/products');
+
+      // Add item to cart
+      const addBtn = page.locator('.product-card').first().locator('.product-card-cta');
+      await addBtn.click();
+      await page.waitForTimeout(200);
+
+      // Go to cart
+      await page.goto('/cart');
+      await expect(page.locator('.cart-item-row')).toBeVisible();
+
+      // Check overflow
+      const isOverflowing = await page.evaluate(() => {
+        return document.documentElement.scrollWidth > window.innerWidth;
+      });
+      expect(isOverflowing).toBe(false);
+    }
   });
 });

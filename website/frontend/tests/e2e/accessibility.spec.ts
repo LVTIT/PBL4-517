@@ -73,4 +73,33 @@ test.describe('WCAG 2.2 AA Accessibility Audits', () => {
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
+
+  test('Cart page passes automated accessibility scan', async ({ page }) => {
+    await page.goto('/cart');
+    await page.waitForLoadState('networkidle');
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
+  });
+
+  test('Login and Register pages pass automated accessibility scan', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    let scan = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(scan.violations).toEqual([]);
+
+    await page.goto('/register');
+    await page.waitForLoadState('networkidle');
+
+    scan = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(scan.violations).toEqual([]);
+  });
 });

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router';
-import { ArrowIcon, CategoryIcon } from '../components/Icon';
+import { ArrowIcon, CategoryIcon, RefreshIcon } from '../components/Icon';
 import { ProductCard } from '../components/ProductCard';
 import { LiveToast, type ToastMessage } from '../components/LiveToast';
-import { get } from '../services/api';
+import { get, messageFrom } from '../services/api';
 import type { Product } from '../types/api';
+import type { AddToCartResult } from '../services/cart';
 import {
   BRAND_DEFAULT_TITLE,
   BRAND_HERO_CTA,
@@ -23,20 +24,28 @@ const CATEGORIES = [
 export function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  useEffect(() => {
-    document.title = BRAND_DEFAULT_TITLE;
+  const fetchFeatured = useCallback(() => {
     const controller = new AbortController();
+    setLoading(true);
+    setError(null);
 
     get<Product[]>('/products', controller.signal)
       .then((products) => {
+        // Exclude internal/verification items from public storefront
+        const validProducts = products.filter(
+          (p) => p.category !== 'Deployment verification' && !p.name.includes('NOT FOR SALE')
+        );
         // Take up to 4 in-stock products for stable featured display
-        const inStock = products.filter((p) => p.stock > 0).slice(0, 4);
-        setFeaturedProducts(inStock.length > 0 ? inStock : products.slice(0, 4));
+        const inStock = validProducts.filter((p) => p.stock > 0).slice(0, 4);
+        setFeaturedProducts(inStock.length > 0 ? inStock : validProducts.slice(0, 4));
       })
-      .catch(() => {
-        // Non-blocking for homepage
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(messageFrom(err));
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -45,11 +54,27 @@ export function HomePage() {
     return () => controller.abort();
   }, []);
 
-  function handleProductAdded(productName: string) {
+  useEffect(() => {
+    document.title = BRAND_DEFAULT_TITLE;
+    return fetchFeatured();
+  }, [fetchFeatured]);
+
+  function handleProductAdded(productName: string, result?: AddToCartResult) {
+    if (result && !result.success) {
+      setToast({
+        id: String(Date.now()),
+        type: 'warning',
+        message: result.message,
+        actionText: 'Xem giỏ hàng',
+        actionHref: '/cart',
+      });
+      return;
+    }
+
     setToast({
       id: String(Date.now()),
       type: 'success',
-      message: `Đã thêm "${productName}" vào giỏ hàng.`,
+      message: result?.message ?? `Đã thêm "${productName}" vào giỏ hàng.`,
       actionText: 'Xem giỏ hàng',
       actionHref: '/cart',
     });
@@ -132,6 +157,24 @@ export function HomePage() {
         <div className="state-panel" role="status">
           <span className="spinner" />
           <p>Đang tải gợi ý sản phẩm…</p>
+        </div>
+      ) : error ? (
+        <div className="state-panel" role="alert">
+          <h2>Chưa thể tải gợi ý sản phẩm</h2>
+          <p>{error}</p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'center' }}>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => fetchFeatured()}
+            >
+              <RefreshIcon size={16} />
+              <span>Thử lại</span>
+            </button>
+            <Link to="/products" className="button button-secondary">
+              Xem tất cả sản phẩm
+            </Link>
+          </div>
         </div>
       ) : featuredProducts.length > 0 ? (
         <div className="product-grid" aria-label="Sản phẩm gợi ý">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../services/auth';
@@ -20,6 +20,11 @@ export function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<'name' | 'email' | 'password' | 'confirmPassword' | null>(null);
+
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.title = getPageTitle('Đăng ký thành viên');
@@ -31,22 +36,35 @@ export function RegisterPage() {
 
     if (password !== confirmPassword) {
       setError('Mật khẩu xác nhận không khớp.');
+      setErrorField('confirmPassword');
+      confirmPasswordInputRef.current?.focus();
       return;
     }
 
     if (password.length < 8) {
       setError('Mật khẩu phải có ít nhất 8 ký tự.');
+      setErrorField('password');
+      passwordInputRef.current?.focus();
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    setErrorField(null);
     try {
       await register(name.trim(), email.trim(), password);
       const target = from.startsWith('/') && !from.startsWith('//') ? from : '/products';
       navigate(target, { replace: true });
     } catch (err) {
-      setError(messageFrom(err));
+      const msg = messageFrom(err);
+      setError(msg);
+      if (msg.toLowerCase().includes('email')) {
+        setErrorField('email');
+        emailInputRef.current?.focus();
+      } else if (msg.toLowerCase().includes('mật khẩu') || msg.toLowerCase().includes('password')) {
+        setErrorField('password');
+        passwordInputRef.current?.focus();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -106,6 +124,7 @@ export function RegisterPage() {
                   Email
                 </label>
                 <input
+                  ref={emailInputRef}
                   id="email"
                   name="email"
                   type="email"
@@ -115,8 +134,16 @@ export function RegisterPage() {
                   maxLength={254}
                   className="form-input"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    if (errorField === 'email') {
+                      setError(null);
+                      setErrorField(null);
+                    }
+                  }}
                   disabled={submitting}
+                  aria-invalid={errorField === 'email' ? true : undefined}
+                  aria-describedby={errorField === 'email' ? 'register-error' : undefined}
                 />
               </div>
 
@@ -126,6 +153,7 @@ export function RegisterPage() {
                 </label>
                 <div className="form-input-password-wrap">
                   <input
+                    ref={passwordInputRef}
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
@@ -136,8 +164,16 @@ export function RegisterPage() {
                     maxLength={72}
                     className="form-input"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      if (errorField === 'password') {
+                        setError(null);
+                        setErrorField(null);
+                      }
+                    }}
                     disabled={submitting}
+                    aria-invalid={errorField === 'password' ? true : undefined}
+                    aria-describedby={errorField === 'password' ? 'register-error' : undefined}
                   />
                   <button
                     type="button"
@@ -156,6 +192,7 @@ export function RegisterPage() {
                 </label>
                 <div className="form-input-password-wrap">
                   <input
+                    ref={confirmPasswordInputRef}
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -166,8 +203,16 @@ export function RegisterPage() {
                     maxLength={72}
                     className="form-input"
                     value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onChange={(event) => {
+                      setConfirmPassword(event.target.value);
+                      if (errorField === 'confirmPassword') {
+                        setError(null);
+                        setErrorField(null);
+                      }
+                    }}
                     disabled={submitting}
+                    aria-invalid={errorField === 'confirmPassword' ? true : undefined}
+                    aria-describedby={errorField === 'confirmPassword' ? 'register-error' : undefined}
                   />
                   <button
                     type="button"
@@ -181,7 +226,7 @@ export function RegisterPage() {
               </div>
 
               {error && (
-                <div className="notice notice-error" role="alert" style={{ marginBottom: '16px' }}>
+                <div id="register-error" className="notice notice-error" role="alert" style={{ marginBottom: '16px' }}>
                   <span>{error}</span>
                 </div>
               )}

@@ -1,0 +1,3122 @@
+{
+  "date": "2026-10-03",
+  "base": "https://47.129.214.70",
+  "browser": "153.0.8010.12",
+  "pages": [
+    {
+      "label": "home",
+      "width": 1440,
+      "http": 200,
+      "title": "KEVILO — Phụ kiện công nghệ cho góc làm việc",
+      "url": "https://47.129.214.70/",
+      "h1": [
+        "Nâng chuẩn góc làm việc."
+      ],
+      "text": "KEVILO WORKSPACE\nNâng chuẩn góc làm việc.\n\nKhám phá phụ kiện giúp bạn làm việc tập trung, kết nối thuận tiện và hoàn thiện không gian mỗi ngày.\n\nKhám phá sản phẩm\n\nDANH MỤC\n\nKhám phá theo danh mục\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\n\nBỘ SƯU TẬP\n\nGợi ý cho góc làm việc\nXem tất cả\nBÀN PHÍM\nCòn 17\nBàn phím cơ Mini 68\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\n790.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 32\nChuột không dây Everyday\n\nChuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.\n\n290.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 12\nTai nghe Studio Lite\n\nTai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.\n\n590.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 9\nHub USB-C 5 trong 1\n\nMở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.\n\n450.000 ₫\n\n+ Giỏ hàng\n\nTRIẾT LÝ THIẾT KẾ\n\nKhông gian tinh giản, tối đa hiệu suất\n\nKEVILO chú trọng từng chi tiết: từ vật liệu nhôm anode cao cấp, switch bàn phím êm ái đến ánh sáng đèn bàn dịu mắt. Từng phụ kiện được tạo ra để cùng bạn tạo nên một bàn làm việc chỉn chu, ngăn nắp và tràn đầy năng lượng sáng tạo.",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 74.25,
+          "height": 38.5,
+          "cls": "nav-link active"
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 73.625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Xem tất cả",
+          "tag": "A",
+          "width": 82.3125,
+          "height": 38.5,
+          "cls": "inline-link"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "tag": "A",
+          "width": 169.78125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím cơ Mini 68 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "tag": "A",
+          "width": 227.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Chuột không dây Everyday vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "tag": "A",
+          "width": 167.921875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Tai nghe Studio Lite vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "tag": "A",
+          "width": 172.703125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Hub USB-C 5 trong 1 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 992,
+        "cls": 0.0016861438306434327
+      },
+      "navigation": [
+        {
+          "ttfb": 53.099999994039536,
+          "dom": 614.3000000119209,
+          "duration": 614.3000000119209
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 361475,
+          "duration": 281.40000000596046
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 31641,
+          "duration": 240.80000001192093
+        },
+        {
+          "name": "https://47.129.214.70/images/hero/hero-workspace.webp",
+          "transfer": 66320,
+          "duration": 56.19999998807907
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "transfer": 4265,
+          "duration": 64.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 100.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 22452,
+          "duration": 244.39999997615814
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 21468,
+          "duration": 245.7000000178814
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 22332,
+          "duration": 282.80000001192093
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 22192,
+          "duration": 291.90000000596046
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 12476,
+          "duration": 266.40000000596046
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 12472,
+          "duration": 281.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 13356,
+          "duration": 321.19999998807907
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 11832,
+          "duration": 290.40000000596046
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 12768,
+          "duration": 259.40000000596046
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 13908,
+          "duration": 319.2000000178814
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 14152,
+          "duration": 312.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 31352,
+          "duration": 162.7000000178814
+        },
+        {
+          "name": "https://47.129.214.70/images/products/studio-lite-headphone.webp",
+          "transfer": 28056,
+          "duration": 131.90000000596046
+        },
+        {
+          "name": "https://47.129.214.70/images/products/usb-c-hub.webp",
+          "transfer": 62240,
+          "duration": 131.5
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "transfer": 8372,
+          "duration": 150.40000000596046
+        }
+      ],
+      "links": [
+        {
+          "text": "Khám phá sản phẩm",
+          "href": "/products"
+        },
+        {
+          "text": "Bàn phím",
+          "href": "/products?category=B%C3%A0n%20ph%C3%ADm"
+        },
+        {
+          "text": "Chuột",
+          "href": "/products?category=Chu%E1%BB%99t"
+        },
+        {
+          "text": "Âm thanh",
+          "href": "/products?category=%C3%82m%20thanh"
+        },
+        {
+          "text": "Phụ kiện",
+          "href": "/products?category=Ph%E1%BB%A5%20ki%E1%BB%87n"
+        },
+        {
+          "text": "Đèn bàn",
+          "href": "/products?category=%C4%90%C3%A8n%20b%C3%A0n"
+        },
+        {
+          "text": "Xem tất cả",
+          "href": "/products"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        }
+      ],
+      "form": [],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "catalog",
+      "width": 1440,
+      "http": 200,
+      "title": "Phụ kiện cho góc làm việc | KEVILO",
+      "url": "https://47.129.214.70/products",
+      "h1": [
+        "Phụ kiện cho góc làm việc"
+      ],
+      "text": "KEVILO CATALOG\n\nPhụ kiện cho góc làm việc\n\nTuyển chọn phụ kiện tối giản, chất liệu cao cấp và kết nối thông minh.\n\nSắp xếp: Mặc định\nGiá: Thấp đến cao\nGiá: Cao đến thấp\nTất cả\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\nTất cả sản phẩm\n11 sản phẩm\nDEPLOYMENT VERIFICATION\nDEPLOYMENT VERIFICATION\nHết hàng\nDeployment verification item - NOT FOR SALE\n\nSynthetic item for Issue 14 deployment verification only. No real purchase or delivery.\n\n10.000 ₫\n\nHết hàng\nBÀN PHÍM\nCòn 17\nBàn phím cơ Mini 68\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\n790.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 32\nChuột không dây Everyday\n\nChuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.\n\n290.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 12\nTai nghe Studio Lite\n\nTai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.\n\n590.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 9\nHub USB-C 5 trong 1\n\nMở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.\n\n450.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 24\nGiá đỡ laptop nhôm\n\nGiá đỡ có thể gấp gọn, nâng màn hình và tạo khoảng thoáng dưới laptop.\n\n350.000 ₫\n\n+ Giỏ hàng\nĐÈN BÀN\nHết hàng\nĐèn bàn Focus\n\nĐèn LED để bàn với ba mức ánh sáng và cần đèn có thể điều chỉnh.\n\n390.000 ₫\n\nHết hàng\nBÀN PHÍM\nCòn 14\nBàn phím Full-size Studio 104\n\nBàn phím cơ đầy đủ 104 phím kèm núm xoay âm lượng đa năng, khung nhôm graphite cứng cáp.\n\n1.290.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 20\nChuột công thái học Ergo Master\n\nThiết kế góc nghiêng tự nhiên giảm mỏi cổ tay, cảm biến quang học độ chính xác cao.\n\n850.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 14\nLoa để bàn SoundBar Desk\n\nLoa thanh đặt bàn với màng loa kép cho âm thanh cân bằng và thiết kế tối giản sang trọng.\n\n690.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 35\nThảm bàn Desk Mat Da PU\n\nChất liệu da PU chống nước, bề mặt mịn màng êm ái bảo vệ mặt bàn và nâng tầm góc làm việc.\n\n250.000 ₫\n\n+ Giỏ hàng",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 73.140625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 74.25,
+          "height": 38.5,
+          "cls": "nav-link active"
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tất cả",
+          "tag": "BUTTON",
+          "width": 79.546875,
+          "height": 38,
+          "cls": "filter-tab active"
+        },
+        {
+          "text": "Bàn phím",
+          "tag": "BUTTON",
+          "width": 98.109375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Chuột",
+          "tag": "BUTTON",
+          "width": 76.375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Âm thanh",
+          "tag": "BUTTON",
+          "width": 99.96875,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Phụ kiện",
+          "tag": "BUTTON",
+          "width": 91.53125,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Đèn bàn",
+          "tag": "BUTTON",
+          "width": 91.375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Deployment verification item - NOT FOR SALE đã hết hàng",
+          "tag": "BUTTON",
+          "width": 93.03125,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "tag": "A",
+          "width": 169.78125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím cơ Mini 68 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "tag": "A",
+          "width": 227.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Chuột không dây Everyday vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "tag": "A",
+          "width": 167.921875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Tai nghe Studio Lite vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "tag": "A",
+          "width": 172.703125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Hub USB-C 5 trong 1 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Giá đỡ laptop nhôm",
+          "tag": "A",
+          "width": 166.515625,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Giá đỡ laptop nhôm vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Đèn bàn Focus",
+          "tag": "A",
+          "width": 124.46875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Đèn bàn Focus đã hết hàng",
+          "tag": "BUTTON",
+          "width": 93.03125,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Bàn phím Full-size Studio 104",
+          "tag": "A",
+          "width": 250.296875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím Full-size Studio 104 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Thêm Chuột công thái học Ergo Master vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Loa để bàn SoundBar Desk",
+          "tag": "A",
+          "width": 227.625,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Loa để bàn SoundBar Desk vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Thảm bàn Desk Mat Da PU",
+          "tag": "A",
+          "width": 222.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Thảm bàn Desk Mat Da PU vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 512,
+        "cls": 0.22434924989551183
+      },
+      "navigation": [
+        {
+          "ttfb": 50.5,
+          "dom": 72.59999999403954,
+          "duration": 74.09999999403954
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 13848,
+          "duration": 75.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "transfer": 300,
+          "duration": 61.29999998211861
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 54.400000005960464
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/studio-lite-headphone.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/usb-c-hub.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/focus-desk-lamp.webp",
+          "transfer": 11468,
+          "duration": 60
+        },
+        {
+          "name": "https://47.129.214.70/images/products/laptop-stand.webp",
+          "transfer": 6360,
+          "duration": 69.5
+        },
+        {
+          "name": "https://47.129.214.70/images/products/fullsize-keyboard.webp",
+          "transfer": 37744,
+          "duration": 102.7000000178814
+        },
+        {
+          "name": "https://47.129.214.70/images/products/ergo-mouse.webp",
+          "transfer": 44084,
+          "duration": 121.5
+        },
+        {
+          "name": "https://47.129.214.70/images/products/desk-speaker.webp",
+          "transfer": 30226,
+          "duration": 118.2999999821186
+        },
+        {
+          "name": "https://47.129.214.70/images/products/leather-desk-mat.webp",
+          "transfer": 53654,
+          "duration": 166.90000000596046
+        }
+      ],
+      "links": [
+        {
+          "text": "Xem chi tiết sản phẩm Deployment verification item - NOT FOR SALE",
+          "href": "/products/7e517014-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Deployment verification item - NOT FOR SALE",
+          "href": "/products/7e517014-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Giá đỡ laptop nhôm",
+          "href": "/products/10000000-0000-4000-8000-000000000005"
+        },
+        {
+          "text": "Giá đỡ laptop nhôm",
+          "href": "/products/10000000-0000-4000-8000-000000000005"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Đèn bàn Focus",
+          "href": "/products/10000000-0000-4000-8000-000000000006"
+        },
+        {
+          "text": "Đèn bàn Focus",
+          "href": "/products/10000000-0000-4000-8000-000000000006"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím Full-size Studio 104",
+          "href": "/products/10000000-0000-4000-8000-000000000007"
+        },
+        {
+          "text": "Bàn phím Full-size Studio 104",
+          "href": "/products/10000000-0000-4000-8000-000000000007"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột công thái học Ergo Master",
+          "href": "/products/10000000-0000-4000-8000-000000000008"
+        },
+        {
+          "text": "Chuột công thái học Ergo Master",
+          "href": "/products/10000000-0000-4000-8000-000000000008"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Loa để bàn SoundBar Desk",
+          "href": "/products/10000000-0000-4000-8000-000000000009"
+        },
+        {
+          "text": "Loa để bàn SoundBar Desk",
+          "href": "/products/10000000-0000-4000-8000-000000000009"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Thảm bàn Desk Mat Da PU",
+          "href": "/products/10000000-0000-4000-8000-000000000010"
+        },
+        {
+          "text": "Thảm bàn Desk Mat Da PU",
+          "href": "/products/10000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "form": [
+        {
+          "id": "",
+          "type": "search",
+          "autocomplete": "",
+          "name": "",
+          "required": false
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "label": "detail",
+      "width": 1440,
+      "http": 200,
+      "title": "Bàn phím cơ Mini 68 | KEVILO",
+      "url": "https://47.129.214.70/products/10000000-0000-4000-8000-000000000001",
+      "h1": [
+        "Bàn phím cơ Mini 68"
+      ],
+      "text": "Trang chủ\n/\nPhụ kiện cho góc làm việc\n/\nBàn phím cơ Mini 68\nBÀN PHÍM\nCòn 17 sản phẩm\nBàn phím cơ Mini 68\nChưa có đánh giá nào\n\n790.000 ₫\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\nSố lượng:\n−\n+\nThêm vào giỏ hàng\n\nTRẢI NGHIỆM KHÁCH HÀNG\n\nĐánh giá sản phẩm (0)\nĐăng nhập để chia sẻ đánh giá của bạn về sản phẩm này.\nĐăng nhập\n\nChưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên chia sẻ cảm nhận!",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 73.140625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 74.25,
+          "height": 38.5,
+          "cls": "nav-link active"
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 67.3125,
+          "height": 21,
+          "cls": ""
+        },
+        {
+          "text": "Phụ kiện cho góc làm việc",
+          "tag": "A",
+          "width": 175.75,
+          "height": 21,
+          "cls": ""
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-secondary button-small"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 196,
+        "cls": 0.07317091677316422
+      },
+      "navigation": [
+        {
+          "ttfb": 54.69999998807907,
+          "dom": 84.09999999403954,
+          "duration": 85.2999999821186
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/products/10000000-0000-4000-8000-000000000001",
+          "transfer": 703,
+          "duration": 66.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 56.099999994039536
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 0,
+          "duration": 0
+        }
+      ],
+      "links": [
+        {
+          "text": "Trang chủ",
+          "href": "/"
+        },
+        {
+          "text": "Phụ kiện cho góc làm việc",
+          "href": "/products"
+        },
+        {
+          "text": "Đăng nhập",
+          "href": "/login"
+        }
+      ],
+      "form": [
+        {
+          "id": "qty-input",
+          "type": "number",
+          "autocomplete": "",
+          "name": "",
+          "required": false
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "login",
+      "width": 1440,
+      "http": 200,
+      "title": "Đăng nhập | KEVILO",
+      "url": "https://47.129.214.70/login",
+      "h1": [
+        "Chào mừng trở lại"
+      ],
+      "text": "TÀI KHOẢN KEVILO\n\nChào mừng trở lại\n\nĐăng nhập để đồng bộ giỏ hàng và theo dõi đơn hàng của bạn.\n\nEmail đăng nhập\nMật khẩu\nĐăng nhập\nChưa có tài khoản? Tạo tài khoản KEVILO",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 73.140625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 73.625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary active"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tạo tài khoản KEVILO",
+          "tag": "A",
+          "width": 152.421875,
+          "height": 18,
+          "cls": ""
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 188,
+        "cls": 0.0055940542380669145
+      },
+      "navigation": [
+        {
+          "ttfb": 58.29999998211861,
+          "dom": 75.09999999403954,
+          "duration": 76.09999999403954
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 61.70000001788139
+        }
+      ],
+      "links": [
+        {
+          "text": "Tạo tài khoản KEVILO",
+          "href": "/register"
+        }
+      ],
+      "form": [
+        {
+          "id": "email",
+          "type": "email",
+          "autocomplete": "username",
+          "name": "email",
+          "required": true
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "autocomplete": "current-password",
+          "name": "password",
+          "required": true
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "register",
+      "width": 1440,
+      "http": 200,
+      "title": "Đăng ký thành viên | KEVILO",
+      "url": "https://47.129.214.70/register",
+      "h1": [
+        "Tạo tài khoản KEVILO"
+      ],
+      "text": "THÀNH VIÊN MỚI\n\nTạo tài khoản KEVILO\n\nTrải nghiệm lưu trữ giỏ hàng và quản lý đơn hàng thuận tiện.\n\nHọ và tên\nEmail\nMật khẩu\nXác nhận mật khẩu\nHoàn tất đăng ký\nĐã có tài khoản? Đăng nhập ngay",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 73.140625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 73.625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary active"
+        },
+        {
+          "text": "Đăng nhập ngay",
+          "tag": "A",
+          "width": 113.640625,
+          "height": 18,
+          "cls": ""
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 184,
+        "cls": 0.023648384234476807
+      },
+      "navigation": [
+        {
+          "ttfb": 58.69999998807907,
+          "dom": 83.80000001192093,
+          "duration": 83.90000000596046
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 64.7999999821186
+        }
+      ],
+      "links": [
+        {
+          "text": "Đăng nhập ngay",
+          "href": "/login"
+        }
+      ],
+      "form": [
+        {
+          "id": "name",
+          "type": "text",
+          "autocomplete": "name",
+          "name": "name",
+          "required": true
+        },
+        {
+          "id": "email",
+          "type": "email",
+          "autocomplete": "username",
+          "name": "email",
+          "required": true
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "autocomplete": "new-password",
+          "name": "password",
+          "required": true
+        },
+        {
+          "id": "confirmPassword",
+          "type": "password",
+          "autocomplete": "new-password",
+          "name": "confirmPassword",
+          "required": true
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "404",
+      "width": 1440,
+      "http": 200,
+      "title": "Không tìm thấy trang | KEVILO",
+      "url": "https://47.129.214.70/audit-page-does-not-exist",
+      "h1": [
+        "Trang bạn tìm kiếm không tồn tại"
+      ],
+      "text": "404 · KHÔNG TÌM THẤY TRANG\n\nTrang bạn tìm kiếm không tồn tại\n\nĐường dẫn có thể đã thay đổi, bị xóa hoặc nhập chưa chính xác. Hãy quay về danh mục phụ kiện KEVILO để tiếp tục khám phá.\n\nKhám phá sản phẩm\nVề trang chủ",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 73.140625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Sản phẩm",
+          "tag": "A",
+          "width": 73.625,
+          "height": 38.5,
+          "cls": "nav-link "
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 106,
+          "height": 38,
+          "cls": "button button-small button-secondary"
+        },
+        {
+          "text": "Đăng ký",
+          "tag": "A",
+          "width": 87.296875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 112,
+        "cls": 0.0015363131383155436
+      },
+      "navigation": [
+        {
+          "ttfb": 57.900000005960464,
+          "dom": 76.59999999403954,
+          "duration": 77.5
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 60.69999998807907
+        }
+      ],
+      "links": [
+        {
+          "text": "Khám phá sản phẩm",
+          "href": "/products"
+        },
+        {
+          "text": "Về trang chủ",
+          "href": "/"
+        }
+      ],
+      "form": [],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "cart",
+      "width": 1440,
+      "text": "MUA SẮM\n\nGiỏ hàng (1)\nDanh sách sản phẩm\nBàn phím cơ Mini 68\n790.000 ₫\n−\n1\n+\nThông tin đặt hàng\nTạm tính (1 sản phẩm):\n790.000 ₫\nPhí vận chuyển:\nMiễn phí\nTổng thanh toán:\n790.000 ₫\nĐặt hàng không cần tài khoản: Bạn có thể mua sắm ngay với tư cách khách vãng lai. Sau khi xác nhận đặt hàng, hãy lưu lại mã đơn để tiện đối chiếu khi nhận hàng.\nHọ và tên người nhận *\nEmail nhận thông báo *\nSố điện thoại liên hệ (tùy chọn)\nĐịa chỉ giao hàng *\nXác nhận đặt hàng",
+      "scrollWidth": 1440,
+      "forms": [
+        {
+          "id": "guest-name",
+          "name": "",
+          "type": "text",
+          "autocomplete": "",
+          "required": true
+        },
+        {
+          "id": "guest-email",
+          "name": "",
+          "type": "email",
+          "autocomplete": "",
+          "required": true
+        },
+        {
+          "id": "guest-phone",
+          "name": "",
+          "type": "tel",
+          "autocomplete": "",
+          "required": false
+        },
+        {
+          "id": "shipping-address",
+          "name": "",
+          "type": "textarea",
+          "autocomplete": "",
+          "required": true
+        }
+      ],
+      "controls": [
+        {
+          "text": "Giảm số lượng Bàn phím cơ Mini 68",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Tăng số lượng Bàn phím cơ Mini 68",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Xóa Bàn phím cơ Mini 68 khỏi giỏ hàng",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Xác nhận đặt hàng",
+          "width": 405.390625,
+          "height": 54,
+          "disabled": false
+        }
+      ],
+      "violations": []
+    },
+    {
+      "label": "home",
+      "width": 390,
+      "http": 200,
+      "title": "KEVILO — Phụ kiện công nghệ cho góc làm việc",
+      "url": "https://47.129.214.70/",
+      "h1": [
+        "Nâng chuẩn góc làm việc."
+      ],
+      "text": "KEVILO WORKSPACE\nNâng chuẩn góc làm việc.\n\nKhám phá phụ kiện giúp bạn làm việc tập trung, kết nối thuận tiện và hoàn thiện không gian mỗi ngày.\n\nKhám phá sản phẩm\n\nDANH MỤC\n\nKhám phá theo danh mục\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\n\nBỘ SƯU TẬP\n\nGợi ý cho góc làm việc\nXem tất cả\nBÀN PHÍM\nCòn 17\nBàn phím cơ Mini 68\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\n790.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 32\nChuột không dây Everyday\n\nChuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.\n\n290.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 12\nTai nghe Studio Lite\n\nTai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.\n\n590.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 9\nHub USB-C 5 trong 1\n\nMở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.\n\n450.000 ₫\n\n+ Giỏ hàng\n\nTRIẾT LÝ THIẾT KẾ\n\nKhông gian tinh giản, tối đa hiệu suất\n\nKEVILO chú trọng từng chi tiết: từ vật liệu nhôm anode cao cấp, switch bàn phím êm ái đến ánh sáng đèn bàn dịu mắt. Từng phụ kiện được tạo ra để cùng bạn tạo nên một bàn làm việc chỉn chu, ngăn nắp và tràn đầy năng lượng sáng tạo.",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "tag": "A",
+          "width": 169.78125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím cơ Mini 68 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "tag": "A",
+          "width": 227.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Chuột không dây Everyday vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "tag": "A",
+          "width": 167.921875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Tai nghe Studio Lite vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "tag": "A",
+          "width": 172.703125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Hub USB-C 5 trong 1 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 1512,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 55,
+          "dom": 521.9000000059605,
+          "duration": 522
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 361475,
+          "duration": 288
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 31641,
+          "duration": 203.19999998807907
+        },
+        {
+          "name": "https://47.129.214.70/images/hero/hero-workspace.webp",
+          "transfer": 66320,
+          "duration": 59.5
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 22452,
+          "duration": 122.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 21468,
+          "duration": 160
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 22332,
+          "duration": 180
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 12768,
+          "duration": 237.40000000596046
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 11832,
+          "duration": 194.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 12476,
+          "duration": 180.2999999821186
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 13908,
+          "duration": 207.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 13356,
+          "duration": 255.80000001192093
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 14152,
+          "duration": 265.90000000596046
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "transfer": 4265,
+          "duration": 196.90000000596046
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 205.2999999821186
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 31352,
+          "duration": 112.5
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "transfer": 8372,
+          "duration": 53.79999998211861
+        },
+        {
+          "name": "https://47.129.214.70/images/products/studio-lite-headphone.webp",
+          "transfer": 28056,
+          "duration": 53.30000001192093
+        },
+        {
+          "name": "https://47.129.214.70/images/products/usb-c-hub.webp",
+          "transfer": 62240,
+          "duration": 104
+        }
+      ],
+      "links": [
+        {
+          "text": "Khám phá sản phẩm",
+          "href": "/products"
+        },
+        {
+          "text": "Bàn phím",
+          "href": "/products?category=B%C3%A0n%20ph%C3%ADm"
+        },
+        {
+          "text": "Chuột",
+          "href": "/products?category=Chu%E1%BB%99t"
+        },
+        {
+          "text": "Âm thanh",
+          "href": "/products?category=%C3%82m%20thanh"
+        },
+        {
+          "text": "Phụ kiện",
+          "href": "/products?category=Ph%E1%BB%A5%20ki%E1%BB%87n"
+        },
+        {
+          "text": "Đèn bàn",
+          "href": "/products?category=%C4%90%C3%A8n%20b%C3%A0n"
+        },
+        {
+          "text": "Xem tất cả",
+          "href": "/products"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        }
+      ],
+      "form": [],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "catalog",
+      "width": 390,
+      "http": 200,
+      "title": "Phụ kiện cho góc làm việc | KEVILO",
+      "url": "https://47.129.214.70/products",
+      "h1": [
+        "Phụ kiện cho góc làm việc"
+      ],
+      "text": "KEVILO CATALOG\n\nPhụ kiện cho góc làm việc\n\nTuyển chọn phụ kiện tối giản, chất liệu cao cấp và kết nối thông minh.\n\nSắp xếp: Mặc định\nGiá: Thấp đến cao\nGiá: Cao đến thấp\nTất cả\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\nTất cả sản phẩm\n11 sản phẩm\nDEPLOYMENT VERIFICATION\nDEPLOYMENT VERIFICATION\nHết hàng\nDeployment verification item - NOT FOR SALE\n\nSynthetic item for Issue 14 deployment verification only. No real purchase or delivery.\n\n10.000 ₫\n\nHết hàng\nBÀN PHÍM\nCòn 17\nBàn phím cơ Mini 68\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\n790.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 32\nChuột không dây Everyday\n\nChuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.\n\n290.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 12\nTai nghe Studio Lite\n\nTai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.\n\n590.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 9\nHub USB-C 5 trong 1\n\nMở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.\n\n450.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 24\nGiá đỡ laptop nhôm\n\nGiá đỡ có thể gấp gọn, nâng màn hình và tạo khoảng thoáng dưới laptop.\n\n350.000 ₫\n\n+ Giỏ hàng\nĐÈN BÀN\nHết hàng\nĐèn bàn Focus\n\nĐèn LED để bàn với ba mức ánh sáng và cần đèn có thể điều chỉnh.\n\n390.000 ₫\n\nHết hàng\nBÀN PHÍM\nCòn 14\nBàn phím Full-size Studio 104\n\nBàn phím cơ đầy đủ 104 phím kèm núm xoay âm lượng đa năng, khung nhôm graphite cứng cáp.\n\n1.290.000 ₫\n\n+ Giỏ hàng\nCHUỘT\nCòn 20\nChuột công thái học Ergo Master\n\nThiết kế góc nghiêng tự nhiên giảm mỏi cổ tay, cảm biến quang học độ chính xác cao.\n\n850.000 ₫\n\n+ Giỏ hàng\nÂM THANH\nCòn 14\nLoa để bàn SoundBar Desk\n\nLoa thanh đặt bàn với màng loa kép cho âm thanh cân bằng và thiết kế tối giản sang trọng.\n\n690.000 ₫\n\n+ Giỏ hàng\nPHỤ KIỆN\nCòn 35\nThảm bàn Desk Mat Da PU\n\nChất liệu da PU chống nước, bề mặt mịn màng êm ái bảo vệ mặt bàn và nâng tầm góc làm việc.\n\n250.000 ₫\n\n+ Giỏ hàng",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "filter-tab ",
+          "text": "Âm thanh"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "filter-tab ",
+          "text": "Phụ kiện"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "filter-tab ",
+          "text": "Đèn bàn"
+        }
+      ],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Tất cả",
+          "tag": "BUTTON",
+          "width": 79.546875,
+          "height": 38,
+          "cls": "filter-tab active"
+        },
+        {
+          "text": "Bàn phím",
+          "tag": "BUTTON",
+          "width": 98.109375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Chuột",
+          "tag": "BUTTON",
+          "width": 76.375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Âm thanh",
+          "tag": "BUTTON",
+          "width": 99.96875,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Phụ kiện",
+          "tag": "BUTTON",
+          "width": 91.53125,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Đèn bàn",
+          "tag": "BUTTON",
+          "width": 91.375,
+          "height": 38,
+          "cls": "filter-tab "
+        },
+        {
+          "text": "Deployment verification item - NOT FOR SALE đã hết hàng",
+          "tag": "BUTTON",
+          "width": 93.03125,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "tag": "A",
+          "width": 169.78125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím cơ Mini 68 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "tag": "A",
+          "width": 227.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Chuột không dây Everyday vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "tag": "A",
+          "width": 167.921875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Tai nghe Studio Lite vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "tag": "A",
+          "width": 172.703125,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Hub USB-C 5 trong 1 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Giá đỡ laptop nhôm",
+          "tag": "A",
+          "width": 166.515625,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Giá đỡ laptop nhôm vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Đèn bàn Focus",
+          "tag": "A",
+          "width": 124.46875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Đèn bàn Focus đã hết hàng",
+          "tag": "BUTTON",
+          "width": 93.03125,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Bàn phím Full-size Studio 104",
+          "tag": "A",
+          "width": 250.296875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Bàn phím Full-size Studio 104 vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Chuột công thái học Ergo Master",
+          "tag": "A",
+          "width": 278.375,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Chuột công thái học Ergo Master vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Loa để bàn SoundBar Desk",
+          "tag": "A",
+          "width": 227.625,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Loa để bàn SoundBar Desk vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        },
+        {
+          "text": "Thảm bàn Desk Mat Da PU",
+          "tag": "A",
+          "width": 222.546875,
+          "height": 22,
+          "cls": ""
+        },
+        {
+          "text": "Thêm Thảm bàn Desk Mat Da PU vào giỏ hàng",
+          "tag": "BUTTON",
+          "width": 104.546875,
+          "height": 38,
+          "cls": "button button-small button-primary"
+        }
+      ],
+      "brokenImages": [
+        "https://47.129.214.70/images/products/focus-desk-lamp.webp",
+        "https://47.129.214.70/images/products/fullsize-keyboard.webp",
+        "https://47.129.214.70/images/products/ergo-mouse.webp",
+        "https://47.129.214.70/images/products/desk-speaker.webp",
+        "https://47.129.214.70/images/products/leather-desk-mat.webp"
+      ],
+      "metrics": {
+        "lcp": 852,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 53.400000005960464,
+          "dom": 72.59999999403954,
+          "duration": 73.5
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 22192,
+          "duration": 118.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 12472,
+          "duration": 64.30000001192093
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 13848,
+          "duration": 61.900000005960464
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "transfer": 300,
+          "duration": 65
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 67.59999999403954
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/studio-lite-headphone.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/usb-c-hub.webp",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/images/products/laptop-stand.webp",
+          "transfer": 6360,
+          "duration": 68.59999999403954
+        }
+      ],
+      "links": [
+        {
+          "text": "Xem chi tiết sản phẩm Deployment verification item - NOT FOR SALE",
+          "href": "/products/7e517014-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Deployment verification item - NOT FOR SALE",
+          "href": "/products/7e517014-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Bàn phím cơ Mini 68",
+          "href": "/products/10000000-0000-4000-8000-000000000001"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Chuột không dây Everyday",
+          "href": "/products/10000000-0000-4000-8000-000000000002"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Tai nghe Studio Lite",
+          "href": "/products/10000000-0000-4000-8000-000000000003"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Hub USB-C 5 trong 1",
+          "href": "/products/10000000-0000-4000-8000-000000000004"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Giá đỡ laptop nhôm",
+          "href": "/products/10000000-0000-4000-8000-000000000005"
+        },
+        {
+          "text": "Giá đỡ laptop nhôm",
+          "href": "/products/10000000-0000-4000-8000-000000000005"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Đèn bàn Focus",
+          "href": "/products/10000000-0000-4000-8000-000000000006"
+        },
+        {
+          "text": "Đèn bàn Focus",
+          "href": "/products/10000000-0000-4000-8000-000000000006"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Bàn phím Full-size Studio 104",
+          "href": "/products/10000000-0000-4000-8000-000000000007"
+        },
+        {
+          "text": "Bàn phím Full-size Studio 104",
+          "href": "/products/10000000-0000-4000-8000-000000000007"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Chuột công thái học Ergo Master",
+          "href": "/products/10000000-0000-4000-8000-000000000008"
+        },
+        {
+          "text": "Chuột công thái học Ergo Master",
+          "href": "/products/10000000-0000-4000-8000-000000000008"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Loa để bàn SoundBar Desk",
+          "href": "/products/10000000-0000-4000-8000-000000000009"
+        },
+        {
+          "text": "Loa để bàn SoundBar Desk",
+          "href": "/products/10000000-0000-4000-8000-000000000009"
+        },
+        {
+          "text": "Xem chi tiết sản phẩm Thảm bàn Desk Mat Da PU",
+          "href": "/products/10000000-0000-4000-8000-000000000010"
+        },
+        {
+          "text": "Thảm bàn Desk Mat Da PU",
+          "href": "/products/10000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "form": [
+        {
+          "id": "",
+          "type": "search",
+          "autocomplete": "",
+          "name": "",
+          "required": false
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "label": "detail",
+      "width": 390,
+      "http": 200,
+      "title": "Bàn phím cơ Mini 68 | KEVILO",
+      "url": "https://47.129.214.70/products/10000000-0000-4000-8000-000000000001",
+      "h1": [
+        "Bàn phím cơ Mini 68"
+      ],
+      "text": "Trang chủ\n/\nPhụ kiện cho góc làm việc\n/\nBàn phím cơ Mini 68\nBÀN PHÍM\nCòn 17 sản phẩm\nBàn phím cơ Mini 68\nChưa có đánh giá nào\n\n790.000 ₫\n\nBàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.\n\nSố lượng:\n−\n+\nThêm vào giỏ hàng\n\nTRẢI NGHIỆM KHÁCH HÀNG\n\nĐánh giá sản phẩm (0)\nĐăng nhập để chia sẻ đánh giá của bạn về sản phẩm này.\nĐăng nhập\n\nChưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên chia sẻ cảm nhận!",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Trang chủ",
+          "tag": "A",
+          "width": 67.3125,
+          "height": 21,
+          "cls": ""
+        },
+        {
+          "text": "Phụ kiện cho góc làm việc",
+          "tag": "A",
+          "width": 175.75,
+          "height": 21,
+          "cls": ""
+        },
+        {
+          "text": "Đăng nhập",
+          "tag": "A",
+          "width": 74.625,
+          "height": 38,
+          "cls": "button button-secondary button-small"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 252,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 58.5,
+          "dom": 76.7000000178814,
+          "duration": 77.7000000178814
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/products/10000000-0000-4000-8000-000000000001",
+          "transfer": 703,
+          "duration": 131.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 93.80000001192093
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "transfer": 0,
+          "duration": 0
+        }
+      ],
+      "links": [
+        {
+          "text": "Trang chủ",
+          "href": "/"
+        },
+        {
+          "text": "Phụ kiện cho góc làm việc",
+          "href": "/products"
+        },
+        {
+          "text": "Đăng nhập",
+          "href": "/login"
+        }
+      ],
+      "form": [
+        {
+          "id": "qty-input",
+          "type": "number",
+          "autocomplete": "",
+          "name": "",
+          "required": false
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "label": "login",
+      "width": 390,
+      "http": 200,
+      "title": "Đăng nhập | KEVILO",
+      "url": "https://47.129.214.70/login",
+      "h1": [
+        "Chào mừng trở lại"
+      ],
+      "text": "TÀI KHOẢN KEVILO\n\nChào mừng trở lại\n\nĐăng nhập để đồng bộ giỏ hàng và theo dõi đơn hàng của bạn.\n\nEmail đăng nhập\nMật khẩu\nĐăng nhập\nChưa có tài khoản? Tạo tài khoản KEVILO",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Tạo tài khoản KEVILO",
+          "tag": "A",
+          "width": 152.421875,
+          "height": 18,
+          "cls": ""
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 96,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 61.20000001788139,
+          "dom": 78.69999998807907,
+          "duration": 78.69999998807907
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 63.099999994039536
+        }
+      ],
+      "links": [
+        {
+          "text": "Tạo tài khoản KEVILO",
+          "href": "/register"
+        }
+      ],
+      "form": [
+        {
+          "id": "email",
+          "type": "email",
+          "autocomplete": "username",
+          "name": "email",
+          "required": true
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "autocomplete": "current-password",
+          "name": "password",
+          "required": true
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "register",
+      "width": 390,
+      "http": 200,
+      "title": "Đăng ký thành viên | KEVILO",
+      "url": "https://47.129.214.70/register",
+      "h1": [
+        "Tạo tài khoản KEVILO"
+      ],
+      "text": "THÀNH VIÊN MỚI\n\nTạo tài khoản KEVILO\n\nTrải nghiệm lưu trữ giỏ hàng và quản lý đơn hàng thuận tiện.\n\nHọ và tên\nEmail\nMật khẩu\nXác nhận mật khẩu\nHoàn tất đăng ký\nĐã có tài khoản? Đăng nhập ngay",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        },
+        {
+          "text": "Đăng nhập ngay",
+          "tag": "A",
+          "width": 113.640625,
+          "height": 18,
+          "cls": ""
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 100,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 60.900000005960464,
+          "dom": 76.5,
+          "duration": 77.59999999403954
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 63.19999998807907
+        }
+      ],
+      "links": [
+        {
+          "text": "Đăng nhập ngay",
+          "href": "/login"
+        }
+      ],
+      "form": [
+        {
+          "id": "name",
+          "type": "text",
+          "autocomplete": "name",
+          "name": "name",
+          "required": true
+        },
+        {
+          "id": "email",
+          "type": "email",
+          "autocomplete": "username",
+          "name": "email",
+          "required": true
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "autocomplete": "new-password",
+          "name": "password",
+          "required": true
+        },
+        {
+          "id": "confirmPassword",
+          "type": "password",
+          "autocomplete": "new-password",
+          "name": "confirmPassword",
+          "required": true
+        }
+      ],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "404",
+      "width": 390,
+      "http": 200,
+      "title": "Không tìm thấy trang | KEVILO",
+      "url": "https://47.129.214.70/audit-page-does-not-exist",
+      "h1": [
+        "Trang bạn tìm kiếm không tồn tại"
+      ],
+      "text": "404 · KHÔNG TÌM THẤY TRANG\n\nTrang bạn tìm kiếm không tồn tại\n\nĐường dẫn có thể đã thay đổi, bị xóa hoặc nhập chưa chính xác. Hãy quay về danh mục phụ kiện KEVILO để tiếp tục khám phá.\n\nKhám phá sản phẩm\nVề trang chủ",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": [],
+      "smallControls": [
+        {
+          "text": "KEVILO, trang chủ",
+          "tag": "A",
+          "width": 147,
+          "height": 32,
+          "cls": "brand-link"
+        }
+      ],
+      "brokenImages": [],
+      "metrics": {
+        "lcp": 208,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 61.5,
+          "dom": 178.90000000596046,
+          "duration": 180
+        }
+      ],
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-500-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "transfer": 0,
+          "duration": 0
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "transfer": 322,
+          "duration": 78.90000000596046
+        }
+      ],
+      "links": [
+        {
+          "text": "Khám phá sản phẩm",
+          "href": "/products"
+        },
+        {
+          "text": "Về trang chủ",
+          "href": "/"
+        }
+      ],
+      "form": [],
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "label": "cart",
+      "width": 390,
+      "text": "MUA SẮM\n\nGiỏ hàng (1)\nDanh sách sản phẩm\nBàn phím cơ Mini 68\n790.000 ₫\n−\n1\n+\nThông tin đặt hàng\nTạm tính (1 sản phẩm):\n790.000 ₫\nPhí vận chuyển:\nMiễn phí\nTổng thanh toán:\n790.000 ₫\nĐặt hàng không cần tài khoản: Bạn có thể mua sắm ngay với tư cách khách vãng lai. Sau khi xác nhận đặt hàng, hãy lưu lại mã đơn để tiện đối chiếu khi nhận hàng.\nHọ và tên người nhận *\nEmail nhận thông báo *\nSố điện thoại liên hệ (tùy chọn)\nĐịa chỉ giao hàng *\nXác nhận đặt hàng",
+      "scrollWidth": 399,
+      "forms": [
+        {
+          "id": "guest-name",
+          "name": "",
+          "type": "text",
+          "autocomplete": "",
+          "required": true
+        },
+        {
+          "id": "guest-email",
+          "name": "",
+          "type": "email",
+          "autocomplete": "",
+          "required": true
+        },
+        {
+          "id": "guest-phone",
+          "name": "",
+          "type": "tel",
+          "autocomplete": "",
+          "required": false
+        },
+        {
+          "id": "shipping-address",
+          "name": "",
+          "type": "textarea",
+          "autocomplete": "",
+          "required": true
+        }
+      ],
+      "controls": [
+        {
+          "text": "Giảm số lượng Bàn phím cơ Mini 68",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Tăng số lượng Bàn phím cơ Mini 68",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Xóa Bàn phím cơ Mini 68 khỏi giỏ hàng",
+          "width": 36,
+          "height": 36,
+          "disabled": false
+        },
+        {
+          "text": "Xác nhận đặt hàng",
+          "width": 333.34375,
+          "height": 54,
+          "disabled": false
+        }
+      ],
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "products": [
+    {
+      "id": "7e517014-0000-4000-8000-000000000001",
+      "name": "Deployment verification item - NOT FOR SALE",
+      "description": "Synthetic item for Issue 14 deployment verification only. No real purchase or delivery.",
+      "price": "10000.00",
+      "stock": 0,
+      "category": "Deployment verification",
+      "imageKey": null,
+      "createdAt": "2026-09-27T08:30:36.339Z",
+      "updatedAt": "2026-09-27T08:31:47.387Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "name": "Bàn phím cơ Mini 68",
+      "description": "Bàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.",
+      "price": "790000.00",
+      "stock": 17,
+      "category": "Bàn phím",
+      "imageKey": "mini-68-keyboard",
+      "createdAt": "2026-10-03T03:46:17.467Z",
+      "updatedAt": "2026-10-03T09:13:22.140Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "name": "Chuột không dây Everyday",
+      "description": "Chuột không dây nhẹ, thiết kế thuận tay và độ nhạy có thể điều chỉnh.",
+      "price": "290000.00",
+      "stock": 32,
+      "category": "Chuột",
+      "imageKey": "everyday-mouse",
+      "createdAt": "2026-10-03T03:46:17.472Z",
+      "updatedAt": "2026-10-03T03:46:17.472Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "name": "Tai nghe Studio Lite",
+      "description": "Tai nghe chụp tai với đệm mềm và microphone cho lớp học trực tuyến.",
+      "price": "590000.00",
+      "stock": 12,
+      "category": "Âm thanh",
+      "imageKey": "studio-lite-headphone",
+      "createdAt": "2026-10-03T03:46:17.477Z",
+      "updatedAt": "2026-10-03T03:46:17.477Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000004",
+      "name": "Hub USB-C 5 trong 1",
+      "description": "Mở rộng kết nối với HDMI, USB và cổng sạc USB-C trong một thiết bị nhỏ gọn.",
+      "price": "450000.00",
+      "stock": 9,
+      "category": "Phụ kiện",
+      "imageKey": "usb-c-hub",
+      "createdAt": "2026-10-03T03:46:17.480Z",
+      "updatedAt": "2026-10-03T03:46:17.480Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000005",
+      "name": "Giá đỡ laptop nhôm",
+      "description": "Giá đỡ có thể gấp gọn, nâng màn hình và tạo khoảng thoáng dưới laptop.",
+      "price": "350000.00",
+      "stock": 24,
+      "category": "Phụ kiện",
+      "imageKey": "laptop-stand",
+      "createdAt": "2026-10-03T03:46:17.484Z",
+      "updatedAt": "2026-10-03T03:46:17.484Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000006",
+      "name": "Đèn bàn Focus",
+      "description": "Đèn LED để bàn với ba mức ánh sáng và cần đèn có thể điều chỉnh.",
+      "price": "390000.00",
+      "stock": 0,
+      "category": "Đèn bàn",
+      "imageKey": "focus-desk-lamp",
+      "createdAt": "2026-10-03T03:46:17.488Z",
+      "updatedAt": "2026-10-03T03:46:17.488Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000007",
+      "name": "Bàn phím Full-size Studio 104",
+      "description": "Bàn phím cơ đầy đủ 104 phím kèm núm xoay âm lượng đa năng, khung nhôm graphite cứng cáp.",
+      "price": "1290000.00",
+      "stock": 14,
+      "category": "Bàn phím",
+      "imageKey": "fullsize-keyboard",
+      "createdAt": "2026-10-03T03:46:17.493Z",
+      "updatedAt": "2026-10-03T09:13:22.135Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000008",
+      "name": "Chuột công thái học Ergo Master",
+      "description": "Thiết kế góc nghiêng tự nhiên giảm mỏi cổ tay, cảm biến quang học độ chính xác cao.",
+      "price": "850000.00",
+      "stock": 20,
+      "category": "Chuột",
+      "imageKey": "ergo-mouse",
+      "createdAt": "2026-10-03T03:46:17.497Z",
+      "updatedAt": "2026-10-03T03:46:17.497Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000009",
+      "name": "Loa để bàn SoundBar Desk",
+      "description": "Loa thanh đặt bàn với màng loa kép cho âm thanh cân bằng và thiết kế tối giản sang trọng.",
+      "price": "690000.00",
+      "stock": 14,
+      "category": "Âm thanh",
+      "imageKey": "desk-speaker",
+      "createdAt": "2026-10-03T03:46:17.502Z",
+      "updatedAt": "2026-10-03T03:46:17.502Z"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000010",
+      "name": "Thảm bàn Desk Mat Da PU",
+      "description": "Chất liệu da PU chống nước, bề mặt mịn màng êm ái bảo vệ mặt bàn và nâng tầm góc làm việc.",
+      "price": "250000.00",
+      "stock": 35,
+      "category": "Phụ kiện",
+      "imageKey": "leather-desk-mat",
+      "createdAt": "2026-10-03T03:46:17.506Z",
+      "updatedAt": "2026-10-03T03:46:17.506Z"
+    }
+  ],
+  "detailId": "10000000-0000-4000-8000-000000000001"
+}

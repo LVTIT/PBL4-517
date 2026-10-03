@@ -58,6 +58,33 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.deepEqual(result.body.data.map(({ id, name, price, stock }) => ({ id, name, price, stock })), rows.rows);
     });
 
+    await suite.test('public catalog excludes deployment verification items', async () => {
+      const testId = 'test-deploy-verify-synthetic';
+      await database.query(
+        'INSERT INTO "Product" (id, name, description, price, stock, category) VALUES ($1, $2, $3, $4, $5, $6)',
+        [testId, 'Deployment verification item - NOT FOR SALE', 'Verification item only', 10000, 0, 'Deployment verification']
+      );
+      try {
+        const publicList = await browser.request('/products');
+        const foundInPublic = publicList.body.data.some(
+          (p) => p.id === testId || p.category === 'Deployment verification' || p.name.includes('NOT FOR SALE')
+        );
+        assert.equal(foundInPublic, false, 'Public catalog must exclude verification items');
+
+        const singlePublic = await browser.request(`/products/${testId}`);
+        assert.equal(singlePublic.status, 404, 'Direct public request for verification item must 404');
+
+        const verificationList = await browser.request('/products?includeVerification=true');
+        const foundInVerification = verificationList.body.data.some((p) => p.id === testId);
+        assert.equal(foundInVerification, true, 'Can query with includeVerification=true');
+
+        const singleVerification = await browser.request(`/products/${testId}?includeVerification=true`);
+        assert.equal(singleVerification.status, 200, 'Can get verification item with includeVerification=true');
+      } finally {
+        await database.query('DELETE FROM "Product" WHERE id = $1', [testId]);
+      }
+    });
+
     await suite.test('anonymous user and rejected missing CSRF token', async () => {
       assert.deepEqual((await browser.request('/auth/me')).body, { data: { user: null } });
       const result = await browser.request('/auth/login', {

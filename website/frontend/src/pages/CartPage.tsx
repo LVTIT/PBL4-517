@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router';
 import { useCart } from '../services/cart';
@@ -6,7 +6,7 @@ import { useAuth } from '../services/auth';
 import { messageFrom, post } from '../services/api';
 import type { Order } from '../types/api';
 import { ProductMedia } from '../components/ProductMedia';
-import { TrashIcon, CheckIcon, AlertCircleIcon } from '../components/Icon';
+import { TrashIcon, CheckIcon, AlertCircleIcon, CopyIcon } from '../components/Icon';
 import { getPageTitle } from '../config/brand';
 
 const currency = new Intl.NumberFormat('vi-VN', {
@@ -26,11 +26,38 @@ export function CartPage() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('pbl517_last_order');
+      return saved ? (JSON.parse(saved) as Order) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [copied, setCopied] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    document.title = getPageTitle('Giỏ hàng');
-  }, []);
+    document.title = getPageTitle(createdOrder ? 'Đặt hàng thành công' : 'Giỏ hàng');
+    if (createdOrder) {
+      headingRef.current?.focus();
+    }
+  }, [createdOrder]);
+
+  const handleCopyOrderCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleDismissOrder = () => {
+    sessionStorage.removeItem('pbl517_last_order');
+    setCreatedOrder(null);
+  };
 
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
@@ -85,6 +112,7 @@ export function CartPage() {
     try {
       const order = await post<Order>('/orders', orderPayload);
       clearCart();
+      sessionStorage.setItem('pbl517_last_order', JSON.stringify(order));
       setCreatedOrder(order);
     } catch (err) {
       setError(messageFrom(err));
@@ -125,7 +153,11 @@ export function CartPage() {
             <CheckIcon size={28} />
           </div>
 
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 8px 0' }}>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 8px 0', outline: 'none' }}
+          >
             Đặt hàng thành công!
           </h1>
           <p style={{ color: 'var(--color-text-muted)', margin: '0 0 20px 0' }}>
@@ -142,9 +174,21 @@ export function CartPage() {
               border: '1px solid var(--color-border)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
               <span className="small muted">Mã đơn hàng:</span>
-              <strong style={{ fontFamily: 'var(--font-mono)' }}>{createdOrder.id}</strong>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <strong style={{ fontFamily: 'var(--font-mono)' }}>{createdOrder.id}</strong>
+                <button
+                  type="button"
+                  className="button button-small button-secondary"
+                  onClick={() => void handleCopyOrderCode(createdOrder.id)}
+                  aria-label={`Sao chép mã đơn hàng ${createdOrder.id}`}
+                  style={{ minHeight: '34px', padding: '4px 10px', fontSize: '0.8125rem' }}
+                >
+                  <CopyIcon size={14} />
+                  <span>{copied ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span className="small muted">Trạng thái:</span>
@@ -193,9 +237,20 @@ export function CartPage() {
                 Đăng ký tài khoản KEVILO
               </Link>
             )}
-            <Link to="/products" className="button button-secondary">
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => window.print()}
+            >
+              In phiếu xác nhận
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={handleDismissOrder}
+            >
               Tiếp tục mua sắm
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -235,30 +290,32 @@ export function CartPage() {
           <div className="cart-items-wrapper">
             {items.map((item) => (
               <div key={item.productId} className="cart-item-row">
-                <div className="cart-thumb">
-                  <ProductMedia
-                    imageKey={item.product.imageKey}
-                    name={item.product.name}
-                    category={item.product.category}
-                    aspectRatio="1/1"
-                  />
-                </div>
+                <div className="cart-item-info-col">
+                  <div className="cart-thumb">
+                    <ProductMedia
+                      imageKey={item.product.imageKey}
+                      name={item.product.name}
+                      category={item.product.category}
+                      aspectRatio="1/1"
+                    />
+                  </div>
 
-                <div className="cart-item-details">
-                  <Link
-                    to={`/products/${item.productId}`}
-                    className="cart-item-title"
-                  >
-                    {item.product.name}
-                  </Link>
-                  <span className="cart-item-price">
-                    {currency.format(Number(item.product.price))}
-                  </span>
-                  {item.quantity > item.product.stock && (
-                    <span className="form-error">
-                      Chỉ còn {item.product.stock} trong kho!
+                  <div className="cart-item-details">
+                    <Link
+                      to={`/products/${item.productId}`}
+                      className="cart-item-title"
+                    >
+                      {item.product.name}
+                    </Link>
+                    <span className="cart-item-price">
+                      {currency.format(Number(item.product.price))}
                     </span>
-                  )}
+                    {item.quantity > item.product.stock && (
+                      <span className="form-error">
+                        Chỉ còn {item.product.stock} trong kho!
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="cart-item-actions">
@@ -266,26 +323,26 @@ export function CartPage() {
                     <button
                       type="button"
                       className="qty-btn"
-                      style={{ width: '36px', height: '36px' }}
+                      disabled={item.quantity <= 1}
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       aria-label={`Giảm số lượng ${item.product.name}`}
                     >
                       −
                     </button>
                     <span
+                      className="qty-input"
                       style={{
-                        width: '36px',
-                        textAlign: 'center',
-                        fontWeight: 600,
-                        fontSize: '0.875rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
+                      aria-label={`Số lượng: ${item.quantity}`}
                     >
                       {item.quantity}
                     </span>
                     <button
                       type="button"
                       className="qty-btn"
-                      style={{ width: '36px', height: '36px' }}
                       disabled={item.quantity >= item.product.stock}
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                       aria-label={`Tăng số lượng ${item.product.name}`}
@@ -296,7 +353,7 @@ export function CartPage() {
 
                   <button
                     type="button"
-                    className="dialog-close-btn"
+                    className="cart-remove-btn"
                     onClick={() => removeFromCart(item.productId)}
                     aria-label={`Xóa ${item.product.name} khỏi giỏ hàng`}
                     title="Xóa sản phẩm"
@@ -344,7 +401,9 @@ export function CartPage() {
                   </label>
                   <input
                     id="guest-name"
+                    name="name"
                     type="text"
+                    autoComplete="name"
                     required
                     maxLength={100}
                     placeholder="Ví dụ: Nguyễn Văn A"
@@ -357,11 +416,13 @@ export function CartPage() {
 
                 <div className="form-group">
                   <label htmlFor="guest-email" className="form-label">
-                    Email nhận thông báo <span style={{ color: 'var(--color-danger)' }}>*</span>
+                    Email liên hệ <span style={{ color: 'var(--color-danger)' }}>*</span>
                   </label>
                   <input
                     id="guest-email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     required
                     maxLength={254}
                     placeholder="ban@example.com"
@@ -378,7 +439,9 @@ export function CartPage() {
                   </label>
                   <input
                     id="guest-phone"
+                    name="tel"
                     type="tel"
+                    autoComplete="tel"
                     maxLength={20}
                     placeholder="0912 345 678"
                     className="form-input"
@@ -397,6 +460,8 @@ export function CartPage() {
               </label>
               <textarea
                 id="shipping-address"
+                name="address"
+                autoComplete="street-address"
                 required
                 minLength={5}
                 maxLength={255}
@@ -414,6 +479,10 @@ export function CartPage() {
                 <span>{error}</span>
               </div>
             )}
+
+            <p className="small muted" style={{ textAlign: 'center', margin: '0 0 12px 0' }}>
+              * Website thử nghiệm PBL4-517: Không phát sinh thanh toán hay giao nhận thực tế.
+            </p>
 
             <button
               type="submit"
