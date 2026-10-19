@@ -48,3 +48,20 @@ update/cancel, scan or Telegram/Discord message was sent during verification.
 Authenticated EC2 IDOR results are **pending** the user's private test accounts
 and synthetic order. Existing historical OWASP-01 logs remain local lab evidence.
 Human review/merge remain required; the agent does not merge or close the issue.
+
+## Hosted CI and remaining blocker
+
+[Run 39220785388](https://github.com/LVTIT/PBL4-517/actions/runs/39220785388)
+checked implementation `f4a351560624cf30a503f7255941d8edc366e7cc`:
+
+- `python-check`, `repo-policy`, `backend-integration`: PASS.
+- `frontend-build`: compilation PASS; audit gate FAIL for high-severity
+  `source-map-js` advisory GHSA-68fv-2mgg-jv7q.
+- `backend-build`: compilation PASS; audit gate FAIL for critical-severity
+  `proxy-addr` advisory GHSA-jqcg-44mw-7w3h; also reports two moderate findings.
+
+Both web manifests and lockfiles are byte-for-byte unchanged from base main
+`4e5fb08`. Updating web dependencies is outside this script-targeting change.
+PR #54 remains draft, not READY FOR HUMAN REVIEW. No gate bypass, merge or deploy.
+This evidence-only follow-up requires its own latest-head CI result; use the PR
+checks rather than treating the implementation run as a pass for a later SHA.

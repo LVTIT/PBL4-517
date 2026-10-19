@@ -13,6 +13,10 @@ Local verification and live-check limits are recorded in
 [demo evidence](../evidence/OWASP-01/deployed-demo-scripts-20261019.md).
 Authenticated EC2 IDOR execution and human review remain pending; the original closed
 local-lab Issue #24 is not reopened or reinterpreted as production test evidence.
+CI on implementation `f4a3515`: Python, repository policy and backend integration PASS;
+the two build jobs compile successfully but fail their audit gates on existing
+`proxy-addr` (critical) and `source-map-js` (high) dependencies. PR #54 remains draft;
+web manifests/lockfiles are unchanged, and no dependency gate was bypassed.
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
