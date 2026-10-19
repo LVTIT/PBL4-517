@@ -420,13 +420,17 @@ service/Nginx đang dùng:
 sudo systemctl restart pbl4-backend
 systemctl is-active pbl4-backend
 systemctl is-enabled pbl4-backend
-curl --fail --silent --show-error https://47.129.214.70/api/health
+curl --fail --silent --show-error https://13.251.128.130/api/health
 ```
 
 Kiểm tra frontend/assets/API qua HTTPS, quyền đọc static files của Nginx,
 loopback listeners và hash bản build. Giữ backup cho rollback, không reset
 database. [Evidence lần triển khai KEVILO đầu tiên](../evidence/UI-01/ec2-20261003/README.md),
 [cập nhật UI mobile tại `524c878`, kiểm tra public và rollback](../evidence/UI-01/ec2-ui-update-20261003/README.md).
+Ô SĐT checkout tại `601c237` đã deploy ngày 2026-10-19 lên IP mới
+`13.251.128.130`; [bằng chứng, giới hạn kiểm tra và rollback](../evidence/UI-01/ec2-checkout-phone-20261019/README.md).
+Theo yêu cầu demo, lần triển khai này giữ nguyên cờ IDOR hiện có là `true`;
+không coi đây là kiểm chứng Secure Baseline trên EC2.
 
 ## Troubleshooting
 

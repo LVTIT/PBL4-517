@@ -1,0 +1,12 @@
+Confirmed existing IDOR demo flag true; environment will be preserved.
+Backup: /home/ubuntu/.local/state/pbl4-517/checkout-phone-601c237.eXz9Wb
+Previous HEAD position was 524c878 docs(ui): record passing CI fixture verification (Refs #51)
+HEAD is now at 601c237 fix(checkout): save recipient phone and patch transitive dependencies (Refs #51)
+active
+enabled
+{"data":{"status":"ok","database":"connected"}}
+ACTIVATED: 601c2374d3b2ca4b88e00cd33fcd925ee3fde5da
+ENV_UNCHANGED: yes; VULN_IDOR_ENABLED=true retained
+BUILD_MANIFEST: f3eedff0da4caaae54c367c75395af8af7c71f98c2d35d2a98ad872e24a5a2f3
+BACKUP: /home/ubuntu/.local/state/pbl4-517/checkout-phone-601c237.eXz9Wb
+2026-10-19T09:37:29+00:00

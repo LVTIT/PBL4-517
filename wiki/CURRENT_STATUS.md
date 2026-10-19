@@ -1,6 +1,7 @@
 # Current Project Status
 
-**Latest local #51 update — 2026-10-19:** Added an optional recipient phone field
+**Latest #51 deployment — 2026-10-19 16:37 Asia/Saigon:** Application
+`601c237` is active at `https://13.251.128.130/`. Added an optional recipient phone field
 to checkout for signed-in customers and guests, separate from the shipping
 address. The create-order API accepts customer phone input and stores it in the
 existing `Order.customerPhone` column; guest payload compatibility is preserved.
@@ -13,15 +14,20 @@ PostgreSQL and displayed the phone in order detail; desktop/mobile screenshots
 were visually checked. No database schema, `.env` or attacker-script changes.
 Transitive-only lockfile patches: backend `proxy-addr` 2.0.8, `ip-address` 10.7.4,
 `fast-uri` 3.1.8; frontend `source-map-js` 1.2.2. Main dependency versions are
-unchanged; both complete `npm audit --audit-level=high` runs report zero
-vulnerabilities. SSH recovery access was verified on EC2; the running source
-remains `524c878`, with `pbl4-backend` active. The EC2 lab flag is currently true;
-public release activation requires returning it to the accepted secure baseline.
-Not deployed to EC2. Hosted CI and human review are tracked on
+unchanged; local and Linux builds/audits pass with zero vulnerabilities. All five
+application CI checks pass on `601c237`. Backend active/enabled, HTTPS frontend
+and health 200, database connected. Public guest and customer-view UI checks
+show the phone field on desktop/mobile (customer view mocks auth only; no live
+account/order mutations). Existing `.env` and `VULN_IDOR_ENABLED=true` were
+preserved under the owner's explicit IDOR demo instruction; this is a lab-mode
+deployment, not live secure-baseline acceptance. Protected `production`
+environment configured as reviewed; manual activation only, automatic CD still
+disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-checkout-phone-20261019/README.md).
+PR human review and full real-data acceptance remain outstanding, tracked on
 [PR #55](https://github.com/LVTIT/PBL4-517/pull/55). API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-19 (Asia/Saigon; checkout phone verified locally; latest recorded #51 UI deployment remains 2026-10-03 at 22:58, full deployed real-data acceptance pending)
+**Last updated:** 2026-10-19 (Asia/Saigon; checkout phone deployed at 16:37; full deployed real-account acceptance and PR human review pending)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
