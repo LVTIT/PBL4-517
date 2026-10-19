@@ -19,7 +19,8 @@ export interface Product {
   price: string;
   stock: number;
   category?: string;
-  averageRating?: number;
+  imageKey?: string | null;
+  averageRating?: number | null;
   reviewCount?: number;
   reviews?: Review[];
 }

@@ -1,6 +1,6 @@
-# Website PBL4-517
+# Website KEVILO (PBL4-517)
 
-Website thương mại điện tử cho đồ án PBL4-517: trang chủ, sản phẩm, chi tiết, đánh giá, giỏ hàng, đơn hàng (kể cả khách vãng lai), đăng ký/đăng nhập, hồ sơ và trang quản trị, kết nối Express và PostgreSQL thật qua Prisma.
+Website thương mại điện tử phụ kiện bàn làm việc và không gian công nghệ **KEVILO** thuộc đồ án PBL4-517: trang chủ thương hiệu, danh mục sản phẩm, chi tiết sản phẩm, đánh giá, giỏ hàng (hỗ trợ cả khách vãng lai và thành viên), quản lý đơn hàng, đăng ký/đăng nhập, hồ sơ cá nhân và bảng điều khiển quản trị, kết nối Express và PostgreSQL thật qua Prisma.
 
 ## Requirements
 
@@ -9,7 +9,7 @@ Website thương mại điện tử cho đồ án PBL4-517: trang chủ, sản p
 - **PostgreSQL 16** đang chạy, kèm công cụ `psql`; hoặc Docker để chạy PostgreSQL 16 theo lựa chọn bên dưới.
 - Hai terminal để chạy backend và frontend.
 
-Frontend dùng React, TypeScript, Vite và CSS thuần. Backend dùng Express 5, TypeScript và Prisma ORM 7. Hai project có `package-lock.json` riêng; dùng `npm ci` để cài đúng phiên bản đã khóa.
+Frontend dùng React, TypeScript, Vite và CSS thuần (tuân thủ design system KEVILO, font tự host Be Vietnam Pro, hỗ trợ WCAG 2.2 AA và Playwright/axe e2e tests). Backend dùng Express 5, TypeScript và Prisma ORM 7. Hai project có `package-lock.json` riêng; dùng `npm ci` để cài đúng phiên bản đã khóa.
 
 Trên Windows PowerShell, nếu `npm` bị chặn bởi execution policy, dùng **`npm.cmd`** thay cho `npm` trong mọi lệnh bên dưới. Không cần đổi execution policy của máy.
 
@@ -185,6 +185,7 @@ Giữ terminal này mở. Backend bind loopback `127.0.0.1`, chạy tại **http
 | `npm run prisma:generate` | Tạo Prisma Client từ schema. Chạy lại khi sửa schema hoặc sau khi cài dependency. |
 | `npm run prisma:migrate` | Chạy `prisma migrate deploy`, áp dụng các migration đã commit; dùng khi clone mới và khi triển khai. |
 | `npm run prisma:seed` | Chạy seed rõ ràng sau migration, tạo tài khoản và sáu sản phẩm demo. |
+| `npm run catalog:import` | Nhập 10 sản phẩm catalog KEVILO demo (mặc định dry-run). Dùng `npm run catalog:import -- --apply` để ghi vào database mà không tạo trùng tài khoản hay đặt lại tồn kho. |
 | `npm run prisma:migrate:dev -- --name describe_change` | Tạo migration mới khi phát triển schema. Cần quyền tạo shadow database hoặc cấu hình shadow database riêng. Commit SQL migration sinh ra. |
 
 Prisma 7 lấy URL từ `prisma.config.ts`, dùng PostgreSQL driver adapter và client được generate; không dùng cấu hình URL theo tutorial Prisma 5/6. CLI và Client được khóa cùng phiên bản 7.x. Không cần `prisma db push` để chạy project. Đối chiếu [hướng dẫn chính thức Prisma ORM 7](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7) khi sửa cấu hình hoặc nâng cấp dependency.
@@ -269,6 +270,20 @@ Các tài khoản này có mật khẩu công khai, chỉ dùng development/test
 
 Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
 
+Checkout hiển thị ô **Số điện thoại người nhận (tùy chọn)** riêng với địa chỉ cho cả
+khách đã đăng nhập và khách vãng lai. Với khách đã đăng nhập, `POST /api/orders`
+nhận thêm `customerPhone` (chuỗi đã trim, 8–20 ký tự nếu cung cấp); bỏ qua trường
+này khi để trống. Luồng khách vãng lai tiếp tục gửi `guestInfo.phone` như trước.
+Số điện thoại được lưu vào `Order.customerPhone` và hiển thị trong xác nhận/chi tiết
+đơn hàng. Không cần migration database cho thay đổi này. Khi triển khai, cần cập
+nhật/build cả backend và frontend rồi restart backend; chỉ cập nhật UI là chưa đủ.
+
+Lockfile cập nhật ngày 2026-10-19 chỉ vá dependency bắc cầu: backend dùng
+`proxy-addr` 2.0.8, `ip-address` 10.7.4, `fast-uri` 3.1.8; frontend dùng
+`source-map-js` 1.2.2. Giữ nguyên phiên bản dependency chính. Sau `npm ci`, build và
+kiểm thử lại, `npm audit --audit-level=high` báo 0 vulnerabilities ở cả hai project
+trong lần kiểm tra này.
+
 ### Session, password và CSRF
 
 - Session được lưu trong PostgreSQL, cookie chỉ giữ session ID đã ký; không dùng MemoryStore làm nơi lưu session.
@@ -333,6 +348,29 @@ npm run test:integration
 
 Suite kiểm tra health, dữ liệu sản phẩm khớp SQL, validation/body limit, CSRF, đăng nhập đúng/sai, hash password, PostgreSQL session, cookie, session fixation và logout/replay. Test gọi backend ở `http://127.0.0.1:3000` mặc định; nếu server test dùng port khác, đặt `TEST_API_URL` theo URL đó (PowerShell: `$env:TEST_API_URL='http://127.0.0.1:3002'`; Linux: `TEST_API_URL=http://127.0.0.1:3002 npm run test:integration`). Không chạy suite trên production. Chạy lặp quá nhanh có thể chạm rate limit từ các login lỗi; chờ 15 phút hoặc restart backend local trước một lượt kiểm thử mới.
 
+### E2E & Accessibility test tự động (Playwright + Axe)
+
+Trong thư mục `website/frontend`:
+
+```sh
+npm run test:e2e
+```
+
+Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ headless: 20 test ở hai cấu hình desktop 1440px và mobile 390px, tổng cộng 40 lượt chạy. Build frontend trước khi chạy vì suite dùng Vite preview. Phạm vi assertion hiện tại:
+- Nhận diện thương hiệu KEVILO: title, meta description, wordmark & biểu tượng SVG, footer disclaimer, kiểm tra không xuất hiện chuỗi thương hiệu cũ.
+- Responsive breakpoints: 320px, 390px, 768px, 1024px, 1440px không tràn ngang (`scrollWidth <= innerWidth`).
+- Menu điều hướng mobile drawer: mở bằng nút, giữ focus khi Tab/Shift+Tab, đóng bằng Escape và trả focus về nút mở.
+- Axe trên Home, Catalog, Cart trống, Login và Register: tag WCAG 2.0/2.1/2.2 A/AA, bật kiểm tra tương phản màu, yêu cầu không có violation. Đây không phải chứng nhận toàn bộ website đạt WCAG; các luồng còn lại và kiểm tra thủ công vẫn cần review.
+- Lọc danh mục đồng bộ URL; hiển thị nhãn hết hàng.
+- Thêm sản phẩm vào giỏ, giới hạn tồn kho, địa chỉ ban đầu để trống và thông báo cho khách vãng lai; reset hủy tìm kiếm đang debounce; catalog 2 cột và giỏ không tràn ngang ở 320/390px. Chưa bao phủ toàn bộ checkout thật, sort hay cô lập phiên qua login/logout.
+- Khả năng phục hồi khi lỗi mạng/API 500 với panel lỗi và nút "Thử lại"; trang 404 chuẩn nhận diện KEVILO.
+
+Các test catalog/cart dùng API mock. Kết quả API với PostgreSQL thật được kiểm tra riêng bằng backend integration suite; không chạy suite này trên production.
+
+Catalog và chi tiết sản phẩm mặc định loại bỏ item có nhãn kiểm chứng triển khai. Query `includeVerification=true` trên hai API vẫn cho phép đọc item đó và chưa yêu cầu quyền admin; đây là bộ lọc hiển thị, không phải ranh giới phân quyền. Xác nhận đặt hàng hiện lưu toàn bộ `createdOrder` trong `sessionStorage` (`pbl517_last_order`), có thao tác sao chép mã và in. Chưa xác minh cô lập bản lưu này khi đổi tài khoản và chưa có gửi email. Các route quản trị, đơn hàng, hồ sơ và đăng ký được tải bằng `React.lazy`.
+
+[Kết quả kiểm chứng 2026-10-03 và giới hạn](../evidence/UI-01/public-audit-20261003/commit-verification.md). Nghiệm thu với catalog đã kiểm duyệt và API/PostgreSQL thật vẫn **Planned** theo F14 trong [audit plan](../docs/ui/kevilo-public-audit-20261003.md); Vite dev/preview hiện vẫn có fallback dữ liệu khi backend không kết nối được.
+
 ## Build
 
 Backend, trong `website/backend`:
@@ -364,16 +402,35 @@ Issue #15 now has an active/enabled systemd backend with verified stop/start/res
 and journal checks (2026-10-02). [Service operations and approved reboot verification](../docs/aws/linux-service-review.md),
 [evidence](../evidence/LINUX-02/README.md). Automatic startup after one reboot and external HTTPS were verified.
 
-Trong `website/backend` trên máy EC2 (đã có `.env` production với `NODE_ENV=production`, `VULN_IDOR_ENABLED=false`):
+EC2 hiện dùng service `pbl4-backend`. Backend bind `127.0.0.1`, Nginx reverse
+proxy `/api/` và phục vụ `frontend/dist/`. Không chạy thêm `npm start` cạnh
+service đang chiếm port 3000.
+
+Khi cập nhật bản đã được duyệt: chốt exact tested SHA, build theo mục Build
+ở worktree riêng trên Linux (cài cả devDependencies để compile), giữ `.env`
+production riêng tư và secure baseline. Sao lưu app/database trước khi chạy
+`npm run prisma:migrate`. Với catalog KEVILO, xem trước bằng
+`npm run catalog:import`; chỉ dùng `npm run catalog:import -- --apply` khi
+catalog của bản phát hành đã được duyệt. Không chạy development seed trên EC2.
+
+Sau khi kiểm tra build và chuyển output/dependency tương ứng vào đường dẫn
+service/Nginx đang dùng:
 
 ```sh
-npm ci
-npm run build
-npm run prisma:migrate
-npm start
+sudo systemctl restart pbl4-backend
+systemctl is-active pbl4-backend
+systemctl is-enabled pbl4-backend
+curl --fail --silent --show-error https://13.251.128.130/api/health
 ```
 
-`npm start` chạy `node dist/server.js` (không dùng `tsx`); backend bind `127.0.0.1`, Nginx reverse proxy `/api/` và phục vụ `frontend/dist/`. Chi tiết Nginx/systemd thuộc các issue triển khai tiếp theo.
+Kiểm tra frontend/assets/API qua HTTPS, quyền đọc static files của Nginx,
+loopback listeners và hash bản build. Giữ backup cho rollback, không reset
+database. [Evidence lần triển khai KEVILO đầu tiên](../evidence/UI-01/ec2-20261003/README.md),
+[cập nhật UI mobile tại `524c878`, kiểm tra public và rollback](../evidence/UI-01/ec2-ui-update-20261003/README.md).
+Ô SĐT checkout tại `601c237` đã deploy ngày 2026-10-19 lên IP mới
+`13.251.128.130`; [bằng chứng, giới hạn kiểm tra và rollback](../evidence/UI-01/ec2-checkout-phone-20261019/README.md).
+Theo yêu cầu demo, lần triển khai này giữ nguyên cờ IDOR hiện có là `true`;
+không coi đây là kiểm chứng Secure Baseline trên EC2.
 
 ## Troubleshooting
 

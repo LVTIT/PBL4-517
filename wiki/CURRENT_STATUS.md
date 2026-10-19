@@ -1,6 +1,33 @@
 # Current Project Status
 
-**Last updated:** 2026-10-02 (Asia/Bangkok; #8/#10/#15/#24 closed after verification; project-local UI skill installed)
+**Latest #51 deployment — 2026-10-19 16:37 Asia/Saigon:** Application
+`601c237` is active at `https://13.251.128.130/`. Added an optional recipient phone field
+to checkout for signed-in customers and guests, separate from the shipping
+address. The create-order API accepts customer phone input and stores it in the
+existing `Order.customerPhone` column; guest payload compatibility is preserved.
+`npm ci` and both builds PASS; 48/48 Playwright cases PASS on desktop/mobile
+(including 8 focused checkout-phone cases);
+all 16 API integration subtests PASS against an isolated local PostgreSQL cluster,
+including phone persistence, invalid input, omitted phone, guest checkout and IDOR
+protection. A real browser checkout through the API saved phone/address in
+PostgreSQL and displayed the phone in order detail; desktop/mobile screenshots
+were visually checked. No database schema, `.env` or attacker-script changes.
+Transitive-only lockfile patches: backend `proxy-addr` 2.0.8, `ip-address` 10.7.4,
+`fast-uri` 3.1.8; frontend `source-map-js` 1.2.2. Main dependency versions are
+unchanged; local and Linux builds/audits pass with zero vulnerabilities. All five
+application CI checks pass on `601c237`. Backend active/enabled, HTTPS frontend
+and health 200, database connected. Public guest and customer-view UI checks
+show the phone field on desktop/mobile (customer view mocks auth only; no live
+account/order mutations). Existing `.env` and `VULN_IDOR_ENABLED=true` were
+preserved under the owner's explicit IDOR demo instruction; this is a lab-mode
+deployment, not live secure-baseline acceptance. Protected `production`
+environment configured as reviewed; manual activation only, automatic CD still
+disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-checkout-phone-20261019/README.md).
+PR human review and full real-data acceptance remain outstanding, tracked on
+[PR #55](https://github.com/LVTIT/PBL4-517/pull/55). API contract:
+[website README](../website/README.md#api-endpoints).
+
+**Last updated:** 2026-10-19 (Asia/Saigon; checkout phone deployed at 16:37; full deployed real-account acceptance and PR human review pending)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
@@ -43,6 +70,50 @@
   - **Kiểm thử & Build:** Đã bổ sung bộ kiểm thử tự động, 16/16 backend integration tests chạy thành công (`npm run test:integration`); cả frontend (`npm run build`) và backend (`npm run build`) biên dịch 100% không lỗi.
 
 **In progress:**
+
+- [#51 — Nâng cấp toàn diện UI/UX KEVILO Store theo phong cách công nghệ premium](https://github.com/LVTIT/PBL4-517/issues/51): **Implemented / locally verified.**
+  - **Deployment 22:58 Asia/Bangkok:** Human-authorized deployment of `524c878` (exact [CI 5/5 PASS](https://github.com/LVTIT/PBL4-517/actions/runs/37121814826)) from previous `9f75879`. Linux worktree build, private backup, frontend/backend/dependency switch and service restart PASS; backend active/enabled, HTTPS/database healthy, build hashes match and `.env` unchanged. Public Home/Catalog display 2 columns at 320/375/390/414px; populated cart fits 320/390px; catalog returns 10 products. Four axe scans have zero violations with incomplete results requiring manual review. [Deployment/browser evidence and rollback](../evidence/UI-01/ec2-ui-update-20261003/README.md). No schema/data change, real checkout or PR merge; remaining F14/DoD still pending.
+  - **Cải tiến source theo Audit Plan 2026-10-03 (F01–F13, chưa hoàn tất mọi DoD):**
+    - *F01 (Ảnh sản phẩm Studio AI):* Thay 3 ảnh sai lệch nghiêm trọng (`usb-c-hub`, `laptop-stand`, `leather-desk-mat`) bằng ảnh studio AI tỷ lệ 1:1, nền trung tính `#F1F4F8`, ánh sáng định hướng, dung lượng nhẹ (11–19 KB WebP). Cập nhật hồ sơ prompt trong `IMAGE_PROVENANCE.md`.
+    - *F02 (Ẩn Deployment Verification Item mặc định):* Backend (`listProducts`, `getProductById`) và frontend lọc item kiểm chứng khỏi catalog mặc định. Cờ `includeVerification=true` vẫn truy cập được từ API public, chưa phải cơ chế cô lập theo quyền admin. Test tích hợp đã PASS trên hosted CI sau sửa fixture tại `e07b554`; xem bằng chứng CI bên dưới.
+    - *F03 (Khắc phục tràn ngang giỏ hàng mobile):* Tái cấu trúc layout giỏ hàng dạng 2 khối (thông tin sản phẩm + điều khiển/xóa); test với dữ liệu fixture PASS ở 320px và 390px.
+    - *F04 (Touch Target theo mục tiêu dự án ≥44px):* Tăng vùng chạm các điều khiển giỏ hàng, bộ lọc và CTA được sửa; chưa kiểm toán mọi nút của toàn website. Mục tiêu 44×44px của dự án không đồng nghĩa mọi yêu cầu WCAG 2.2 đã được xác minh.
+    - *F05 (Bẫy tiêu điểm Drawer & Dialog):* Thêm focus trap (Tab/Shift+Tab) trong mobile navigation drawer và `ConfirmDialog`; tự động focus phần tử đầu tiên khi mở và hoàn trả focus chính xác về nút mở khi đóng/Escape.
+    - *F06 (Add-to-cart & Quản lý bão hòa tồn kho):* `addToCart` trả về `AddToCartResult`, vô hiệu hóa nút chuyển thành "Đã đạt tối đa" khi số lượng trong giỏ đạt trần tồn kho, hiển thị toast cảnh báo loại `warning`.
+    - *F07 & F08 (Debounce Reset & Ngữ nghĩa bộ lọc):* Hủy timeout debounce khi bấm "Đặt lại bộ lọc" hoặc unmount; chuyển category tabs sang `role="group"` với `aria-pressed`, thêm vùng thông báo live `aria-live="polite"` cho số lượng kết quả.
+    - *F09 (Điều hướng lỗi Form & ARIA):* Gắn `aria-invalid`, `aria-describedby` và tự động focus ô nhập bị lỗi (`confirmPassword`, `email`, `password`) trên `RegisterPage` và `LoginPage`.
+    - *F10 (Lưu trạng thái xác nhận đơn hàng):* Lưu `createdOrder` vào `sessionStorage` để không mất khi refresh; thêm nút sao chép mã đơn và in phiếu xác nhận (`window.print()`).
+    - *F11 (Phân tách mã nguồn Route-level Code Splitting):* Áp dụng `React.lazy` và `Suspense` cho các trang quản trị/lịch sử đơn hàng/hồ sơ (`AdminPage`, `OrdersPage`, `OrderDetailPage`, `ProfilePage`, `RegisterPage`); build tạo các chunk riêng. Chưa đo lại LCP mobile để kết luận hiệu năng đạt DoD.
+    - *F12 (Khả năng phục hồi lỗi & Điều hướng 404):* Bổ sung nút "Thử lại" khi API featured products lỗi; trang chi tiết sản phẩm 404 xử lý dứt khoát kèm liên kết quay lại danh mục.
+    - *F13 (Grid Catalog 2 cột trên điện thoại):* Triển khai hiển thị 2 cột trên toàn bộ màn hình 320px–767px (`repeat(2, minmax(0, 1fr))`), thu gọn card padding, ẩn mô tả dài và căn chỉnh CTA 44px dạng khối đứng.
+  - **Kiểm thử tự động & Trợ năng:**
+    - Nâng cấp bộ test Playwright E2E đạt **40/40 tests PASS** trên cả desktop-chrome (1440px) và mobile-chrome (Pixel 7 / 390px):
+      - 8 test case trợ năng (10 lượt quét Axe) trên Home, Catalog, Cart trống, Login, Register: 0 violation ở các trạng thái đã quét; chưa phải chứng nhận WCAG toàn website.
+      - 10 lượt kiểm tra responsive không tràn ngang tại 5 breakpoint (320, 390, 768, 1024, 1440px).
+      - Kiểm thử bẫy tiêu điểm và khôi phục focus drawer mobile.
+      - Kiểm thử lưới catalog 2 cột và giỏ hàng không tràn ngang tại 320px và 390px.
+      - Kiểm thử đồng bộ bộ lọc URL, hủy debounce khi đặt lại bộ lọc, và toast giới hạn tồn kho.
+    - Cả Frontend (`vite build`) và Backend (`prisma generate && tsc`) biên dịch 100% không lỗi.
+    - Nhánh làm việc: `feature/51-kevilo-ui`; đã chuyển đầy đủ commit từ `feature/51-kevilo-ux-audit` và bỏ nhánh cũ theo yêu cầu người dùng. PR #52/#53 đã đóng, chưa merge.
+    - **Sửa CI 2026-10-03:** Run `37119945132` của `c729667` đạt 4/5 jobs; `backend-integration` lỗi vì fixture ID không phải UUID. Đã sửa fixture dùng `randomUUID()` và cung cấp `updatedAt` bắt buộc trong INSERT SQL; giữ nguyên schema và các assertion. [Run 37121601251](https://github.com/LVTIT/PBL4-517/actions/runs/37121601251) kiểm tra `e07b554` PASS cả 5 jobs, API 17/17 và UI 40/40. [Bằng chứng CI và phạm vi](../evidence/UI-01/ci-fix-20261003.md); commit cập nhật tài liệu sau đó cần đối chiếu CI riêng trên latest revision.
+    - [Bằng chứng bàn giao local và giới hạn](../evidence/UI-01/public-audit-20261003/commit-verification.md): audit frontend 0 vulnerabilities; backend có 2 moderate, 0 high/critical, PASS ngưỡng `--audit-level=high`. Bản `524c878` đã deploy theo bằng chứng ở trên; human review toàn bộ Issue còn chờ.
+  - **F14 — Planned:** Chưa nghiệm thu catalog đã kiểm duyệt với API/PostgreSQL thật từ đầu đến cuối. UI tests vẫn dùng mock và Vite dev/preview vẫn có fallback dữ liệu khi backend mất kết nối. Chưa hoàn tất mọi DoD F01–F13 (kiểm duyệt toàn bộ ảnh, nền drawer inert, xác nhận đơn qua đổi tài khoản, đo lại hiệu năng và các trạng thái/breakpoint còn thiếu). [Plan và audit gốc](../docs/ui/kevilo-public-audit-20261003.md).
+  - **Nhận diện thương hiệu KEVILO (Phase B0):** Wordmark `KEVILO`, biểu tượng `K` hình học SVG, tagline "Nâng chuẩn góc làm việc.", favicon SVG chuẩn, module cấu hình thương hiệu tập trung `brand.ts`. Đã loại bỏ chuỗi thương hiệu cũ `517 Store` khỏi toàn bộ UI người dùng sở hữu nhưng vẫn bảo toàn mã định danh hệ thống (`PBL4-517`, `pbl517_cart_*`, `pbl517.sid`).
+  - **Hệ thống thiết kế & Typography:** Token CSS chuẩn hóa (nền `#F6F7F9`, card `#FFFFFF`, chữ `#111827`, phụ `#526071`, CTA `#1D4ED8`), font **Be Vietnam Pro** (OFL 1.1) tự host 12 file WOFF2, bộ icon SVG đồng bộ (thay emoji điều hướng), đáp ứng chuẩn tương phản và kích thước vùng bấm tối thiểu 44×44px.
+  - **Bộ ảnh studio chuyên nghiệp:** 10 ảnh sản phẩm studio AI và 1 ảnh hero WebP tối ưu (toàn bộ ≤66KB, đạt mục tiêu hiệu năng ≤180KB và ≤350KB), lưu hồ sơ nguồn gốc trong `IMAGE_PROVENANCE.md`.
+  - **Prisma Schema & Catalog Importer:** Migration SQL bổ sung cột nullable `imageKey` cho bảng `Product`, script importer độc lập `npm run catalog:import` (mặc định dry-run, `-- --apply` để thực thi ghi mà không ghi đè tồn kho hay tạo trùng tài khoản).
+  - **Tối ưu hóa các luồng giao diện:**
+    - *Home:* Hero góc làm việc, 5 danh mục trực quan, hiển thị tối đa 4 sản phẩm còn hàng từ API, giới thiệu triết lý và footer ghi chú demo.
+    - *Catalog & Tìm kiếm:* Lọc danh mục, tìm kiếm có debounce 300ms, đồng bộ hai chiều query URL (`search`, `category`, `sort`), sắp xếp theo giá.
+    - *Chi tiết sản phẩm:* Breadcrumb, layout 2 cột desktop, điều khiển số lượng, hiển thị "Chưa có đánh giá" chính xác khi 0 review (đã sửa hàm tính điểm).
+    - *Giỏ hàng & Đặt hàng:* Media thumbnail, cô lập giỏ hàng theo phiên, địa chỉ giao hàng ban đầu để trống, thông báo rõ ràng cho khách vãng lai và chặn submit lặp.
+    - *Tài khoản & Đơn hàng:* Form-first mobile, hiện/ẩn mật khẩu, chờ auth trước khi khởi tạo form hồ sơ, hiển thị trạng thái tiếng Việt, hộp thoại xác nhận hủy đơn `ConfirmDialog`.
+    - *Bảng điều khiển Admin:* Selector khóa ảnh studio có preview, chuyển trạng thái đơn hàng có pending per-order, danh sách hiển thị dạng bảng desktop và card mobile, xử lý lỗi tải rõ ràng với nút "Thử lại".
+  - **Kiểm thử tự động & Trợ năng:**
+    - Cài đặt `@playwright/test` và `@axe-core/playwright` ở `devDependencies`.
+    - Kết quả lịch sử trước lượt bàn giao audit: 28/28 tests PASS trên desktop 1440px và mobile 390px bao gồm kiểm toán WCAG 2.2 AA (0 lỗi critical/serious), kiểm tra không tràn ngang tại 5 mốc breakpoint (320, 390, 768, 1024, 1440px), và khả năng phục hồi lỗi mạng API.
+    - Tích hợp vào job `backend-integration` trong `ci.yml` và script `backend-integration.sh`.
+    - Kết quả lịch sử: cả frontend và backend build PASS, audit 0 vulnerabilities ở revision đã kiểm tra trước đó; kết quả mới nhất ghi trong bằng chứng bàn giao ở trên.
 
 - [#49 — Project-local UI UX Pro Max](https://github.com/LVTIT/PBL4-517/issues/49): **Installed / locally verified.** Pinned upstream `09170ee` in `.agents/skills/ui-ux-pro-max`, repository paths and plain-CSS stack constraints added. Data validation, 39 upstream core tests and design-system/UX/React smoke checks PASS. [Usage and provenance](../.agents/skills/ui-ux-pro-max/INSTALLATION.md), [evidence](../evidence/DEVTOOLS-01/README.md). Latest PR CI and required human review/merge remain delivery gates.
 

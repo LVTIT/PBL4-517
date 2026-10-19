@@ -16,6 +16,7 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
+    "catalog:import": "tsx src/scripts/import-catalog.ts",
     "test:integration": "node --test tests/api.integration.test.mjs"
   },
   "dependencies": {

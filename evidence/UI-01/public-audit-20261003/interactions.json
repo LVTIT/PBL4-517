@@ -1,0 +1,454 @@
+{
+  "checks": [
+    {
+      "name": "category",
+      "url": "https://47.129.214.70/products?category=B%C3%A0n+ph%C3%ADm",
+      "cards": 2,
+      "categories": [
+        "Bàn phím",
+        "Bàn phím"
+      ]
+    },
+    {
+      "name": "no-results",
+      "url": "https://47.129.214.70/products?category=B%C3%A0n+ph%C3%ADm&search=not-found-audit-517",
+      "text": "KEVILO CATALOG\n\nPhụ kiện cho góc làm việc\n\nTuyển chọn phụ kiện tối giản, chất liệu cao cấp và kết nối thông minh.\n\nSắp xếp: Mặc định\nGiá: Thấp đến cao\nGiá: Cao đến thấp\nTất cả\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\nBàn phím\n0 sản phẩm\nKhông tìm thấy sản phẩm phù hợp\n\nHãy thử tìm với từ khóa khác hoặc chọn danh mục khác nhé.\n\nXóa tất cả bộ lọc"
+    },
+    {
+      "name": "price-sort",
+      "prices": [
+        "10.000 ₫",
+        "250.000 ₫",
+        "290.000 ₫",
+        "350.000 ₫",
+        "390.000 ₫",
+        "450.000 ₫",
+        "590.000 ₫",
+        "690.000 ₫",
+        "790.000 ₫",
+        "850.000 ₫",
+        "1.290.000 ₫"
+      ],
+      "url": "https://47.129.214.70/products?sort=price-asc"
+    },
+    {
+      "name": "URL-refresh",
+      "sort": "price-asc",
+      "cards": 11
+    },
+    {
+      "name": "tab-keyboard",
+      "active": {
+        "text": "Tất cả",
+        "role": "tab"
+      }
+    },
+    {
+      "name": "drawer-open-focus",
+      "focus": {
+        "text": "Mở menu điều hướng",
+        "inDialog": false
+      }
+    },
+    {
+      "name": "drawer-tab-cycle",
+      "focuses": [
+        {
+          "name": "KEVILO, trang chủ",
+          "inDialog": true
+        },
+        {
+          "name": "Đóng menu",
+          "inDialog": true
+        },
+        {
+          "name": "Trang chủ",
+          "inDialog": true
+        },
+        {
+          "name": "Sản phẩm",
+          "inDialog": true
+        },
+        {
+          "name": "Đăng nhập",
+          "inDialog": true
+        },
+        {
+          "name": "Đăng ký tài khoản",
+          "inDialog": true
+        },
+        {
+          "name": "Khám phá sản phẩm",
+          "inDialog": false
+        },
+        {
+          "name": "Bàn phím",
+          "inDialog": false
+        },
+        {
+          "name": "Chuột",
+          "inDialog": false
+        },
+        {
+          "name": "Âm thanh",
+          "inDialog": false
+        },
+        {
+          "name": "Phụ kiện",
+          "inDialog": false
+        },
+        {
+          "name": "Đèn bàn",
+          "inDialog": false
+        }
+      ]
+    },
+    {
+      "name": "drawer-escape",
+      "closed": true,
+      "focus": "Mở menu điều hướng"
+    },
+    {
+      "name": "SPA-scroll",
+      "before": 2400,
+      "after": 2848,
+      "url": "https://47.129.214.70/products/10000000-0000-4000-8000-000000000004",
+      "headingBox": null
+    },
+    {
+      "name": "lazy-images-after-scroll",
+      "images": [
+        {
+          "src": "/images/products/mini-68-keyboard.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/everyday-mouse.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/studio-lite-headphone.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/usb-c-hub.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/laptop-stand.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/focus-desk-lamp.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/fullsize-keyboard.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/ergo-mouse.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/desk-speaker.webp",
+          "loaded": true,
+          "opacity": "1"
+        },
+        {
+          "src": "/images/products/leather-desk-mat.webp",
+          "loaded": true,
+          "opacity": "1"
+        }
+      ]
+    },
+    {
+      "name": "add-at-stock-limit",
+      "toast": "Đã thêm \"Bàn phím cơ Mini 68\" vào giỏ hàng.\nXem giỏ hàng →",
+      "cart": [
+        {
+          "productId": "10000000-0000-4000-8000-000000000001",
+          "quantity": 17,
+          "product": {
+            "id": "10000000-0000-4000-8000-000000000001",
+            "name": "Bàn phím cơ Mini 68",
+            "description": "Bàn phím gọn với 68 phím, kết nối USB-C và switch êm cho góc học tập.",
+            "price": "790000.00",
+            "stock": 17,
+            "category": "Bàn phím",
+            "imageKey": "mini-68-keyboard",
+            "createdAt": "2026-10-03T03:46:17.467Z",
+            "updatedAt": "2026-10-03T09:13:22.140Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cart-refresh",
+      "rowsBefore": 1,
+      "rowsAfter": 1,
+      "text": "−\n17\n+"
+    },
+    {
+      "name": "remove-cart-item",
+      "empty": 1,
+      "dialog": 0,
+      "undo": 0
+    },
+    {
+      "name": "register-mismatch",
+      "alert": "Mật khẩu xác nhận không khớp.",
+      "focus": "Hoàn tất đăng ký",
+      "fields": [
+        {
+          "id": "name",
+          "invalid": null,
+          "description": null
+        },
+        {
+          "id": "email",
+          "invalid": null,
+          "description": null
+        },
+        {
+          "id": "password",
+          "invalid": null,
+          "description": null
+        },
+        {
+          "id": "confirmPassword",
+          "invalid": null,
+          "description": null
+        }
+      ]
+    },
+    {
+      "name": "show-password",
+      "type": "text"
+    },
+    {
+      "name": "login-negative",
+      "alert": "Email hoặc mật khẩu không đúng.",
+      "passwordCleared": true,
+      "focus": "\n    Đến nội dung chínhKEVILOTrang chủSản phẩmGiỏ hàngĐăng nhậpĐăng kýTÀI KHOẢN KEVILOChào mừng trở lạiĐăng nhập để đồng bộ giỏ hàng và theo dõi đơn hàng của bạn.Email đăng nhậpMật khẩuEmail hoặc mật khẩu không đúng.Đăng nhậpChưa có tài khoản? Tạo tài khoản KEVILOKEVILONâng chuẩn góc làm việc.PBL4 · Nhóm 517KEVILO là website demo thuộc đề tài PBL4-517. Không xử lý thanh toán hoặc giao hàng thực tế.\n  \n\n"
+    },
+    {
+      "name": "catalog-network-error",
+      "text": "KEVILO CATALOG\n\nPhụ kiện cho góc làm việc\n\nTuyển chọn phụ kiện tối giản, chất liệu cao cấp và kết nối thông minh.\n\nSắp xếp: Mặc định\nGiá: Thấp đến cao\nGiá: Cao đến thấp\nTất cả\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\nTất cả sản phẩm\nĐang tải…\nChưa thể kết nối danh mục\n\nKhông thể kết nối. Vui lòng kiểm tra mạng và thử lại.\n\nThử lại"
+    },
+    {
+      "name": "catalog-retry",
+      "cards": 11
+    },
+    {
+      "name": "home-network-error",
+      "text": "KEVILO WORKSPACE\nNâng chuẩn góc làm việc.\n\nKhám phá phụ kiện giúp bạn làm việc tập trung, kết nối thuận tiện và hoàn thiện không gian mỗi ngày.\n\nKhám phá sản phẩm\n\nDANH MỤC\n\nKhám phá theo danh mục\nBàn phím\nChuột\nÂm thanh\nPhụ kiện\nĐèn bàn\n\nBỘ SƯU TẬP\n\nGợi ý cho góc làm việc\nXem tất cả\n\nĐang cập nhật các sản phẩm gợi ý.\n\nKhám phá danh mục sản phẩm\n\nTRIẾT LÝ THIẾT KẾ\n\nKhông gian tinh giản, tối đa hiệu suất\n\nKEVILO chú trọng từng chi tiết: từ vật liệu nhôm anode cao cấp, switch bàn phím êm ái đến ánh sáng đèn bàn dịu mắt. Từng phụ kiện được tạo ra để cùng bạn tạo nên một bàn làm việc chỉn chu, ngăn nắp và tràn đầy năng lượng sáng tạo."
+    },
+    {
+      "name": "anonymous-route /orders",
+      "url": "https://47.129.214.70/orders",
+      "text": "Yêu cầu đăng nhập\n\nVui lòng đăng nhập bằng tài khoản Khách hàng để theo dõi lịch sử đơn hàng của bạn.\n\nĐăng nhập ngay"
+    },
+    {
+      "name": "anonymous-route /profile",
+      "url": "https://47.129.214.70/profile",
+      "text": "Yêu cầu đăng nhập\n\nVui lòng đăng nhập để xem và quản lý thông tin tài khoản của bạn.\n\nĐăng nhập ngay"
+    },
+    {
+      "name": "anonymous-route /admin",
+      "url": "https://47.129.214.70/admin",
+      "text": "Yêu cầu quyền Quản trị viên (ADMIN) để truy cập trang này.\nVề trang chủ"
+    },
+    {
+      "name": "missing-product",
+      "title": "KEVILO — Phụ kiện công nghệ cho góc làm việc",
+      "text": "Chưa thể tải thông tin sản phẩm\n\nSản phẩm không tồn tại.\n\nThử lại\nQuay lại danh mục"
+    }
+  ],
+  "responsive": [
+    {
+      "width": 320,
+      "name": "home",
+      "scrollWidth": 320,
+      "viewport": 320,
+      "overflow": []
+    },
+    {
+      "width": 320,
+      "name": "catalog",
+      "scrollWidth": 320,
+      "viewport": 320,
+      "overflow": [
+        {
+          "cls": "filter-tab ",
+          "text": "Âm thanh",
+          "width": 99.96875
+        },
+        {
+          "cls": "filter-tab ",
+          "text": "Phụ kiện",
+          "width": 91.53125
+        },
+        {
+          "cls": "filter-tab ",
+          "text": "Đèn bàn",
+          "width": 91.375
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "name": "detail",
+      "scrollWidth": 320,
+      "viewport": 320,
+      "overflow": []
+    },
+    {
+      "width": 320,
+      "name": "cart",
+      "scrollWidth": 399,
+      "viewport": 399,
+      "overflow": []
+    },
+    {
+      "width": 390,
+      "name": "home",
+      "scrollWidth": 390,
+      "viewport": 390,
+      "overflow": []
+    },
+    {
+      "width": 390,
+      "name": "catalog",
+      "scrollWidth": 390,
+      "viewport": 390,
+      "overflow": [
+        {
+          "cls": "filter-tab ",
+          "text": "Âm thanh",
+          "width": 99.96875
+        },
+        {
+          "cls": "filter-tab ",
+          "text": "Phụ kiện",
+          "width": 91.53125
+        },
+        {
+          "cls": "filter-tab ",
+          "text": "Đèn bàn",
+          "width": 91.375
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "name": "detail",
+      "scrollWidth": 390,
+      "viewport": 390,
+      "overflow": []
+    },
+    {
+      "width": 390,
+      "name": "cart",
+      "scrollWidth": 399,
+      "viewport": 399,
+      "overflow": []
+    },
+    {
+      "width": 768,
+      "name": "home",
+      "scrollWidth": 768,
+      "viewport": 768,
+      "overflow": []
+    },
+    {
+      "width": 768,
+      "name": "catalog",
+      "scrollWidth": 768,
+      "viewport": 768,
+      "overflow": []
+    },
+    {
+      "width": 768,
+      "name": "detail",
+      "scrollWidth": 768,
+      "viewport": 768,
+      "overflow": []
+    },
+    {
+      "width": 768,
+      "name": "cart",
+      "scrollWidth": 768,
+      "viewport": 768,
+      "overflow": []
+    },
+    {
+      "width": 1024,
+      "name": "home",
+      "scrollWidth": 1024,
+      "viewport": 1024,
+      "overflow": []
+    },
+    {
+      "width": 1024,
+      "name": "catalog",
+      "scrollWidth": 1024,
+      "viewport": 1024,
+      "overflow": []
+    },
+    {
+      "width": 1024,
+      "name": "detail",
+      "scrollWidth": 1024,
+      "viewport": 1024,
+      "overflow": []
+    },
+    {
+      "width": 1024,
+      "name": "cart",
+      "scrollWidth": 1024,
+      "viewport": 1024,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "name": "home",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "name": "catalog",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "name": "detail",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "name": "cart",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "overflow": []
+    }
+  ],
+  "visual": [],
+  "mocked": [],
+  "network": [],
+  "errors": []
+}

@@ -1,0 +1,429 @@
+{
+  "headers": [
+    {
+      "url": "/",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      },
+      "assets": [
+        "/favicon.png",
+        "/favicon.svg",
+        "/assets/index-LQ7uQqz9.js",
+        "/assets/index-oAVxOHgT.css"
+      ]
+    },
+    {
+      "url": "/products",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "server": "nginx/1.24.0 (Ubuntu)"
+      }
+    },
+    {
+      "url": "/api/products",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "content-type": "application/json; charset=utf-8",
+        "server": "nginx/1.24.0 (Ubuntu)",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN"
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "Bàn phím cơ Mini 68",
+      "url": "/images/products/mini-68-keyboard.webp",
+      "bytes": 31052,
+      "sha256": "0415c564b79952eaf6db6160705a46a1baffcadf0ada815ca3632f8d49a9ba01",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Chuột không dây Everyday",
+      "url": "/images/products/everyday-mouse.webp",
+      "bytes": 8072,
+      "sha256": "d5319217204c28938549886ee73254c60c07d9a663431c5a0ce9923b739dd881",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Tai nghe Studio Lite",
+      "url": "/images/products/studio-lite-headphone.webp",
+      "bytes": 27756,
+      "sha256": "c2d8345aee330e72fc060ad67e86a31ec7472f2c627439fd88063105627f455a",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Hub USB-C 5 trong 1",
+      "url": "/images/products/usb-c-hub.webp",
+      "bytes": 61940,
+      "sha256": "ac392bd022707c9a1d7e879da1b2a946518f5308ce8818822260e80565fc0502",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Giá đỡ laptop nhôm",
+      "url": "/images/products/laptop-stand.webp",
+      "bytes": 6060,
+      "sha256": "4c311673f54b33167de6326f7fca82deae959e78579997de130964527dbdbfff",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Đèn bàn Focus",
+      "url": "/images/products/focus-desk-lamp.webp",
+      "bytes": 11168,
+      "sha256": "4d60d03bb12ad042a806d917dae59dd3d3d8858af4325198453452587725d096",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Bàn phím Full-size Studio 104",
+      "url": "/images/products/fullsize-keyboard.webp",
+      "bytes": 37444,
+      "sha256": "94efcd02e8edc63845e815ab9febdb091a870c85f817ec45c74b2bef296fca53",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Chuột công thái học Ergo Master",
+      "url": "/images/products/ergo-mouse.webp",
+      "bytes": 43784,
+      "sha256": "d83ed50efdda9ccdaa936b8b6f352a6eba8e28036c2c12167b9dd087892ddc98",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Loa để bàn SoundBar Desk",
+      "url": "/images/products/desk-speaker.webp",
+      "bytes": 29926,
+      "sha256": "4440d42a2f7857aa7e43486fa9cce2c40cd745e65ef84d76668cfff143299ad3",
+      "matchesCheckout": true
+    },
+    {
+      "name": "Thảm bàn Desk Mat Da PU",
+      "url": "/images/products/leather-desk-mat.webp",
+      "bytes": 53354,
+      "sha256": "182cfb07b85c8a89a632b8a3de1c9e9e58bbee25f7ade464c92b2b442c40a07e",
+      "matchesCheckout": true
+    }
+  ],
+  "performance": [
+    {
+      "run": 1,
+      "lcp": 3392,
+      "cls": 0.000020434865547459885,
+      "ttfb": 187.2999999821186,
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "bytes": 361475,
+          "duration": 2142.7000000178814
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "bytes": 31641,
+          "duration": 605.6999999880791
+        },
+        {
+          "name": "https://47.129.214.70/images/hero/hero-workspace.webp",
+          "bytes": 66320,
+          "duration": 526.7999999821186
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "bytes": 22452,
+          "duration": 1039
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "bytes": 21468,
+          "duration": 779.3000000119209
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "bytes": 22332,
+          "duration": 1053.9000000059605
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "bytes": 12768,
+          "duration": 825.8999999761581
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "bytes": 11832,
+          "duration": 776.7999999821186
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "bytes": 12476,
+          "duration": 865.5
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "bytes": 13908,
+          "duration": 1015.5999999940395
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "bytes": 13356,
+          "duration": 1073.2000000178814
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "bytes": 14152,
+          "duration": 1073.5999999940395
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "bytes": 4265,
+          "duration": 977.5
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "bytes": 322,
+          "duration": 915.8000000119209
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "bytes": 31352,
+          "duration": 381.19999998807907
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "bytes": 8372,
+          "duration": 258.09999999403954
+        }
+      ],
+      "totalTransfer": 648491
+    },
+    {
+      "run": 2,
+      "lcp": 3396,
+      "cls": 0.000020434865547459885,
+      "ttfb": 188.09999999403954,
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "bytes": 361475,
+          "duration": 2203.5
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "bytes": 31641,
+          "duration": 611.8999999761581
+        },
+        {
+          "name": "https://47.129.214.70/images/hero/hero-workspace.webp",
+          "bytes": 66320,
+          "duration": 517.1000000238419
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "bytes": 22452,
+          "duration": 1092
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "bytes": 21468,
+          "duration": 719.5999999940395
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "bytes": 22332,
+          "duration": 1105.4000000059605
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "bytes": 12768,
+          "duration": 809
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "bytes": 11832,
+          "duration": 782.5
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "bytes": 12476,
+          "duration": 818.5
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "bytes": 13908,
+          "duration": 959.0999999940395
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "bytes": 13356,
+          "duration": 1051.699999988079
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "bytes": 14152,
+          "duration": 1053.0999999940395
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "bytes": 4265,
+          "duration": 915.5
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "bytes": 322,
+          "duration": 912.2999999821186
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "bytes": 31352,
+          "duration": 371.19999998807907
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "bytes": 8372,
+          "duration": 257.80000001192093
+        }
+      ],
+      "totalTransfer": 648491
+    },
+    {
+      "run": 3,
+      "lcp": 3384,
+      "cls": 0.000020434865547459885,
+      "ttfb": 183.59999999403954,
+      "resources": [
+        {
+          "name": "https://47.129.214.70/assets/index-LQ7uQqz9.js",
+          "bytes": 361475,
+          "duration": 2153.899999976158
+        },
+        {
+          "name": "https://47.129.214.70/assets/index-oAVxOHgT.css",
+          "bytes": 31641,
+          "duration": 630.8999999761581
+        },
+        {
+          "name": "https://47.129.214.70/images/hero/hero-workspace.webp",
+          "bytes": 66320,
+          "duration": 506.09999999403954
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin.woff2",
+          "bytes": 22452,
+          "duration": 1132.699999988079
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin.woff2",
+          "bytes": 21468,
+          "duration": 628.6000000238419
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin.woff2",
+          "bytes": 22332,
+          "duration": 1132.8999999761581
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-vietnamese.woff2",
+          "bytes": 12768,
+          "duration": 873
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-vietnamese.woff2",
+          "bytes": 11832,
+          "duration": 795.4000000059605
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-vietnamese.woff2",
+          "bytes": 12476,
+          "duration": 826.7000000178814
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-600-latin-ext.woff2",
+          "bytes": 13908,
+          "duration": 897.6999999880791
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-400-latin-ext.woff2",
+          "bytes": 13356,
+          "duration": 1048.3999999761581
+        },
+        {
+          "name": "https://47.129.214.70/fonts/be-vietnam-pro-700-latin-ext.woff2",
+          "bytes": 14152,
+          "duration": 1048.5
+        },
+        {
+          "name": "https://47.129.214.70/api/products",
+          "bytes": 4265,
+          "duration": 886.7999999821186
+        },
+        {
+          "name": "https://47.129.214.70/api/auth/me",
+          "bytes": 322,
+          "duration": 930.0999999940395
+        },
+        {
+          "name": "https://47.129.214.70/images/products/mini-68-keyboard.webp",
+          "bytes": 31352,
+          "duration": 368.39999997615814
+        },
+        {
+          "name": "https://47.129.214.70/images/products/everyday-mouse.webp",
+          "bytes": 8372,
+          "duration": 257.90000000596046
+        }
+      ],
+      "totalTransfer": 648491
+    }
+  ],
+  "authSimulation": [
+    {
+      "role": "CUSTOMER",
+      "requestedWidth": 320,
+      "viewport": 320,
+      "scrollWidth": 320,
+      "header": "KEVILO",
+      "headerWidth": 320
+    },
+    {
+      "role": "ADMIN",
+      "requestedWidth": 320,
+      "viewport": 320,
+      "scrollWidth": 320,
+      "header": "KEVILO",
+      "headerWidth": 320
+    }
+  ],
+  "checkoutSimulation": [
+    {
+      "name": "guest-success",
+      "mockedResponse": true,
+      "payload": {
+        "items": [
+          {
+            "productId": "10000000-0000-4000-8000-000000000001",
+            "quantity": 1
+          }
+        ],
+        "shippingAddress": "Địa chỉ kiểm thử không giao hàng",
+        "guestInfo": {
+          "name": "Khách Kiểm Thử",
+          "email": "ui-audit@example.invalid"
+        }
+      },
+      "checkoutText": "Đặt hàng không cần tài khoản: Bạn có thể mua sắm ngay với tư cách khách vãng lai. Sau khi xác nhận đặt hàng, hãy lưu lại mã đơn để tiện đối chiếu khi nhận hàng.\nHọ và tên người nhận *\nEmail nhận thông báo *\nSố điện thoại liên hệ (tùy chọn)\nĐịa chỉ giao hàng *\nXác nhận đặt hàng",
+      "text": "Đặt hàng thành công!\n\nCảm ơn bạn đã lựa chọn các phụ kiện công nghệ từ KEVILO.\n\nMã đơn hàng:\naudit-simulated-order\nTrạng thái:\nCHỜ XỬ LÝ\nTổng thanh toán:\n790.000 ₫\nĐịa chỉ giao hàng:\n\nĐịa chỉ kiểm thử không giao hàng\n\nLưu ý dành cho khách vãng lai:\n\nBạn đang đặt hàng mà không đăng nhập. Vui lòng ghi lại hoặc chụp ảnh mã đơn hàng audit-simulated-order để đối chiếu và tra cứu khi nhận hàng.\n\nĐăng ký tài khoản KEVILO\nTiếp tục mua sắm",
+      "scrollWidth": 390
+    },
+    {
+      "name": "success-refresh",
+      "mockedResponse": true,
+      "text": "Giỏ hàng của bạn đang trống\n\nHãy lựa chọn những món đồ hữu ích để hoàn thiện không gian làm việc của bạn.\n\nKhám phá sản phẩm"
+    }
+  ],
+  "pr": {
+    "state": "open",
+    "sha": "9f758792aa13c7b402dd3699cd96aaf518e7bffa",
+    "base": "main"
+  }
+}

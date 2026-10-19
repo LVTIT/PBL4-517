@@ -1,0 +1,127 @@
+﻿import { createRequire } from 'node:module';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const require=createRequire('D:/PBL4-517/website/frontend/package.json');
+const {chromium}=require('playwright');
+const out=process.argv[2],base='https://47.129.214.70';
+const baseline=JSON.parse(await fs.readFile(path.join(out,'baseline.json'),'utf8'));
+const p=baseline.products.find(x=>x.stock>0);
+const browser=await chromium.launch({headless:true});
+const result={checks:[],responsive:[],visual:[],mocked:[],network:[],errors:[]};
+const record=(name,data)=>{result.checks.push({name,...data});console.log('CHECK',name,JSON.stringify(data));};
+const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+const page=await ctx.newPage();
+const goto=async(route)=>{await page.goto(base+route,{waitUntil:'networkidle'});await page.evaluate(()=>document.fonts.ready);};
+await ctx.route('**/api/**',route=>{
+ const req=route.request(),url=new URL(req.url());
+ if(req.method()!=='GET' && url.pathname!=='/api/auth/login') return route.abort('blockedbyclient');
+ return route.continue();
+});
+for(const width of [320,390,768,1024,1440]){
+ await page.setViewportSize({width,height:900});
+ for(const [name,route]of [['home','/'],['catalog','/products'],['detail','/products/'+p.id],['cart','/cart']]){
+  if(name==='cart') await page.evaluate(product=>localStorage.setItem('pbl517_cart_guest',JSON.stringify([{productId:product.id,quantity:1,product}])),p);
+  await goto(route);
+  const r=await page.evaluate(()=>{
+   const w=document.documentElement.scrollWidth;
+   return {scrollWidth:w,viewport:innerWidth,overflow:[...document.querySelectorAll('main *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&(r.right>innerWidth+1||r.left < -1)&&getComputedStyle(e).position!=='fixed';}).slice(0,8).map(e=>({cls:e.className,text:e.innerText?.slice(0,80),width:e.getBoundingClientRect().width}))};
+  });
+  result.responsive.push({width,name,...r});
+  if(r.scrollWidth>width)console.log('OVERFLOW',width,name,JSON.stringify(r));
+ }
+}
+await page.setViewportSize({width:390,height:844});
+await goto('/products');
+await page.getByRole('tab',{name:'Bàn phím',exact:true}).click();
+await page.waitForLoadState('networkidle');
+await page.locator('.product-card').first().waitFor();
+record('category',{url:page.url(),cards:await page.locator('.product-card').count(),categories:await page.locator('.product-category-tag').allTextContents()});
+await page.getByRole('tab',{name:'Tất cả',exact:true}).click();
+await page.waitForLoadState('networkidle');
+await page.getByRole('searchbox',{name:'Tìm kiếm sản phẩm'}).fill('not-found-audit-517');
+await page.getByRole('heading',{name:'Không tìm thấy sản phẩm phù hợp'}).waitFor();
+record('no-results',{url:page.url(),text:await page.locator('main').innerText()});
+await page.getByRole('button',{name:'Xóa tất cả bộ lọc'}).click();
+await page.locator('.product-card').first().waitFor();
+await page.getByRole('combobox').selectOption('price-asc');
+record('price-sort',{prices:await page.locator('.product-price').allTextContents(),url:page.url()});
+await page.reload({waitUntil:'networkidle'});
+record('URL-refresh',{sort:await page.getByRole('combobox').inputValue(),cards:await page.locator('.product-card').count()});
+await page.getByRole('tab',{name:'Tất cả',exact:true}).focus();
+await page.keyboard.press('ArrowRight');
+record('tab-keyboard',{active:await page.evaluate(()=>({text:document.activeElement?.textContent,role:document.activeElement?.getAttribute('role')}))});
+await goto('/');
+await page.getByRole('button',{name:'Mở menu điều hướng'}).click();
+record('drawer-open-focus',{focus:await page.evaluate(()=>({text:document.activeElement?.getAttribute('aria-label')||document.activeElement?.textContent,inDialog:!!document.activeElement?.closest('[role=dialog]')}))});
+let escaped=[];
+for(let i=0;i<12;i++){
+ await page.keyboard.press('Tab');
+ escaped.push(await page.evaluate(()=>({name:document.activeElement?.getAttribute('aria-label')||document.activeElement?.textContent?.trim().slice(0,75),inDialog:!!document.activeElement?.closest('[role=dialog]')})));
+}
+record('drawer-tab-cycle',{focuses:escaped});
+await page.screenshot({path:path.join(out,'drawer-keyboard-390.png')});
+await page.keyboard.press('Escape');
+record('drawer-escape',{closed:await page.getByRole('dialog').count()===0,focus:await page.evaluate(()=>document.activeElement?.getAttribute('aria-label'))});
+await goto('/products');
+await page.evaluate(()=>scrollTo(0,2400));
+await page.waitForTimeout(250);
+const before=await page.evaluate(()=>scrollY);
+await page.locator('.product-card').nth(4).locator('h3 a').click();
+await page.locator('h1').waitFor();
+await page.waitForLoadState('networkidle');
+record('SPA-scroll',{before,after:await page.evaluate(()=>scrollY),url:page.url(),headingBox:await page.locator('h1').boundingBox()});
+await page.screenshot({path:path.join(out,'detail-after-navigation-390.png')});
+await goto('/products');
+for(let y=0;y<8000;y+=650){await page.evaluate(y=>scrollTo(0,y),y);await page.waitForTimeout(100);}
+await page.waitForLoadState('networkidle');
+await page.evaluate(()=>scrollTo(0,0));
+await page.screenshot({path:path.join(out,'catalog-loaded-390.png'),fullPage:true});
+record('lazy-images-after-scroll',{images:await page.locator('main img').evaluateAll(els=>els.map(e=>({src:e.getAttribute('src'),loaded:e.complete&&e.naturalWidth>0,opacity:getComputedStyle(e).opacity})))});
+await page.evaluate(product=>localStorage.setItem('pbl517_cart_guest',JSON.stringify([{productId:product.id,quantity:product.stock,product}])),p);
+await goto('/products');
+await page.getByRole('button',{name:'Thêm '+p.name+' vào giỏ hàng',exact:true}).click();
+record('add-at-stock-limit',{toast:await page.locator('.live-toast').innerText(),cart:await page.evaluate(()=>JSON.parse(localStorage.getItem('pbl517_cart_guest')))});
+await goto('/cart');
+const rowsBefore=await page.locator('.cart-item-row').count();
+await page.reload({waitUntil:'networkidle'});
+record('cart-refresh',{rowsBefore,rowsAfter:await page.locator('.cart-item-row').count(),text:await page.locator('.quantity-selector').innerText()});
+await page.getByRole('button',{name:'Xóa '+p.name+' khỏi giỏ hàng',exact:true}).click();
+record('remove-cart-item',{empty:await page.getByRole('heading',{name:'Giỏ hàng của bạn đang trống'}).count(),dialog:await page.getByRole('dialog').count(),undo:await page.getByRole('button',{name:/Hoàn tác/}).count()});
+await goto('/register');
+await page.locator('#name').fill('UI Audit');
+await page.locator('#email').fill('ui-audit@example.invalid');
+await page.locator('#password').fill('AuditPassword517!');
+await page.locator('#confirmPassword').fill('Different517!');
+await page.locator('button[type=submit]').click();
+record('register-mismatch',{alert:await page.getByRole('alert').innerText(),focus:await page.evaluate(()=>document.activeElement?.id||document.activeElement?.textContent),fields:await page.locator('input').evaluateAll(els=>els.map(e=>({id:e.id,invalid:e.getAttribute('aria-invalid'),description:e.getAttribute('aria-describedby')})))});
+await page.screenshot({path:path.join(out,'register-error-390.png')});
+await goto('/login');
+await page.locator('#email').fill('ui-audit@example.invalid');
+await page.locator('#password').fill('AuditPassword517!');
+await page.getByRole('button',{name:'Hiện mật khẩu',exact:true}).click();
+record('show-password',{type:await page.locator('#password').getAttribute('type')});
+await page.locator('button[type=submit]').click();
+await page.getByRole('alert').waitFor();
+record('login-negative',{alert:await page.getByRole('alert').innerText(),passwordCleared:await page.locator('#password').inputValue()==='',focus:await page.evaluate(()=>document.activeElement?.id||document.activeElement?.textContent)});
+await page.route('**/api/products',route=>route.abort('failed'));
+await goto('/products');
+record('catalog-network-error',{text:await page.locator('main').innerText()});
+await page.screenshot({path:path.join(out,'catalog-error-390.png')});
+await page.unroute('**/api/products');
+await page.getByRole('button',{name:'Thử lại',exact:true}).click();
+await page.locator('.product-card').first().waitFor();
+record('catalog-retry',{cards:await page.locator('.product-card').count()});
+await page.route('**/api/products',route=>route.abort('failed'));
+await goto('/');
+record('home-network-error',{text:await page.locator('main').innerText()});
+await page.unroute('**/api/products');
+for(const route of ['/orders','/profile','/admin']){
+ await goto(route);
+ record('anonymous-route '+route,{url:page.url(),text:await page.locator('main').innerText()});
+}
+await goto('/products/00000000-0000-4000-8000-000000000099');
+record('missing-product',{title:await page.title(),text:await page.locator('main').innerText()});
+await ctx.close();
+await fs.writeFile(path.join(out,'interactions.json'),JSON.stringify(result,null,2));
+await browser.close();
+console.log('FINISHED');

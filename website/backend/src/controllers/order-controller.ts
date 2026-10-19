@@ -26,6 +26,7 @@ const guestInfoSchema = z.strictObject({
 const createOrderSchema = z.strictObject({
   items: z.array(orderItemInputSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm.'),
   shippingAddress: z.string().trim().min(5, 'Địa chỉ giao hàng phải có ít nhất 5 ký tự.').max(255),
+  customerPhone: z.string().trim().min(8, 'Số điện thoại không hợp lệ.').max(20).optional(),
   guestInfo: guestInfoSchema.optional(),
 });
 
@@ -45,7 +46,8 @@ export const handleCreateOrder: RequestHandler = async (req, res) => {
     parsed.data.items,
     parsed.data.shippingAddress,
     req.session.userId ?? null,
-    parsed.data.guestInfo
+    parsed.data.guestInfo,
+    parsed.data.customerPhone
   );
   res.status(201).json({ data: order });
 };

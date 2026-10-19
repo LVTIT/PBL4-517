@@ -1,0 +1,37 @@
+e0f783b619def8c7123ec417239e32866ff72ee7
+600 ubuntu ubuntu
+MainPID=911
+ExecStart={ path=/usr/bin/node ; argv[]=/usr/bin/node /var/www/pbl4-517/website/backend/dist/server.js ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }
+WorkingDirectory=/var/www/pbl4-517/website/backend
+ActiveState=active
+SubState=running
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+377M	website/backend/node_modules
+109M	website/frontend/node_modules
+232K	website/backend/dist
+368K	website/frontend/dist
+ products
+----------
+        1
+(1 row)
+
+ users
+-------
+     1
+(1 row)
+
+ orders
+--------
+      1
+(1 row)
+
+         migration_name          | applied
+---------------------------------+---------
+ 20260914000000_initial          | t
+ 20260918000000_expand_ecommerce | t
+ 20260918140000_guest_checkout   | t
+(3 rows)
+
+production / secure baseline / loopback proxy: PASS
+{"data":{"status":"ok","database":"connected"}}

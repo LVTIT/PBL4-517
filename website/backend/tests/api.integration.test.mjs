@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import { Pool } from 'pg';
 import { compare } from 'bcryptjs';
@@ -56,6 +57,35 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.equal(result.status, 200);
       assert.ok(rows.rows.length >= 6, 'Run the development seed first.');
       assert.deepEqual(result.body.data.map(({ id, name, price, stock }) => ({ id, name, price, stock })), rows.rows);
+    });
+
+    await suite.test('public catalog excludes deployment verification items', async () => {
+      const testId = randomUUID();
+      await database.query(
+        'INSERT INTO "Product" (id, name, description, price, stock, category, "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, NOW())',
+        [testId, 'Deployment verification item - NOT FOR SALE', 'Verification item only', 10000, 0, 'Deployment verification']
+      );
+      try {
+        const publicList = await browser.request('/products');
+        assert.equal(publicList.status, 200);
+        const foundInPublic = publicList.body.data.some(
+          (p) => p.id === testId || p.category === 'Deployment verification' || p.name.includes('NOT FOR SALE')
+        );
+        assert.equal(foundInPublic, false, 'Public catalog must exclude verification items');
+
+        const singlePublic = await browser.request(`/products/${testId}`);
+        assert.equal(singlePublic.status, 404, 'Direct public request for verification item must 404');
+
+        const verificationList = await browser.request('/products?includeVerification=true');
+        assert.equal(verificationList.status, 200);
+        const foundInVerification = verificationList.body.data.some((p) => p.id === testId);
+        assert.equal(foundInVerification, true, 'Can query with includeVerification=true');
+
+        const singleVerification = await browser.request(`/products/${testId}?includeVerification=true`);
+        assert.equal(singleVerification.status, 200, 'Can get verification item with includeVerification=true');
+      } finally {
+        await database.query('DELETE FROM "Product" WHERE id = $1', [testId]);
+      }
     });
 
     await suite.test('anonymous user and rejected missing CSRF token', async () => {
@@ -213,22 +243,52 @@ test('real PostgreSQL API and session authentication', async (suite) => {
 
       // Create order as userA
       csrfToken = await userA.csrf();
+      for (const customerPhone of ['123', '1'.repeat(21), 912345678]) {
+        const invalidPhoneOrder = await userA.request('/orders', {
+          method: 'POST', csrfToken,
+          body: {
+            items: [{ productId: prod.id, quantity: 1 }],
+            shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+            customerPhone,
+          },
+        });
+        assert.equal(invalidPhoneOrder.status, 400);
+        assert.equal(invalidPhoneOrder.body.error.code, 'INVALID_INPUT');
+      }
       const orderRes = await userA.request('/orders', {
         method: 'POST',
         csrfToken,
         body: {
           items: [{ productId: prod.id, quantity: 1 }],
           shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+          customerPhone: ' 0912345678 ',
         },
       });
       assert.equal(orderRes.status, 201);
       const createdOrderId = orderRes.body.data.id;
       assert.equal(orderRes.body.data.totalPrice, prod.price);
+      assert.equal(orderRes.body.data.customerPhone, '0912345678');
+      const savedPhone = await database.query('SELECT "customerPhone" FROM "Order" WHERE id = $1', [createdOrderId]);
+      assert.equal(savedPhone.rows[0].customerPhone, '0912345678');
 
       // User A can view own order
       const getOwnOrder = await userA.request(`/orders/${createdOrderId}`);
       assert.equal(getOwnOrder.status, 200);
       assert.equal(getOwnOrder.body.data.id, createdOrderId);
+      assert.equal(getOwnOrder.body.data.customerPhone, '0912345678');
+
+      const noPhoneOrder = await userA.request('/orders', {
+        method: 'POST', csrfToken,
+        body: {
+          items: [{ productId: prod.id, quantity: 1 }],
+          shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+        },
+      });
+      assert.equal(noPhoneOrder.status, 201);
+      assert.equal(noPhoneOrder.body.data.customerPhone, null);
+      assert.equal((await userA.request(`/orders/${noPhoneOrder.body.data.id}/cancel`, {
+        method: 'POST', csrfToken,
+      })).status, 200);
 
       // Register User B
       const userB = new BrowserSession();

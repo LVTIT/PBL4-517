@@ -1,0 +1,56 @@
+Snapshot: {"User":1,"Order":1,"OrderItem":1,"Review":0,"products":[{"id":"7e517014-0000-4000-8000-000000000001","stock":0}]}
+
+> pbl517-backend@0.1.0 prisma:migrate
+> prisma migrate deploy
+
+Loaded Prisma config from prisma.config.ts.
+
+Datasource "db": PostgreSQL database "pbl517_prod", schema "public" at "127.0.0.1:5432"
+Prisma schema loaded from prisma/schema.prisma.
+
+4 migrations found in prisma/migrations
+
+Applying migration `20261002000000_add_product_image_key`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261002000000_add_product_image_key/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.10.0 -> 8.0.0-rc.19                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+> pbl517-backend@0.1.0 catalog:import
+> tsx src/scripts/import-catalog.ts
+
+============================================================
+KEVILO Catalog Importer — Chế độ: DRY-RUN (Thử nghiệm)
+============================================================
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000001 | Bàn phím cơ Mini 68 (Bàn phím) | Giá: 790000.00 | Tồn kho khởi tạo: 18
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000002 | Chuột không dây Everyday (Chuột) | Giá: 290000.00 | Tồn kho khởi tạo: 32
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000003 | Tai nghe Studio Lite (Âm thanh) | Giá: 590000.00 | Tồn kho khởi tạo: 12
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000004 | Hub USB-C 5 trong 1 (Phụ kiện) | Giá: 450000.00 | Tồn kho khởi tạo: 9
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000005 | Giá đỡ laptop nhôm (Phụ kiện) | Giá: 350000.00 | Tồn kho khởi tạo: 24
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000006 | Đèn bàn Focus (Đèn bàn) | Giá: 390000.00 | Tồn kho khởi tạo: 0
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000007 | Bàn phím Full-size Studio 104 (Bàn phím) | Giá: 1290000.00 | Tồn kho khởi tạo: 15
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000008 | Chuột công thái học Ergo Master (Chuột) | Giá: 850000.00 | Tồn kho khởi tạo: 20
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000009 | Loa để bàn SoundBar Desk (Âm thanh) | Giá: 690000.00 | Tồn kho khởi tạo: 14
+[TẠO MỚI] ID: 10000000-0000-4000-8000-000000000010 | Thảm bàn Desk Mat Da PU (Phụ kiện) | Giá: 250000.00 | Tồn kho khởi tạo: 35
+------------------------------------------------------------
+Tổng kết: 10 tạo mới, 0 cập nhật thông tin (bảo toàn tồn kho).
+Số lượng sản phẩm trong database hiện tại: 1
+
+[LƯU Ý] Đây là chế độ DRY-RUN, không có thay đổi nào được ghi vào cơ sở dữ liệu.
+Để thực thi thay đổi thật, hãy chạy lại lệnh với cờ: --apply
+BACKUP=/home/ubuntu/.local/state/pbl4-517/ui51-0cfed00-20261003
+MIGRATION_AND_DRY_RUN_COMPLETE

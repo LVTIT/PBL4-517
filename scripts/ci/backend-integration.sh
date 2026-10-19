@@ -19,6 +19,9 @@ cleanup() {
   if [[ -f "$log_dir/tests.log" ]]; then
     python ../../scripts/ci/sanitize_log.py "$log_dir/tests.log"
   fi
+  if [[ -f "$log_dir/e2e.log" ]]; then
+    python ../../scripts/ci/sanitize_log.py "$log_dir/e2e.log"
+  fi
   rm -rf -- "$log_dir"
   exit "$result"
 }
@@ -46,3 +49,8 @@ if [[ "$healthy" != true ]]; then
 fi
 echo 'Backend /api/health PASS; running real PostgreSQL integration tests.'
 timeout 180s npm run test:integration >"$log_dir/tests.log" 2>&1
+
+if [[ -d ../frontend/dist ]] && [[ -f ../frontend/package.json ]]; then
+  echo 'Frontend build found; running Playwright e2e tests via preview server.'
+  timeout 180s npm --prefix ../frontend run test:e2e >"$log_dir/e2e.log" 2>&1
+fi
