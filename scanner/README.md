@@ -66,12 +66,6 @@ python scanner/scan.py 127.0.0.1 --reset-baseline
 python scanner/scan.py <EC2_PUBLIC_IP> --ports 22,80,443,3000,5432,8080
 ```
 
-IP deploy được người dùng xác nhận ngày 2026-10-19: `13.251.128.130`.
-Scanner nhận **host/IP**, không nhận URL `https://.../`. Bot đang chạy trên máy Ninh
-có thể nhận `/scan 13.251.128.130 22,80,443,3000,5432,8080` ngay, không cần bật
-thêm listener. Các nút quét nhanh vẫn dùng localhost của máy chạy bot.
-Demo IDOR trên HTTPS dùng [scripts/attacker/README.md](../scripts/attacker/README.md).
-
 ### 3.3. Chế độ Giám sát liên tục (Watch Mode / Daemon):
 Tự động quét lặp lại định kỳ mỗi `N` giây. Khi phát hiện thay đổi trạng thái cổng (mở thêm hoặc đóng lại), cảnh báo sẽ được kích hoạt tức thì:
 ```bash

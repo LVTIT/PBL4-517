@@ -1,19 +1,6 @@
 # Current Project Status
 
-**Last updated:** 2026-10-19 (Asia/Saigon; deployed demo scripts moved onto #51 at the user's request; full real-data acceptance pending)
-
-**2026-10-19 deployed demo scripts — Refs #51, #24:** The existing read/update/cancel
-IDOR scripts now default to `https://13.251.128.130`, require a prepared order UUID
-and prompt for an existing customer's private password. No public seed credentials
-or auto-registration. Login/CSRF failures are inconclusive, not IDOR passes. The user
-requested these changes directly in `D:\PBL4-517` on `feature/51-kevilo-ui`; the UI
-implementation and unrelated local scripts are preserved. The original local
-vulnerable lab remains explicitly selected via `--url http://127.0.0.1:3000`.
-No production deployment, authenticated IDOR execution or bot restart was performed.
-The Telegram listener on Ninh's machine can use the explicit new IP immediately.
-[Usage](../scripts/attacker/README.md), [verification and CI limits](../evidence/OWASP-01/deployed-demo-scripts-20261019.md).
-Prior isolated-branch CI passed Python/policy/backend integration but its two audit
-gates failed on existing web dependencies; it is not a CI result for this #51 revision.
+**Last updated:** 2026-10-03 (Asia/Bangkok; #51 tested UI deployed at 22:58, public mobile grid/cart verified; full real-data acceptance pending)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
