@@ -243,22 +243,52 @@ test('real PostgreSQL API and session authentication', async (suite) => {
 
       // Create order as userA
       csrfToken = await userA.csrf();
+      for (const customerPhone of ['123', '1'.repeat(21), 912345678]) {
+        const invalidPhoneOrder = await userA.request('/orders', {
+          method: 'POST', csrfToken,
+          body: {
+            items: [{ productId: prod.id, quantity: 1 }],
+            shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+            customerPhone,
+          },
+        });
+        assert.equal(invalidPhoneOrder.status, 400);
+        assert.equal(invalidPhoneOrder.body.error.code, 'INVALID_INPUT');
+      }
       const orderRes = await userA.request('/orders', {
         method: 'POST',
         csrfToken,
         body: {
           items: [{ productId: prod.id, quantity: 1 }],
           shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+          customerPhone: ' 0912345678 ',
         },
       });
       assert.equal(orderRes.status, 201);
       const createdOrderId = orderRes.body.data.id;
       assert.equal(orderRes.body.data.totalPrice, prod.price);
+      assert.equal(orderRes.body.data.customerPhone, '0912345678');
+      const savedPhone = await database.query('SELECT "customerPhone" FROM "Order" WHERE id = $1', [createdOrderId]);
+      assert.equal(savedPhone.rows[0].customerPhone, '0912345678');
 
       // User A can view own order
       const getOwnOrder = await userA.request(`/orders/${createdOrderId}`);
       assert.equal(getOwnOrder.status, 200);
       assert.equal(getOwnOrder.body.data.id, createdOrderId);
+      assert.equal(getOwnOrder.body.data.customerPhone, '0912345678');
+
+      const noPhoneOrder = await userA.request('/orders', {
+        method: 'POST', csrfToken,
+        body: {
+          items: [{ productId: prod.id, quantity: 1 }],
+          shippingAddress: '123 Đường Kiểm Thử, Đà Nẵng',
+        },
+      });
+      assert.equal(noPhoneOrder.status, 201);
+      assert.equal(noPhoneOrder.body.data.customerPhone, null);
+      assert.equal((await userA.request(`/orders/${noPhoneOrder.body.data.id}/cancel`, {
+        method: 'POST', csrfToken,
+      })).status, 200);
 
       // Register User B
       const userB = new BrowserSession();

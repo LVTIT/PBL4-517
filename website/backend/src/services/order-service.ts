@@ -22,7 +22,8 @@ export async function createOrder(
   items: CartItemInput[],
   shippingAddress: string,
   userId?: string | null,
-  guestInfo?: GuestInfoInput
+  guestInfo?: GuestInfoInput,
+  recipientPhone?: string
 ) {
   if (!items || items.length === 0) {
     throw new AppError(400, 'EMPTY_CART', 'Giỏ hàng của bạn đang trống.');
@@ -30,7 +31,7 @@ export async function createOrder(
 
   let customerName = guestInfo?.name?.trim();
   let customerEmail = guestInfo?.email?.trim();
-  let customerPhone = guestInfo?.phone?.trim() || null;
+  const customerPhone = recipientPhone?.trim() || guestInfo?.phone?.trim() || null;
 
   if (userId) {
     const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => {

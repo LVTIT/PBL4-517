@@ -21,7 +21,7 @@ export function CartPage() {
 
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
-  const [guestPhone, setGuestPhone] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   // Address starts EMPTY as required by specification
   const [shippingAddress, setShippingAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -89,6 +89,11 @@ export function CartPage() {
       return;
     }
 
+    if (customerPhone.trim() && customerPhone.trim().length < 8) {
+      setError('Số điện thoại phải có từ 8 đến 20 ký tự.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -99,12 +104,12 @@ export function CartPage() {
       })),
       shippingAddress: shippingAddress.trim(),
       ...(user
-        ? {}
+        ? { customerPhone: customerPhone.trim() || undefined }
         : {
             guestInfo: {
               name: guestName.trim(),
               email: guestEmail.trim(),
-              phone: guestPhone.trim() || undefined,
+              phone: customerPhone.trim() || undefined,
             },
           }),
     };
@@ -203,6 +208,11 @@ export function CartPage() {
             <div style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: '8px', marginTop: '8px' }}>
               <span className="small muted">Địa chỉ giao hàng:</span>
               <p style={{ margin: '4px 0 0 0', fontSize: '0.9375rem' }}>{createdOrder.shippingAddress}</p>
+              {createdOrder.customerPhone && (
+                <p style={{ margin: '8px 0 0 0', fontSize: '0.9375rem' }}>
+                  Số điện thoại người nhận: {createdOrder.customerPhone}
+                </p>
+              )}
             </div>
           </div>
 
@@ -432,26 +442,27 @@ export function CartPage() {
                     disabled={submitting}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="guest-phone" className="form-label">
-                    Số điện thoại liên hệ (tùy chọn)
-                  </label>
-                  <input
-                    id="guest-phone"
-                    name="tel"
-                    type="tel"
-                    autoComplete="tel"
-                    maxLength={20}
-                    placeholder="0912 345 678"
-                    className="form-input"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    disabled={submitting}
-                  />
-                </div>
               </>
             )}
+
+            <div className="form-group">
+              <label htmlFor="customer-phone" className="form-label">
+                Số điện thoại người nhận (tùy chọn)
+              </label>
+              <input
+                id="customer-phone"
+                name="tel"
+                type="tel"
+                autoComplete="tel"
+                minLength={8}
+                maxLength={20}
+                placeholder="0912 345 678"
+                className="form-input"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                disabled={submitting}
+              />
+            </div>
 
             {/* Shipping Address (Starts Empty) */}
             <div className="form-group">

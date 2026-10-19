@@ -270,6 +270,20 @@ Các tài khoản này có mật khẩu công khai, chỉ dùng development/test
 
 Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
 
+Checkout hiển thị ô **Số điện thoại người nhận (tùy chọn)** riêng với địa chỉ cho cả
+khách đã đăng nhập và khách vãng lai. Với khách đã đăng nhập, `POST /api/orders`
+nhận thêm `customerPhone` (chuỗi đã trim, 8–20 ký tự nếu cung cấp); bỏ qua trường
+này khi để trống. Luồng khách vãng lai tiếp tục gửi `guestInfo.phone` như trước.
+Số điện thoại được lưu vào `Order.customerPhone` và hiển thị trong xác nhận/chi tiết
+đơn hàng. Không cần migration database cho thay đổi này. Khi triển khai, cần cập
+nhật/build cả backend và frontend rồi restart backend; chỉ cập nhật UI là chưa đủ.
+
+Lockfile cập nhật ngày 2026-10-19 chỉ vá dependency bắc cầu: backend dùng
+`proxy-addr` 2.0.8, `ip-address` 10.7.4, `fast-uri` 3.1.8; frontend dùng
+`source-map-js` 1.2.2. Giữ nguyên phiên bản dependency chính. Sau `npm ci`, build và
+kiểm thử lại, `npm audit --audit-level=high` báo 0 vulnerabilities ở cả hai project
+trong lần kiểm tra này.
+
 ### Session, password và CSRF
 
 - Session được lưu trong PostgreSQL, cookie chỉ giữ session ID đã ký; không dùng MemoryStore làm nơi lưu session.
