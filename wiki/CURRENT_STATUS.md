@@ -1,6 +1,18 @@
 # Current Project Status
 
-**Last updated:** 2026-10-02 (Asia/Bangkok; #8/#10/#15/#24 closed after verification; project-local UI skill installed)
+**Last updated:** 2026-10-19 (Asia/Saigon; deployed IDOR demo follow-up, Refs #24)
+
+**2026-10-19 follow-up — deployed demo scripts:** Three existing IDOR scripts now default to
+`https://13.251.128.130`, require a prepared order UUID and prompt for an existing test
+customer's private password. Auto-registration and public demo credentials are removed;
+login/CSRF failures cannot be reported as an IDOR pass. Local vulnerable testing remains
+explicit via `--url http://127.0.0.1:3000`; EC2 stays on the secure baseline. Scanner/Bot
+already accept the new IP as an argument; the listener running on Ninh's machine was not
+changed or started here. [Usage and limitations](../scripts/attacker/README.md).
+Local verification and live-check limits are recorded in
+[demo evidence](../evidence/OWASP-01/deployed-demo-scripts-20261019.md).
+Authenticated EC2 IDOR execution and human review remain pending; the original closed
+local-lab Issue #24 is not reopened or reinterpreted as production test evidence.
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
