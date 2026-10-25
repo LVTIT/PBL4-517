@@ -4,7 +4,7 @@ Captured      : 2026-09-30 01:31:48 UTC
 Branch        : feature/37-sqli-lab (Refs #37)
 Environment   : local lab, PostgreSQL 16 container pbl517-postgres, migrated + seeded dev database
 Flag          : VULN_SQLI_ENABLED=false, NODE_ENV=development
-Command       : python scripts/attacker/exploit_sqli.py --url http://127.0.0.1:3002 
+Command       : python scripts/attacker/exploit_sqli.py --url http://127.0.0.1:3002
 Isolation     : retest Secure Baseline; backend Secure Baseline o port 3000 va 3002, lab vulnerable o port 3001
 Redaction     : email trong output duoc che boi script (khong co raw PII trong evidence)
 

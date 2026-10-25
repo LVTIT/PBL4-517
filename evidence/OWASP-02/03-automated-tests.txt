@@ -97,7 +97,7 @@ test at tests\api.integration.test.mjs:199:17
 ✖ product search rejects SQL injection payloads (19.6671ms)
   AssertionError [ERR_ASSERTION]: SQL injection must not return rows on the secure baseline.
   + actual - expected
-  
+
   + [
   +   {
   +     category: 'Bàn phím',
@@ -161,7 +161,7 @@ test at tests\api.integration.test.mjs:199:17
   +   }
   + ]
   - []
-  
+
       at TestContext.<anonymous> (file:///D:/PBL4/PBL4-517/website/backend/tests/api.integration.test.mjs:203:14)
       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
       at async Test.run (node:internal/test_runner/test:1389:7)
@@ -175,4 +175,3 @@ test at tests\api.integration.test.mjs:199:17
     operator: 'deepStrictEqual',
     diff: 'simple'
   }
-

@@ -4,7 +4,7 @@ Refs #44, #45. Related to #37, #38, #40, #43 and #51.
 
 Status: implemented and verified locally; hosted CI/human review are separate.
 Source baseline is `8625681` plus this integration PR. The SQLi work is adapted
-from `59b75f3` (PR #47), retaining its historical OWASP-02 evidence unchanged.
+from `59b75f3` (PR #47), retaining its historical OWASP-02 evidence content (trailing whitespace normalized).
 See the PR head for the exact integrated revision and latest hosted checks.
 
 Environment: Windows, Node 24.15.0, npm 11.12.1, PostgreSQL 16.15 in a newly

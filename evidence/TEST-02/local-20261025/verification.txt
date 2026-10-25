@@ -9,10 +9,10 @@ Windows / Node 24.15.0 / npm 11.12.1 / Docker PostgreSQL 16.15.
 | found 0 vulnerabilities
 
 ## api-integration
-| 
+|
 | > pbl517-backend@0.1.0 test:integration
 | > node --test tests/api.integration.test.mjs
-| 
+|
 | ▶ real PostgreSQL API and session authentication
 |   ✔ health and security headers (46.015ms)
 |   ✔ products match database rows with exact decimal money (68.2374ms)
@@ -42,15 +42,15 @@ Windows / Node 24.15.0 / npm 11.12.1 / Docker PostgreSQL 16.15.
 | ℹ duration_ms 3104.3626
 
 ## playwright
-| 
+|
 | > pbl4-517-frontend@0.1.0 test:e2e
 | > playwright test --workers=2
-| 
+|
 | [WebServer] (node:14368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
-| 
+|
 | Running 54 tests using 2 workers
-| 
+|
 | (node:16480) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
 | (node:10256) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
@@ -113,14 +113,14 @@ Windows / Node 24.15.0 / npm 11.12.1 / Docker PostgreSQL 16.15.
 |   ok 53 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects another owner confirmation (261ms)
 |   ok 52 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:6:1 › confirmation waits for auth, survives owner refresh and is cleared on logout (556ms)
 |   ok 54 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects legacy confirmation (317ms)
-| 
+|
 |   54 passed (22.1s)
 
 ## security-lifecycle
-| 
+|
 | > pbl517-backend@0.1.0 test:security
 | > node --test tests/security-lifecycle.test.mjs
-| 
+|
 | ▶ isolated local exploit -> defense lifecycle
 |   ✔ production refuses each vulnerable flag before serving requests (561.7885ms)
 |   ✔ IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (497.7737ms)
@@ -151,10 +151,10 @@ Windows / Node 24.15.0 / npm 11.12.1 / Docker PostgreSQL 16.15.
 | test_simultaneous_open_close_delivers_both_events (test_reliability.ReliabilityTests.test_simultaneous_open_close_delivers_both_events) ... ok
 | test_single_writer_lock_releases_after_failure (test_reliability.ReliabilityTests.test_single_writer_lock_releases_after_failure) ... ok
 | test_timeout_is_uncertain_not_closed_and_recovery_is_not_new_port (test_reliability.ReliabilityTests.test_timeout_is_uncertain_not_closed_and_recovery_is_not_new_port) ... ok
-| 
+|
 | ----------------------------------------------------------------------
 | Ran 12 tests in 0.845s
-| 
+|
 | OK
 | [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
 | [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
@@ -183,8 +183,8 @@ Windows / Node 24.15.0 / npm 11.12.1 / Docker PostgreSQL 16.15.
 | test_git_index_is_checked_even_if_worktree_is_cleaned (test_policy.PolicyTests.test_git_index_is_checked_even_if_worktree_is_cleaned) ... ok
 | test_log_redaction_and_command_escape (test_policy.PolicyTests.test_log_redaction_and_command_escape) ... ok
 | test_source_and_sanitized_evidence_allowed (test_policy.PolicyTests.test_source_and_sanitized_evidence_allowed) ... ok
-| 
+|
 | ----------------------------------------------------------------------
 | Ran 5 tests in 0.294s
-| 
+|
 | OK
