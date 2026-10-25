@@ -8,6 +8,7 @@ import type { Order } from '../types/api';
 import { ProductMedia } from '../components/ProductMedia';
 import { TrashIcon, CheckIcon, AlertCircleIcon, CopyIcon } from '../components/Icon';
 import { getPageTitle } from '../config/brand';
+import { clearOrderConfirmation, readOrderConfirmation, saveOrderConfirmation } from '../services/order-confirmation';
 
 const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
@@ -16,6 +17,13 @@ const currency = new Intl.NumberFormat('vi-VN', {
 });
 
 export function CartPage() {
+  const { user, loading, error, refresh } = useAuth();
+  if (loading) return <div className="container page-content" role="status">Đang tải giỏ hàng...</div>;
+  if (error) return <div className="container page-content" role="alert">{error} <button className="button button-secondary" onClick={() => void refresh()}>Thử lại</button></div>;
+  return <CartContent key={user?.id ?? 'guest'} />;
+}
+
+function CartContent() {
   const { items, updateQuantity, removeFromCart, clearCart, totalCount, totalAmount } = useCart();
   const { user } = useAuth();
 
@@ -26,14 +34,9 @@ export function CartPage() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(() => {
-    try {
-      const saved = sessionStorage.getItem('pbl517_last_order');
-      return saved ? (JSON.parse(saved) as Order) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(() => readOrderConfirmation(user?.id ?? null));
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [copied, setCopied] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -55,7 +58,7 @@ export function CartPage() {
   };
 
   const handleDismissOrder = () => {
-    sessionStorage.removeItem('pbl517_last_order');
+    clearOrderConfirmation();
     setCreatedOrder(null);
   };
 
@@ -116,8 +119,9 @@ export function CartPage() {
 
     try {
       const order = await post<Order>('/orders', orderPayload);
+      if (!mounted.current) return;
       clearCart();
-      sessionStorage.setItem('pbl517_last_order', JSON.stringify(order));
+      saveOrderConfirmation(user?.id ?? null, order);
       setCreatedOrder(order);
     } catch (err) {
       setError(messageFrom(err));

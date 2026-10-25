@@ -49,9 +49,9 @@ test.describe('Catalog, Search, and Cart Interactions', () => {
 
     await page.route('**/api/auth/me', (route) => {
       route.fulfill({
-        status: 401,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ error: { message: 'Not authenticated' } }),
+        body: JSON.stringify({ data: { user: null } }),
       });
     });
 

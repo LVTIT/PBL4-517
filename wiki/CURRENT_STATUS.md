@@ -1,5 +1,7 @@
 # Current Project Status
 
+**2026-10-25 local baseline (#51):** dependency audits zero vulnerabilities; both builds, fresh PostgreSQL 16 migration/seed, 16 API subtests and 54 Playwright runs PASS. Removed API mock fallback; confirmation storage bound to authenticated owner and cleared across login/logout. AWS not rechecked; human review/hosted CI and broader lab regression tracked separately. [Evidence](../evidence/UI-01/local-baseline-20261025/README.md).
+
 **Latest #51 deployment — 2026-10-19 16:37 Asia/Saigon:** Application
 `601c237` is active at `https://13.251.128.130/`. Added an optional recipient phone field
 to checkout for signed-in customers and guests, separate from the shipping
