@@ -2,40 +2,56 @@
 
 ## Secure baseline
 
-**Status: Accepted** — theo yêu cầu Issue #8 và hướng dẫn knowledge base ngày 2026-09-14. `main` giữ baseline bảo mật bình thường; không cố tình tạo lỗ hổng trong skeleton.
+**Status: Accepted.** Keep `main` and deployment configuration secure by default.
+The existing website uses bcrypt, runtime validation/body limits, session rotation,
+PostgreSQL sessions, HttpOnly/SameSite cookies, Secure cookies in production,
+CSRF tokens, role guards, parameterized Prisma queries and HTTP security headers.
+These controls are not a claim that all vulnerabilities have been eliminated.
+[Canonical configuration/commands](../website/README.md).
 
-Source web có password hashing, validation runtime/body limit, rate limit login, HTTP security headers, Prisma parameterized queries, PostgreSQL session store, HttpOnly/SameSite cookie, Secure cookie khi production, CSRF token và xử lý lỗi tập trung. Chi tiết cấu hình/hợp đồng hiện hành ở [website/README.md](../website/README.md#session-password-và-csrf), kết quả kiểm chứng ở [CURRENT_STATUS.md](CURRENT_STATUS.md). Baseline không phải lời cam kết hệ thống không có lỗ hổng.
+## Controlled local labs
 
-## OWASP lab
+**Status: Partially implemented / locally verified; human review pending.**
+The user authorized the local-first plan on 2026-10-25. Reuse existing work;
+SQLi was adapted from `59b75f3` (PR #47), preserving KEVILO fields and filters in
+secure mode. Current local results and pending AWS/VM work are recorded in the
+[security matrix](../evidence/TEST-02/local-20261025/README.md).
 
-**Status: Planned.** Chưa tạo phiên bản vulnerable, chưa khai thác và chưa có evidence của các scenario dưới đây.
+All flags default false: `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`,
+`VULN_XSS_ENABLED`, `VULN_AUTH_ENABLED`. Any enabled flag is rejected by config
+when `NODE_ENV=production`, before binding an HTTP port. APIs bind loopback.
+Only use an isolated lab branch/environment, synthetic data and an authorized
+target. A non-production label alone does not make a publicly proxied lab safe.
+Historical EC2 IDOR demo evidence is not approval to deploy these new lab modes.
 
-```text
-main → secure baseline
+Each lab must demonstrate vulnerable behavior, the defense, the same attack after
+fix, and normal functionality. Record source revision, environment, date, request,
+result and limitations. Evidence belongs in `evidence/`, with secrets/cookies/tokens
+redacted. Do not close an issue or infer human acceptance from tests or a PR merge.
 
-lab/OWASP hoặc branch lab tương đương
-    → intentionally vulnerable version
-    → exploit trong phạm vi được phép
-    → evidence
-    → fix
-    → retest
-```
+| OWASP Top 10:2021 | Scenario | Current scope |
+| --- | --- | --- |
+| A01 Broken Access Control | IDOR read/update/cancel | Historical evidence + new local API/DB retest; owner remains allowed, attacker blocked in secure mode |
+| A03 Injection | SQL Injection | Existing search lab adapted; identical tautology/UNION payloads verified in vulnerable/secure modes |
+| A03 Injection | Stored XSS | Review persisted in PostgreSQL; harmless marker executes in local lab, same review is escaped by secure React rendering |
+| A07 Authentication | Login guessing | 12 bounded wrong-password requests; secure returns 429 from attempt 11, lab remains 401; bcrypt/session/CSRF retained |
+| A05 Misconfiguration | Unnecessary service exposure | Scanner implemented; local listener/reliability checks; real EC2 SG hardening lifecycle still pending #33/#36/#41 |
 
-- Tách branch và môi trường lab được kiểm soát; ghi phạm vi host, tài khoản thử và thời gian thực hành trước khi chạy. Tên branch cụ thể sẽ chốt khi tạo lab.
-- Chỉ dùng dữ liệu giả; không để môi trường vulnerable public không kiểm soát. Không đưa lỗ hổng cố ý trở lại `main`.
-- Chọn và ghi rõ phiên bản OWASP Top 10, điều kiện tái hiện, kết quả trước/sau fix. Không suy ra lỗ hổng ứng dụng chỉ từ một port mở.
-- Evidence phải đủ để tái hiện và đánh giá fix; loại bỏ password thật, session cookie/token, database URL có mật khẩu và cloud credential. Lưu evidence vào `evidence/` theo issue, không nhét báo cáo vào wiki.
-- Chỉ ghi scenario Completed khi đã có exploit, fix và retest thực tế. Có thể đưa fix phù hợp về baseline theo workflow review; không merge phần cố ý làm yếu ứng dụng.
+SQLi and XSS are two scenarios in one OWASP group. CSRF and admin authorization
+have baseline tests but are not separately completed exploit/fix labs.
+A port scan observes TCP reachability; it does not read AWS rules, prove an
+application vulnerability, or establish a CVSS score. Timeout/filtered observations
+remain uncertain. Port-based scores are local heuristics.
 
-## Kịch bản thực nghiệm OWASP Top 10
+## Automated local regression
 
-| Scenario | Trạng thái | Chi tiết triển khai & Công cụ |
-| :--- | :--- | :--- |
-| **A01: Broken Access Control (IDOR)** | **Completed (Verified with Evidence)** | Chu trình toàn vẹn: Đọc (`GET`), Sửa địa chỉ (`PATCH`), Hủy đơn (`POST`). Phòng thủ tầng DB (*Database-level Scoping*), cờ `VULN_IDOR_ENABLED`, UI trực quan ([`OrderDetailPage`](../website/frontend/src/pages/OrderDetailPage.tsx)), 3 script attacker và 7 file bằng chứng tại [`evidence/OWASP-01/`](../evidence/OWASP-01/). |
-| **A01: Admin Authorization** | **Implemented (Baseline)** | Phân quyền nghiêm ngặt qua middleware `requireAdmin`; Admin bị chặn đặt hàng (`ADMIN_CANNOT_ORDER`) và chặn tự review sản phẩm. |
-| **A03: Injection (SQLi)** | **Planned** | Ô tìm kiếm `GET /api/products?search=...` (chuẩn bị kịch bản `VULN_SQLI_ENABLED` với query ghép chuỗi thô). |
-| **A03: Stored XSS** | **Planned** | Bình luận sản phẩm `POST /api/products/:id/reviews` (chuẩn bị kịch bản `VULN_XSS_ENABLED`). |
-| **A05: Security Misconfiguration** | **Implemented (Verified with Dual Alerts)** | Module `scanner/` dò quét cổng mở đa luồng trên AWS Security Group, lưu baseline chênh lệch (`scanner_state.json`) và gửi cảnh báo tức thì về cả Discord Webhook và Telegram Group Bot. |
-| **A07: Authentication & Brute Force** | **Implemented (Baseline)** | Đã triển khai rate limiter, bcrypt hash mật khẩu, kiểm tra phiên session phía server. |
+`npm run test:security` from backend requires explicit `LOCAL_SECURITY_LAB=1`,
+a dedicated loopback test/security/lab database (or a disposable CI database),
+both project builds and Playwright Chromium. It creates synthetic fixtures and
+fresh API processes, performs the lifecycle checks and cleans up its own fixtures.
+[Commands and prerequisites](../website/README.md#local-security-lifecycle-regression--refs-37-38-40-44).
 
-Cơ chế thực nghiệm sử dụng cờ môi trường (`VULN_*_ENABLED=true/false`) để đảm bảo nhánh `main` luôn là **Secure Baseline** khi deploy lên AWS Cloud, đồng thời cho phép bật nhanh chế độ có lỗ hổng khi demo khai thác và kiểm chứng bịt lỗi.
+Scanner regression uses loopback sockets and mocked channel outcomes, never real
+chat messages. [Scanner behavior and scheduling template](../scanner/README.md).
+Actual Ubuntu VM scheduling/reboot, real current dual-channel receipts, AWS
+network verification, deployed acceptance and human review remain pending.

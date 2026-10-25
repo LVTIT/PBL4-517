@@ -2,6 +2,9 @@
 # Run from website/backend, on an isolated Linux CI runner only.
 set -Eeuo pipefail
 test "${VULN_IDOR_ENABLED:?}" = false
+test "${VULN_SQLI_ENABLED:?}" = false
+test "${VULN_XSS_ENABLED:?}" = false
+test "${VULN_AUTH_ENABLED:?}" = false
 test "${NODE_ENV:?}" = development
 log_dir="$(mktemp -d)"
 backend_pid=''
@@ -21,6 +24,9 @@ cleanup() {
   fi
   if [[ -f "$log_dir/e2e.log" ]]; then
     python ../../scripts/ci/sanitize_log.py "$log_dir/e2e.log"
+  fi
+  if [[ -f "$log_dir/security.log" ]]; then
+    python ../../scripts/ci/sanitize_log.py "$log_dir/security.log"
   fi
   rm -rf -- "$log_dir"
   exit "$result"
@@ -53,4 +59,5 @@ timeout 180s npm run test:integration >"$log_dir/tests.log" 2>&1
 if [[ -d ../frontend/dist ]] && [[ -f ../frontend/package.json ]]; then
   echo 'Frontend build found; running Playwright e2e tests via preview server.'
   timeout 180s npm --prefix ../frontend run test:e2e >"$log_dir/e2e.log" 2>&1
+  LOCAL_SECURITY_LAB=1 timeout 120s npm run test:security >"$log_dir/security.log" 2>&1
 fi

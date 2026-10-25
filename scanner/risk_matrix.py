@@ -1,7 +1,7 @@
-"""PBL4-517: Security Risk Matrix & CVSS Assessment (Issue #10).
+"""Port-based heuristic profiles for investigation, not validated CVSS findings.
 
-Hệ thống đánh giá mức độ rủi ro an ninh theo chuẩn quốc tế (CVSS v3.1 & OWASP A05):
-Phân loại rủi ro cho từng cổng mạng khi bị phơi bày ra Internet công khai (0.0.0.0/0).
+The legacy cvss_score field is kept for report compatibility. An open port alone
+cannot prove missing authentication, an exploitable CVE or Internet-wide exposure.
 """
 
 from __future__ import annotations

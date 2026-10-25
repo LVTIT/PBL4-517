@@ -210,10 +210,13 @@ def notify_scan_event(
     closed_ports: list[int] | None = None,
     scan_duration: float | None = None,
     banners: dict[int, str | None] | None = None,
+    channels: list[str] | None = None,
+    event_id: str | None = None,
+    detected_at: str | None = None,
 ) -> dict[str, bool]:
     """Hàm điều phối gửi cảnh báo song song tới cả Discord và Telegram."""
     discord_url, tele_token, tele_chat_id = get_credentials()
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = detected_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     duration_str = f"{scan_duration:.2f}s" if scan_duration is not None else "N/A"
     b_map = banners or {}
@@ -290,13 +293,24 @@ def notify_scan_event(
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"✅ *Hạ tầng mạng đã trở về trạng thái an toàn.*"
         )
+    elif event_type in ("SCAN_UNCERTAIN", "SCAN_RECOVERED"):
+        title_discord = "[PBL4 SCANNER] " + ("Kết quả quét chưa xác định" if event_type == "SCAN_UNCERTAIN" else "Kết nối giám sát đã phục hồi")
+        color_discord = 0xF39C12 if event_type == "SCAN_UNCERTAIN" else 0x3498DB
+        desc_discord = "Một số kết nối timeout/filtered hoặc giám sát vừa phục hồi. Không suy ra cổng đã đóng hay hệ thống đã an toàn; đối chiếu báo cáo và cấu hình mạng."
+        fields_discord = [{"name": "Mục tiêu", "value": target_host, "inline": True},
+                          {"name": "Detected at", "value": now_str, "inline": True}]
+        text_telegram = f"{title_discord}\nMục tiêu: `{target_host}`\n{now_str}\n{desc_discord}"
     else:
         return {"discord": False, "telegram": False}
+
+    if event_id:
+        fields_discord.append({"name": "Event ID", "value": event_id, "inline": False})
+        text_telegram += f"\nEvent ID: `{event_id}`"
 
     # 2. Gửi đồng thời tới cả 2 kênh
     results = {"discord": False, "telegram": False}
 
-    if discord_url:
+    if discord_url and (channels is None or "discord" in channels):
         results["discord"] = send_discord_alert(
             webhook_url=discord_url,
             title=title_discord,
@@ -320,7 +334,7 @@ def notify_scan_event(
         ],
     ]
 
-    if tele_token and tele_chat_id:
+    if tele_token and tele_chat_id and (channels is None or "telegram" in channels):
         results["telegram"] = send_telegram_alert(
             bot_token=tele_token,
             chat_id=tele_chat_id,

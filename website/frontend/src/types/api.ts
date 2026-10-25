@@ -23,6 +23,8 @@ export interface Product {
   averageRating?: number | null;
   reviewCount?: number;
   reviews?: Review[];
+  // Returned only by the isolated XSS lab; production rejects that lab flag.
+  labUnsafeReviewHtml?: boolean;
 }
 
 export interface User {

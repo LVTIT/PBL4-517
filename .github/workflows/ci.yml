@@ -108,7 +108,11 @@ jobs:
       NODE_ENV: development
       PORT: '3000'
       TRUST_PROXY: '0'
+      # CI always runs the Secure Baseline; OWASP lab toggles must stay off here.
       VULN_IDOR_ENABLED: 'false'
+      VULN_SQLI_ENABLED: 'false'
+      VULN_XSS_ENABLED: 'false'
+      VULN_AUTH_ENABLED: 'false'
       TEST_API_URL: http://127.0.0.1:3000
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -150,6 +154,8 @@ jobs:
           test -f alerts/notifier.py
           test -f scripts/attacker/exploit_idor.py
           python -m compileall -q scanner alerts scripts/attacker scripts/ci
+      - name: Verify scanner with loopback sockets and simulated alert failures
+        run: python -m unittest discover -s scanner/tests -v
       - name: Validate project-local UI UX Pro Max skill
         run: |
           python -m compileall -q .agents/skills/ui-ux-pro-max/scripts

@@ -411,6 +411,7 @@ export function ProductDetailPage() {
           </div>
         ) : (
           <div className="reviews-list">
+            {product.labUnsafeReviewHtml && <p role="alert">LAB XSS: nội dung đánh giá đang được hiển thị dưới dạng HTML không an toàn. Chỉ dùng dữ liệu giả trong lab local.</p>}
             {product.reviews?.map((r) => (
               <div key={r.id} className="review-item">
                 <div className="review-meta">
@@ -426,7 +427,9 @@ export function ProductDetailPage() {
                     </span>
                   </div>
                 </div>
-                <p className="review-comment">{r.comment}</p>
+                {product.labUnsafeReviewHtml
+                  ? <p className="review-comment" dangerouslySetInnerHTML={{ __html: r.comment }} />
+                  : <p className="review-comment">{r.comment}</p>}
               </div>
             ))}
           </div>

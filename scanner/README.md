@@ -3,7 +3,7 @@
 Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface Management) và giám sát điểm yếu bảo mật theo chuẩn **OWASP Top 10 - A05: Security Misconfiguration**:
 - **Quét mạng đa luồng:** Quét nhanh danh sách cổng TCP với `ThreadPoolExecutor`, hỗ trợ cả IP và Domain.
 - **Thu thập Banner giao thức (Deep Banner Grabbing):** Thăm dò chi tiết phiên bản HTTP (`Server`, `X-Powered-By`), SSH handshake, PostgreSQL SSLRequest, MySQL packet, Redis PING.
-- **Đánh giá rủi ro theo CVSS v3.1 & OWASP A05:** Chấm điểm Base Score, xếp hạng độ nghiêm trọng (CRITICAL / HIGH / MEDIUM / INFO) và xếp loại Posture hệ thống (Grade A+ đến F).
+- **Đánh giá rủi ro theo heuristic & OWASP A05:** Chấm điểm heuristic score, xếp hạng độ nghiêm trọng (CRITICAL / HIGH / MEDIUM / INFO) và xếp loại Posture hệ thống (Grade A+ đến F).
 - **Phát hiện dị thường theo Baseline (Diffing Engine):** Tự động phát hiện cổng mới mở thêm hoặc cổng đã được bịt lại dựa trên mốc lưu trữ tại `scanner_state.json`.
 - **Hệ thống cảnh báo kép (Dual Alerts) với nút bấm tương tác:**
   - **Discord Webhook:** Rich Embed trực quan kèm Action Row Link Buttons dẫn tới cẩm nang khắc phục AWS Security Group & tài liệu chuẩn OWASP A05.
@@ -99,7 +99,7 @@ Các lệnh tương tác hỗ trợ:
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
 Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục `scanner/reports/`:
-1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm CVSS, cảnh báo trực quan, biểu đồ tình trạng, và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
+1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, cảnh báo trực quan, biểu đồ tình trạng, và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
 2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
 
@@ -107,9 +107,9 @@ Toàn bộ bộ bằng chứng thực nghiệm đạt chuẩn kiểm thử cho I
 
 ---
 
-## 6. Ma trận Đánh giá Rủi ro (CVSS v3.1 & OWASP A05)
+## 6. Ma trận Đánh giá Rủi ro (heuristic & OWASP A05)
 
-| Cổng | Dịch vụ | CVSS Score | Mức độ | Định danh OWASP | Mô tả Rủi ro & Hành động |
+| Cổng | Dịch vụ | heuristic Score | Mức độ | Định danh OWASP | Mô tả Rủi ro & Hành động |
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **5432** | PostgreSQL | **9.8** | 🔴 CRITICAL | OWASP A05 | Cổng cơ sở dữ liệu mở công khai! Cần đóng ngay trên AWS Security Group. |
 | **3306** | MySQL | **9.8** | 🔴 CRITICAL | OWASP A05 | Cổng RDBMS mở công khai! Nguy cơ rò rỉ dữ liệu hoặc brute-force mật khẩu. |
@@ -126,7 +126,37 @@ Toàn bộ bộ bằng chứng thực nghiệm đạt chuẩn kiểm thử cho I
 | Sự kiện | Điều kiện kích hoạt | Hành động của Hệ thống |
 | :--- | :--- | :--- |
 | **`INITIAL_SCAN`** | Lần đầu quét một host (hoặc dùng `--reset-baseline`) | Ghi nhận mốc Baseline. Gửi thông báo khởi tạo thành công tới Discord & Telegram. |
-| **`NEW_PORT_DETECTED`** | Phát hiện cổng mới mở thêm ($P_{\text{mới}} = P_{\text{hiện tại}} \setminus P_{\text{baseline}}$) | Cập nhật Baseline. **Bắn chuông báo động đỏ khẩn cấp** kèm điểm CVSS và nút hướng dẫn xử lý! |
+| **`NEW_PORT_DETECTED`** | Phát hiện cổng mới mở thêm ($P_{\text{mới}} = P_{\text{hiện tại}} \setminus P_{\text{baseline}}$) | Cập nhật Baseline. **Bắn chuông báo động đỏ khẩn cấp** kèm điểm heuristic và nút hướng dẫn xử lý! |
 | **`PORT_CLOSED`** | Cổng bất thường đã được đóng lại/bịt thành công | Cập nhật Baseline. Gửi thông báo xanh lá xác nhận hệ thống an toàn trở lại. |
 | **`NO_CHANGE`** | Trạng thái cổng không đổi so với Baseline | Cập nhật thời gian quét. **Im lặng hoàn toàn** (tránh gây phiền nhiễu cho nhóm chat). |
 
+
+
+## Reliability and local verification ? Refs #35, #43, #44
+
+`open` means a TCP connection succeeded; `closed` means an explicit refusal.
+`filtered`/timeout is uncertain and never confirms a closed port. Previously open
+ports remain in the baseline until a confirmed refusal. `SCAN_UNCERTAIN` and
+`SCAN_RECOVERED` describe monitoring uncertainty/recovery, not vulnerability fixes.
+A new host with only uncertain results does not establish an empty baseline.
+
+State writes use an atomic replace and a single-writer OS lock. Malformed state
+fails visibly; preserve the damaged file and restore a known-good backup rather
+than resetting the baseline automatically. The state record includes a durable
+alert outbox: failed channels retry after 10 seconds with exponential backoff up
+to 300 seconds; successful channels are removed. At most two due events are
+attempted per scan and the queue is capped at 100. A full queue fails without
+advancing the stored baseline. Delivery is at-least-once: a crash after remote
+acceptance but before local acknowledgement can duplicate a message. Missing
+credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
+new alerts; it preserves existing pending events. No tokens enter the outbox.
+
+Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
+observations or pending delivery; 2 = configuration/state/lock/DNS failure.
+JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at
+1 MiB with two backups. Reports can use `PBL517_REPORTS_DIR`; score values are
+local port-based heuristics, not a validated CVSS assessment or proof of a CVE.
+
+Run `python -m unittest discover -s scanner/tests -v` from the repository root.
+These checks use loopback sockets and simulated alert outcomes; no chat is sent.
+[Ubuntu VM scheduler template and acceptance steps](systemd/README.md).

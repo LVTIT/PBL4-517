@@ -1,5 +1,16 @@
 # Current Project Status
 
+**2026-10-25 local security integration (#44):** SQLi from `59b75f3` adapted to
+KEVILO without dropping catalog/image fields. IDOR read/update/cancel, SQLi,
+persisted review XSS and bounded login-guessing have vulnerable/secure local
+controls; production rejects every lab flag. Real browser checkout persists phone
+and address to PostgreSQL. Scanner adds uncertain/recovery observations, atomic
+state/single writer, per-channel durable retry and rotating audit; scheduler is a
+template pending Ubuntu VM install/reboot. [Matrix and verified results](../evidence/TEST-02/local-20261025/README.md).
+No AWS changes, real-channel alert sends, issue closure or human acceptance were
+performed. #33?#36/#41?#43 AWS/VM evidence remains pending. Historical deployment
+paragraphs below describe earlier revisions, not today's availability.
+
 **2026-10-25 local baseline (#51):** dependency audits zero vulnerabilities; both builds, fresh PostgreSQL 16 migration/seed, 16 API subtests and 54 Playwright runs PASS. Removed API mock fallback; confirmation storage bound to authenticated owner and cleared across login/logout. AWS not rechecked; human review/hosted CI and broader lab regression tracked separately. [Evidence](../evidence/UI-01/local-baseline-20261025/README.md).
 
 **Latest #51 deployment — 2026-10-19 16:37 Asia/Saigon:** Application
@@ -29,11 +40,11 @@ PR human review and full real-data acceptance remain outstanding, tracked on
 [PR #55](https://github.com/LVTIT/PBL4-517/pull/55). API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-19 (Asia/Saigon; checkout phone deployed at 16:37; full deployed real-account acceptance and PR human review pending)
+**Last updated:** 2026-10-25 (Asia/Bangkok; local verification, no AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
-**Current phase:** Issues [#8](https://github.com/LVTIT/PBL4-517/issues/8), [#10](https://github.com/LVTIT/PBL4-517/issues/10), [#15](https://github.com/LVTIT/PBL4-517/issues/15) and [#24](https://github.com/LVTIT/PBL4-517/issues/24) are **CLOSED / completed** with Tasks/DoD checked after evidence and CI review and explicit user closure instruction. For #8, the user explicitly confirmed another member cloned and ran the website. PR #48 is merged; current main `13bbfe4` passed all five [CI checks](https://github.com/LVTIT/PBL4-517/actions/runs/36983994593). [Closure audit and skill verification](../evidence/DEVTOOLS-01/README.md). UI skill delivery is tracked separately in [#49](https://github.com/LVTIT/PBL4-517/issues/49).
+**Current phase:** Local-first security integration is implemented and verified; hosted CI and required human review are tracked on the integration PR. EC2/Ubuntu VM/network acceptance remains pending. Historical completed issue evidence below is preserved.
 
 **Completed:**
 

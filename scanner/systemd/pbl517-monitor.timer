@@ -1,0 +1,12 @@
+[Unit]
+Description=Run PBL4 external monitor periodically
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=60s
+AccuracySec=5s
+RandomizedDelaySec=5s
+Unit=pbl517-monitor.service
+
+[Install]
+WantedBy=timers.target

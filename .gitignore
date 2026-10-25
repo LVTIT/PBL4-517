@@ -16,12 +16,15 @@ website/backend/src/generated/
 playwright-report/
 test-results/
 scanner_state.json
+scanner_state.json.lock
+*.state.json.lock
 *.state.json
 scanner/reports/*
 !scanner/reports/.gitkeep
 
 # Logs and editor settings
 *.log
+*.audit.log.*
 npm-debug.log*
 .idea/
 .vscode/

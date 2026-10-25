@@ -1,0 +1,27 @@
+OWASP-02 Evidence - A03:2021 Injection (SQL Injection)
+Scenario      : product search - GET /api/products?search=...
+Captured      : 2026-09-30 01:31:48 UTC
+Branch        : feature/37-sqli-lab (Refs #37)
+Environment   : local lab, PostgreSQL 16 container pbl517-postgres, migrated + seeded dev database
+Flag          : VULN_SQLI_ENABLED=false, NODE_ENV=development
+Command       : python scripts/attacker/exploit_sqli.py --url http://127.0.0.1:3002 
+Isolation     : retest Secure Baseline; backend Secure Baseline o port 3000 va 3002, lab vulnerable o port 3001
+Redaction     : email trong output duoc che boi script (khong co raw PII trong evidence)
+
+[*] PBL4-517 OWASP A03 SQL Injection - product search lab
+[*] Target        : http://127.0.0.1:3002/api/products
+[*] Lưu ý         : payload chỉ đọc dữ liệu, email trong output đã được che.
+--- Scenario: tautology ---
+[*] Payload       : ' OR '1'='1
+[*] Baseline      : HTTP 200, 0 sản phẩm khớp 'khong-ton-tai-517'
+[*] Response      : HTTP 200
+[*] Rows returned : 0
+[-] SECURE: input được coi là giá trị tìm kiếm, không có injection (tautology).
+--- Scenario: union ---
+[*] Payload       : ') UNION SELECT id, name, email, NULL::text, 0, 'CUSTOMER', "createdAt", "updatedAt" FROM "User" --
+[*] Baseline      : HTTP 200, 0 sản phẩm khớp 'khong-ton-tai-517'
+[*] Response      : HTTP 200
+[*] Rows returned : 0
+[-] SECURE: input được coi là giá trị tìm kiếm, không có injection (union).
+
+[-] KẾT LUẬN: Secure Baseline giữ vững, không khai thác được.
