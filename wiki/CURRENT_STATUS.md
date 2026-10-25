@@ -7,6 +7,7 @@ controls; production rejects every lab flag. Real browser checkout persists phon
 and address to PostgreSQL. Scanner adds uncertain/recovery observations, atomic
 state/single writer, per-channel durable retry and rotating audit; scheduler is a
 template pending Ubuntu VM install/reboot. [Matrix and verified results](../evidence/TEST-02/local-20261025/README.md).
+Delivery: [PR #56](https://github.com/LVTIT/PBL4-517/pull/56) on `feature/44-local-security-regression`; parent baseline fixes are on [PR #55](https://github.com/LVTIT/PBL4-517/pull/55). Hosted CI status is tracked on the latest PR revision.
 No AWS changes, real-channel alert sends, issue closure or human acceptance were
 performed. #33?#36/#41?#43 AWS/VM evidence remains pending. Historical deployment
 paragraphs below describe earlier revisions, not today's availability.
