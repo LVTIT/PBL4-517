@@ -1,0 +1,57 @@
+From https://github.com/LVTIT/PBL4-517
+ * branch            feature/51-kevilo-ui -> FETCH_HEAD
+ * [new branch]      feature/51-kevilo-ui -> origin/feature/51-kevilo-ui
+Preparing worktree (detached HEAD 0cfed00)
+HEAD is now at 0cfed00 style(ui): nâng cao tương phản WCAG 2.2, wordmark SVG và dev preview fallback
+npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+npm warn install-scripts   @prisma/engines@7.10.0 (postinstall: node scripts/postinstall.js)
+npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn install-scripts   prisma@7.10.0 (preinstall: node scripts/preinstall-entry.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+
+added 251 packages, and audited 252 packages in 12s
+
+48 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> pbl517-backend@0.1.0 build
+> prisma generate && tsc -p tsconfig.json
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (7.10.0) to ./src/generated/prisma in 186ms
+
+
+added 35 packages, and audited 36 packages in 3s
+
+9 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> pbl4-517-frontend@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 98 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.78 kB │ gzip:   0.44 kB
+dist/assets/index-CyqfJssr.css   30.94 kB │ gzip:   5.81 kB
+dist/assets/index-DpdCk2hI.js   361.17 kB │ gzip: 103.03 kB
+
+✓ built in 485ms
+RELEASE_BUILT=0cfed004b92168a2fb92c9b91d3fac78f8bc31e3
+active
+{"data":{"status":"ok","database":"connected"}}

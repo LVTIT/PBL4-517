@@ -1,0 +1,39 @@
+{
+  "target": "https://13.251.128.130",
+  "health": "database connected",
+  "productionMutations": 0,
+  "results": [
+    {
+      "width": 1440,
+      "view": "real unauthenticated guest",
+      "phoneVisible": true,
+      "phoneInputCount": 1,
+      "horizontalOverflow": false,
+      "screenshot": "public-guest-1440.png"
+    },
+    {
+      "width": 1440,
+      "view": "customer UI with mocked auth only",
+      "phoneVisible": true,
+      "phoneInputCount": 1,
+      "horizontalOverflow": false,
+      "screenshot": "public-customer-view-1440.png"
+    },
+    {
+      "width": 390,
+      "view": "real unauthenticated guest",
+      "phoneVisible": true,
+      "phoneInputCount": 1,
+      "horizontalOverflow": false,
+      "screenshot": "public-guest-390.png"
+    },
+    {
+      "width": 390,
+      "view": "customer UI with mocked auth only",
+      "phoneVisible": true,
+      "phoneInputCount": 1,
+      "horizontalOverflow": false,
+      "screenshot": "public-customer-view-390.png"
+    }
+  ]
+}

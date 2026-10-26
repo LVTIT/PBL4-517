@@ -2,19 +2,40 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { get, messageFrom, post } from '../services/api';
 import { useAuth } from '../services/auth';
-import type { Order } from '../types/api';
+import type { Order, OrderStatus } from '../types/api';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { RefreshIcon } from '../components/Icon';
+import { getPageTitle } from '../config/brand';
 
-const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+const currency = new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+  maximumFractionDigits: 0,
+});
+
+export const STATUS_MAP: Record<OrderStatus, { text: string; className: string }> = {
+  PENDING: { text: 'Chờ xử lý', className: 'status-pending' },
+  CONFIRMED: { text: 'Đã xác nhận', className: 'status-confirmed' },
+  SHIPPED: { text: 'Đang giao', className: 'status-shipped' },
+  DELIVERED: { text: 'Đã giao', className: 'status-delivered' },
+  CANCELLED: { text: 'Đã hủy', className: 'status-cancelled' },
+};
 
 export function OrdersPage() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = getPageTitle('Lịch sử đơn hàng');
+  }, []);
+
+  const loadOrders = () => {
     if (!user || user.role === 'ADMIN') {
       setLoading(false);
       return;
@@ -24,7 +45,6 @@ export function OrdersPage() {
     get<Order[]>('/orders')
       .then((data) => {
         setOrders(data);
-        setError(null);
       })
       .catch((err) => {
         setError(messageFrom(err));
@@ -32,31 +52,37 @@ export function OrdersPage() {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadOrders();
   }, [user]);
 
-  const handleCancelOrder = async (orderId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Các sản phẩm sẽ được hoàn lại vào kho.')) {
-      return;
-    }
-    setCancellingId(orderId);
+  async function handleConfirmCancel() {
+    if (!cancellingOrder) return;
+    setIsCancelling(true);
     setActionNotice(null);
     try {
-      const cancelled = await post<Order>(`/orders/${orderId}/cancel`);
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? cancelled : o)));
-      setActionNotice({ type: 'success', message: `Đơn hàng #${orderId.slice(0, 8)} đã được hủy thành công.` });
+      const cancelled = await post<Order>(`/orders/${cancellingOrder.id}/cancel`);
+      setOrders((prev) => prev.map((o) => (o.id === cancellingOrder.id ? cancelled : o)));
+      setActionNotice({
+        type: 'success',
+        message: `Đơn hàng #${cancellingOrder.id.slice(0, 8)} đã được hủy thành công và hoàn trả số lượng vào kho.`,
+      });
+      setCancellingOrder(null);
     } catch (err) {
       setActionNotice({ type: 'error', message: messageFrom(err) });
     } finally {
-      setCancellingId(null);
+      setIsCancelling(false);
     }
-  };
+  }
 
   if (!user) {
     return (
       <div className="container page-content">
-        <div className="state-panel">
-          <h2>Xem lịch sử đơn hàng</h2>
-          <p className="muted">Vui lòng đăng nhập bằng tài khoản Khách hàng để tra cứu các đơn hàng đã đặt.</p>
+        <div className="state-panel" role="alert">
+          <h2>Yêu cầu đăng nhập</h2>
+          <p>Vui lòng đăng nhập bằng tài khoản Khách hàng để theo dõi lịch sử đơn hàng của bạn.</p>
           <Link to="/login" className="button button-primary" style={{ marginTop: '16px' }}>
             Đăng nhập ngay
           </Link>
@@ -70,7 +96,9 @@ export function OrdersPage() {
       <div className="container page-content">
         <div className="state-panel">
           <h2>Khu vực Quản trị Đơn hàng</h2>
-          <p className="muted">Tài khoản Quản trị viên không thực hiện đặt hàng cá nhân. Vui lòng chuyển sang Bảng điều khiển để theo dõi và xử lý toàn bộ đơn hàng trong hệ thống.</p>
+          <p>
+            Tài khoản Quản trị viên theo dõi và xử lý toàn bộ đơn hàng của khách hàng tại Bảng điều khiển.
+          </p>
           <Link to="/admin" className="button button-primary" style={{ marginTop: '16px' }}>
             Quản lý đơn hàng tại Bảng điều khiển Admin
           </Link>
@@ -92,99 +120,161 @@ export function OrdersPage() {
 
   return (
     <div className="container page-content">
-      <div className="page-header">
-        <p className="eyebrow">TÀI KHOẢN CỦA TÔI</p>
-        <h1>Lịch sử đơn hàng ({orders.length})</h1>
-        <p className="muted">Theo dõi tình trạng đơn và các mặt hàng bạn đã đặt mua tại 517 Store.</p>
-      </div>
+      <header className="section-header" style={{ marginBottom: '28px' }}>
+        <p className="section-eyebrow">TÀI KHOẢN KEVILO</p>
+        <h1 className="section-title">Lịch sử đơn hàng ({orders.length})</h1>
+        <p style={{ color: 'var(--color-text-muted)', margin: '8px 0 0 0' }}>
+          Theo dõi trạng thái và chi tiết các đơn hàng bạn đã đặt mua.
+        </p>
+      </header>
 
       {actionNotice && (
         <div className={`notice notice-${actionNotice.type}`} style={{ marginBottom: '20px' }}>
-          {actionNotice.message}
+          <span>{actionNotice.message}</span>
         </div>
       )}
 
-      {error && <div className="notice notice-error" role="alert">{error}</div>}
+      {error && (
+        <div className="notice notice-error" role="alert" style={{ marginBottom: '20px' }}>
+          <span>{error}</span>
+          <button type="button" className="text-button" onClick={loadOrders}>
+            <RefreshIcon size={14} /> Thử lại
+          </button>
+        </div>
+      )}
 
       {orders.length === 0 ? (
         <div className="state-panel">
           <h2>Bạn chưa có đơn hàng nào</h2>
-          <p className="muted">Các sản phẩm bạn mua sẽ xuất hiện tại đây sau khi đặt hàng.</p>
+          <p>Các sản phẩm bạn đặt mua sẽ hiển thị tại đây.</p>
           <Link to="/products" className="button button-primary" style={{ marginTop: '16px' }}>
-            Mua sắm ngay
+            Khám phá sản phẩm
           </Link>
         </div>
       ) : (
         <div className="orders-list">
-          {orders.map((order) => (
-            <article key={order.id} className="order-card">
-              <header className="order-card-header">
-                <div>
-                  <span className="small muted">MÃ ĐƠN HÀNG</span>
-                  <p className="order-code">
-                    <Link to={`/orders/${order.id}`} title="Bấm để xem chi tiết" style={{ color: 'inherit', textDecoration: 'underline' }}>
-                      <strong>{order.id}</strong>
-                    </Link>
-                  </p>
-                </div>
-                <div>
-                  <span className="small muted">NGÀY ĐẶT</span>
-                  <p className="small">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</p>
-                </div>
-                <div>
-                  <span className="small muted">TRẠNG THÁI</span>
+          {orders.map((order) => {
+            const statusInfo = STATUS_MAP[order.status] ?? {
+              text: order.status,
+              className: 'status-pending',
+            };
+
+            return (
+              <article key={order.id} className="order-card">
+                <header className="order-card-header">
                   <div>
-                    <span className={`status-tag status-${order.status.toLowerCase()}`}>
-                      {order.status}
-                    </span>
+                    <span className="small muted">MÃ ĐƠN HÀNG</span>
+                    <p style={{ margin: '4px 0 0 0', fontFamily: 'var(--font-mono)' }}>
+                      <Link
+                        to={`/orders/${order.id}`}
+                        style={{ color: 'var(--color-primary)', fontWeight: 600 }}
+                      >
+                        #{order.id.slice(0, 8)}…
+                      </Link>
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="small muted">NGÀY ĐẶT</span>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.9375rem' }}>
+                      {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="small muted">TRẠNG THÁI</span>
+                    <div style={{ marginTop: '4px' }}>
+                      <span className={`order-status-badge ${statusInfo.className}`}>
+                        {statusInfo.text}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="small muted">TỔNG TIỀN</span>
+                    <p style={{ margin: '4px 0 0 0', fontWeight: 700, color: 'var(--color-text)' }}>
+                      {currency.format(Number(order.totalPrice))}
+                    </p>
+                  </div>
+                </header>
+
+                <div style={{ padding: '16px 0 0 0' }}>
+                  <p className="small muted" style={{ margin: '0 0 12px 0' }}>
+                    <strong>Địa chỉ giao hàng:</strong> {order.shippingAddress}
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    {order.items.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '0.875rem',
+                          paddingBlock: '4px',
+                        }}
+                      >
+                        <span>
+                          {item.product?.name ?? 'Sản phẩm'}{' '}
+                          <span className="small muted">× {item.quantity}</span>
+                        </span>
+                        <span style={{ fontWeight: 600 }}>
+                          {currency.format(Number(item.unitPrice) * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: '12px',
+                      paddingTop: '12px',
+                      borderTop: '1px solid var(--color-border-subtle)',
+                    }}
+                  >
+                    <Link
+                      to={`/orders/${order.id}`}
+                      className="button button-secondary button-small"
+                    >
+                      Xem chi tiết
+                    </Link>
+
+                    {order.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        className="button button-small"
+                        style={{
+                          backgroundColor: 'var(--color-danger-subtle)',
+                          color: 'var(--color-danger)',
+                          borderColor: 'var(--color-danger-border)',
+                        }}
+                        onClick={() => setCancellingOrder(order)}
+                      >
+                        Hủy đơn hàng
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="order-total-col">
-                  <span className="small muted">TỔNG TIỀN</span>
-                  <p className="order-price"><strong>{currency.format(Number(order.totalPrice))}</strong></p>
-                </div>
-              </header>
-
-              <div className="order-card-body">
-                <p className="order-shipping">
-                  <span className="muted small">Địa chỉ nhận hàng:</span> {order.shippingAddress}
-                </p>
-                <div className="order-items-list">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="order-item-row">
-                      <span className="item-name">{item.product?.name ?? 'Sản phẩm'}</span>
-                      <span className="item-qty">x{item.quantity}</span>
-                      <span className="item-price">{currency.format(Number(item.unitPrice) * item.quantity)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f0f3eb' }}>
-                  <Link to={`/orders/${order.id}`} className="button button-secondary" style={{ padding: '6px 14px', fontSize: '.82rem' }}>
-                    Xem chi tiết
-                  </Link>
-                  {order.status === 'PENDING' && (
-                    <button
-                      onClick={() => handleCancelOrder(order.id)}
-                      disabled={cancellingId === order.id}
-                      className="button"
-                      style={{
-                        padding: '6px 14px',
-                        fontSize: '.82rem',
-                        background: '#fff0f0',
-                        color: '#c84b31',
-                        borderColor: '#fad2cb',
-                      }}
-                    >
-                      {cancellingId === order.id ? 'Đang hủy…' : 'Hủy đơn'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
+
+      {/* Accessible Cancel Order Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(cancellingOrder)}
+        title="Xác nhận hủy đơn hàng"
+        message={`Bạn có chắc chắn muốn hủy đơn hàng #${cancellingOrder?.id.slice(0, 8)}? Số lượng sản phẩm sẽ được tự động hoàn lại vào kho hàng KEVILO.`}
+        confirmLabel="Hủy đơn hàng"
+        cancelLabel="Giữ lại"
+        variant="danger"
+        loading={isCancelling}
+        onConfirm={() => void handleConfirmCancel()}
+        onCancel={() => setCancellingOrder(null)}
+      />
     </div>
   );
 }

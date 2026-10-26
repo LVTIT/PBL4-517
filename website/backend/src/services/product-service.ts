@@ -1,11 +1,18 @@
 import { prisma } from '../lib/database.js';
 import { AppError, databaseUnavailable } from '../lib/errors.js';
 
-export async function listProducts(search?: string, category?: string) {
+export async function listProducts(search?: string, category?: string, includeVerification = false) {
   try {
     const where: Record<string, unknown> = {};
     if (category && category !== 'ALL') {
       where.category = category;
+    }
+    if (!includeVerification) {
+      where.NOT = [
+        { category: 'Deployment verification' },
+        { name: { contains: 'NOT FOR SALE', mode: 'insensitive' } },
+        { name: { contains: 'DO NOT BUY', mode: 'insensitive' } },
+      ];
     }
     if (search && search.trim()) {
       where.OR = [
@@ -23,7 +30,7 @@ export async function listProducts(search?: string, category?: string) {
   }
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string, includeVerification = false) {
   try {
     const product = await prisma.product.findUnique({
       where: { id },
@@ -37,9 +44,17 @@ export async function getProductById(id: string) {
     if (!product) {
       throw new AppError(404, 'NOT_FOUND', 'Sản phẩm không tồn tại.');
     }
+    if (
+      !includeVerification &&
+      (product.category === 'Deployment verification' ||
+        product.name.toUpperCase().includes('NOT FOR SALE') ||
+        product.name.toUpperCase().includes('DO NOT BUY'))
+    ) {
+      throw new AppError(404, 'NOT_FOUND', 'Sản phẩm không tồn tại.');
+    }
     const avgRating = product.reviews.length > 0
       ? Number((product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length).toFixed(1))
-      : 5;
+      : null;
     return {
       ...product,
       price: product.price.toFixed(2),
@@ -58,6 +73,7 @@ export async function createProduct(data: {
   price: number;
   stock: number;
   category?: string;
+  imageKey?: string | null;
 }) {
   try {
     const product = await prisma.product.create({
@@ -67,6 +83,7 @@ export async function createProduct(data: {
         price: data.price.toFixed(2),
         stock: data.stock,
         category: data.category ?? 'Phụ kiện',
+        imageKey: data.imageKey ?? null,
       },
     });
     return { ...product, price: product.price.toFixed(2) };
@@ -83,6 +100,7 @@ export async function updateProduct(
     price: number;
     stock: number;
     category: string;
+    imageKey: string | null;
   }>
 ) {
   try {
@@ -92,6 +110,7 @@ export async function updateProduct(
     if (data.price !== undefined) updateData.price = data.price.toFixed(2);
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.category !== undefined) updateData.category = data.category;
+    if (data.imageKey !== undefined) updateData.imageKey = data.imageKey;
 
     const product = await prisma.product.update({
       where: { id },

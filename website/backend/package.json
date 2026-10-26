@@ -16,6 +16,7 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
+    "catalog:import": "tsx src/scripts/import-catalog.ts",
     "test:integration": "node --test tests/api.integration.test.mjs"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "express-session": "1.19.0",
     "helmet": "8.3.0",
     "pg": "8.23.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "overrides": {
     "@prisma/config@7.10.0": {

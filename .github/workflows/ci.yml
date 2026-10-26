@@ -121,6 +121,11 @@ jobs:
           cache-dependency-path: website/backend/package-lock.json
       - run: npm ci
       - run: npm run build
+      - name: Build frontend for integration tests
+        run: |
+          npm --prefix ../frontend ci
+          npm --prefix ../frontend run build
+          npx --prefix ../frontend playwright install --with-deps chromium
       - name: Apply committed migrations
         run: npm run prisma:migrate
       - name: Seed disposable development database

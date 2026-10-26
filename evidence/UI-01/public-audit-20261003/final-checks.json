@@ -1,0 +1,11 @@
+{
+  "checks": [
+    {
+      "name": "reset-with-pending-debounce",
+      "immediately": "https://47.129.214.70/products",
+      "after": "https://47.129.214.70/products?search=chu%E1%BB%99t",
+      "input": "chuột",
+      "cards": 2
+    }
+  ]
+}
