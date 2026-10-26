@@ -1,5 +1,19 @@
 # Current Project Status
 
+**2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
+On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
+acknowledged lab profile; default production profile still refuses all lab flags.
+Compiled fixture creation/reset uses a dedicated synthetic lab database. Portable
+Windows HTTP probes and real-browser XSS probes verify controls and distinguish
+inconclusive failures from defense. Build metadata, frontend remote hash checks
+and local artifact verification support exact-release deployment checks.
+Both builds/audits, real API (18), lifecycle (9), UI (54), scanner (27), demo
+classification (8) and policy (5) checks passed locally. Additional latest-revision
+CI is tracked on the delivery PR; no human acceptance is inferred.
+[Evidence and limits](../evidence/TEST-02/ec2-lab-tools-20261026/README.md),
+[EC2/Windows demo runbook](../scripts/attacker/README.md),
+[updated decision](DECISIONS.md). AWS, real receipts and human review remain pending.
+
 **2026-10-26 PR #57 integration (#43):** Updated
 `feature/43-monitoring-safety` with `main` at `5a7abb7` after PR #56 was
 squash-merged. Resolved nine conflicts while retaining #57's alert recovery,
@@ -175,4 +189,4 @@ full deployed real-data acceptance is not established by that merge. API contrac
 **Important constraints:**
 
 - `main` luôn giữ vững **Secure Baseline** (mã nguồn chuẩn mực, fix đầy đủ các lỗ hổng Injection, XSS, CSRF, IDOR, Broken Authentication).
-- Bất kỳ kịch bản cố tình làm yếu hệ thống để thực hiện bài lab tấn công đều phải thực hiện trên branch lab riêng biệt (không đưa lỗ hổng cố ý vào `main`).
+- Lab cố tình làm yếu hệ thống chỉ chạy trong profile/môi trường dữ liệu giả được kiểm soát theo quyết định 2026-10-26; mặc định mọi cờ false. Mọi sửa code vẫn qua feature branch, PR và human review; không phát triển trực tiếp trên `main`.

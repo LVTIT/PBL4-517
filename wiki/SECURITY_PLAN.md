@@ -9,7 +9,7 @@ CSRF tokens, role guards, parameterized Prisma queries and HTTP security headers
 These controls are not a claim that all vulnerabilities have been eliminated.
 [Canonical configuration/commands](../website/README.md).
 
-## Controlled local labs
+## Controlled labs
 
 **Status: Partially implemented / locally verified; human review pending.**
 The user authorized the local-first plan on 2026-10-25. Reuse existing work;
@@ -17,12 +17,16 @@ SQLi was adapted from `59b75f3` (PR #47), preserving KEVILO fields and filters i
 secure mode. Current local results and pending AWS/VM work are recorded in the
 [security matrix](../evidence/TEST-02/local-20261025/README.md).
 
+Current profile implementation follows the [2026-10-26 decision](DECISIONS.md).
 All flags default false: `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`,
-`VULN_XSS_ENABLED`, `VULN_AUTH_ENABLED`. Any enabled flag is rejected by config
-when `NODE_ENV=production`, before binding an HTTP port. APIs bind loopback.
-Only use an isolated lab branch/environment, synthetic data and an authorized
-target. A non-production label alone does not make a publicly proxied lab safe.
-Historical EC2 IDOR demo evidence is not approval to deploy these new lab modes.
+`VULN_XSS_ENABLED`, `VULN_AUTH_ENABLED`. Enabled flags require `APP_PROFILE=lab` and
+`LAB_DATA_ACK=synthetic-only`. The default production profile refuses them,
+independently of NODE_ENV. A lab on EC2 retains NODE_ENV=production, HTTPS and
+Secure cookies. APIs/database remain loopback; Nginx exposes the selected lab.
+Use a dedicated synthetic database on the same EC2, restrict network ingress to
+authorized source IPs during vulnerable phases, and restore all flags false at end.
+This change does not deploy a build or alter AWS rules. Commands and the complete
+before/after runbook live in [attacker README](../scripts/attacker/README.md).
 
 Each lab must demonstrate vulnerable behavior, the defense, the same attack after
 fix, and normal functionality. Record source revision, environment, date, request,

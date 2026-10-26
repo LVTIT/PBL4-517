@@ -8,7 +8,7 @@ function isSqlInjectionVulnerable(): boolean {
 
 /**
  * OWASP A03 lab path only. Reached exclusively when VULN_SQLI_ENABLED=true,
- * which config.ts refuses to load under NODE_ENV=production. `search` is
+ * which config.ts permits only in an explicitly acknowledged lab profile. `search` is
  * concatenated into the statement on purpose so a lab can demonstrate the
  * injection; the Secure Baseline below never builds SQL from user input.
  */
@@ -85,7 +85,7 @@ export async function getProductById(id: string, includeVerification = false) {
       price: product.price.toFixed(2),
       averageRating: avgRating,
       reviewCount: product.reviews.length,
-      // Only an explicitly enabled, non-production lab can request unsafe HTML.
+      // Only an explicitly enabled lab can request unsafe HTML.
       ...(config.VULN_XSS_ENABLED === 'true' ? { labUnsafeReviewHtml: true } : {}),
     };
   } catch (error) {

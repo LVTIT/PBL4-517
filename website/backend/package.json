@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json && node ../../scripts/release/stamp.mjs backend",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
@@ -18,7 +18,9 @@
     "prisma:studio": "prisma studio",
     "catalog:import": "tsx src/scripts/import-catalog.ts",
     "test:integration": "node --test tests/api.integration.test.mjs",
-    "test:security": "node --test tests/security-lifecycle.test.mjs"
+    "test:security": "node --test tests/security-lifecycle.test.mjs",
+    "lab:fixtures": "node dist/scripts/lab-fixtures.js",
+    "test:config": "node --test tests/config.test.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
