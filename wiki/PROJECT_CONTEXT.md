@@ -8,7 +8,7 @@ Nhóm: Lê Viết Thương (team leader), Nguyễn Thái Toàn và Đinh Khang N
 
 | Thành phần | Trách nhiệm | Phạm vi hiện tại |
 | --- | --- | --- |
-| `website/` | React frontend, Express API, PostgreSQL/Prisma, tài khoản và sản phẩm | Source skeleton Issue #8; xem trạng thái kiểm chứng trong [CURRENT_STATUS.md](CURRENT_STATUS.md) |
+| `website/` | React frontend, Express API, PostgreSQL/Prisma; tài khoản, catalog/reviews, cart/checkout và admin | Skeleton #8 đã hoàn tất; các luồng e-commerce và lab regression có triển khai/kiểm chứng local. Xem [CURRENT_STATUS.md](CURRENT_STATUS.md) và giới hạn nghiệm thu #51/#44 |
 | `scanner/` | External TCP monitoring, baseline and change detection | Implemented; reliability tests local PASS; external Ubuntu VM scheduling/reboot and AWS acceptance pending. See [CURRENT_STATUS.md](CURRENT_STATUS.md) |
 | `alerts/` | Telegram/Discord notifications and ChatOps | Implemented with historical dual-alert evidence; new durable delivery tests simulated locally. See [CURRENT_STATUS.md](CURRENT_STATUS.md) |
 | AWS infrastructure | EC2 Ubuntu, VPC/subnets, SG/NACL and ALB | EC2 website/HTTPS/systemd have evidence; latest AWS availability is not rechecked. Network review and ALB remain Planned. See [CURRENT_STATUS.md](CURRENT_STATUS.md) |

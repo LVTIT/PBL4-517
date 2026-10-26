@@ -1,0 +1,88 @@
+{
+  "captured_at": "2026-10-26T03:09:36.723934+00:00",
+  "source_commit": "82abdff2cb420b3b6d38fcf97e3e7c6a05239d07",
+  "branch": "feature/43-monitoring-safety",
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "node": "24.22.1",
+    "npm": "11.19.1",
+    "python": "3.13.7",
+    "postgresql": "16.15 portable, disposable loopback cluster"
+  },
+  "checks": [
+    {
+      "command": "npm ci; npm run build; npm audit --audit-level=high (frontend)",
+      "exit_code": 0,
+      "audit_vulnerabilities": 0
+    },
+    {
+      "command": "npm ci; npm run build; npm audit --audit-level=high (backend)",
+      "exit_code": 0,
+      "audit_vulnerabilities": 0
+    },
+    {
+      "command": "npm run prisma:migrate; npm run prisma:seed",
+      "exit_code": 0,
+      "migrations": 4
+    },
+    {
+      "command": "npm run test:integration",
+      "exit_code": 0,
+      "subtests_passed": 17,
+      "total_including_parent": 18
+    },
+    {
+      "command": "npm run test:security",
+      "exit_code": 0,
+      "subtests_passed": 6,
+      "total_including_parent": 7
+    },
+    {
+      "command": "npm run test:e2e",
+      "exit_code": 0,
+      "passed": 54
+    },
+    {
+      "command": "python -m unittest discover -s scanner/tests -v",
+      "exit_code": 0,
+      "passed": 27
+    },
+    {
+      "command": "python -m compileall -q scanner alerts scripts/attacker scripts/ci",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m unittest discover -s scripts/ci/tests -v",
+      "exit_code": 0,
+      "passed": 5
+    },
+    {
+      "command": "python .agents/skills/ui-ux-pro-max/scripts/validate_data.py",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m unittest discover -s .agents/skills/ui-ux-pro-max/scripts/tests -p test_core.py -v",
+      "exit_code": 0,
+      "passed": 39
+    },
+    {
+      "command": "python scripts/ci/repo_policy.py (staged source commit)",
+      "exit_code": 0,
+      "index_entries": 385,
+      "violations": 0
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit_code": 0
+    }
+  ],
+  "limits": [
+    "No Ubuntu VM reboot/scheduling acceptance",
+    "No real Telegram/Discord messages",
+    "No AWS/SG/NACL/ALB changes or live scan",
+    "No deployment",
+    "Playwright UI suite uses mocked API fixtures; security suite uses real loopback APIs/PostgreSQL/Chromium",
+    "Native Windows Docker service unavailable; PostgreSQL 16.15 portable used without changing installed PostgreSQL 18",
+    "Local backend and PostgreSQL stopped after testing; test files/binaries stay ignored under .local"
+  ]
+}

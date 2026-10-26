@@ -1,0 +1,79 @@
+| test_audit_write_failure_is_not_silently_successful (test_monitoring_safety.MonitoringSafetyTests.test_audit_write_failure_is_not_silently_successful) ... ok
+| test_backoff_events_do_not_block_a_new_due_alert (test_monitoring_safety.MonitoringSafetyTests.test_backoff_events_do_not_block_a_new_due_alert) ... ok
+| test_callbacks_use_the_same_sender_boundary (test_monitoring_safety.MonitoringSafetyTests.test_callbacks_use_the_same_sender_boundary) ... ok
+| test_closed_port_alert_does_not_claim_remaining_database_is_safe (test_monitoring_safety.MonitoringSafetyTests.test_closed_port_alert_does_not_claim_remaining_database_is_safe) ... ok
+| test_command_without_authenticated_sender_is_rejected (test_monitoring_safety.MonitoringSafetyTests.test_command_without_authenticated_sender_is_rejected) ... ok
+| test_invalid_retry_metadata_preserves_entire_state (test_monitoring_safety.MonitoringSafetyTests.test_invalid_retry_metadata_preserves_entire_state) ... ok
+| test_legacy_baseline_without_outbox_still_loads (test_monitoring_safety.MonitoringSafetyTests.test_legacy_baseline_without_outbox_still_loads) ... ok
+| test_listener_missing_sender_allowlist_fails_before_any_network_call (test_monitoring_safety.MonitoringSafetyTests.test_listener_missing_sender_allowlist_fails_before_any_network_call) ... [-] ChatOps requires TELEGRAM_CHAT_ID and TELEGRAM_ALLOWED_USER_IDS.
+| ok
+| test_malformed_pending_state_is_rejected_without_advancing_baseline (test_monitoring_safety.MonitoringSafetyTests.test_malformed_pending_state_is_rejected_without_advancing_baseline) ... ok
+| test_only_allowed_chat_and_sender_can_scan (test_monitoring_safety.MonitoringSafetyTests.test_only_allowed_chat_and_sender_can_scan) ... ok
+| test_remote_targets_hostnames_and_large_scans_are_rejected (test_monitoring_safety.MonitoringSafetyTests.test_remote_targets_hostnames_and_large_scans_are_rejected) ... ok
+| test_scan_returns_failure_when_audit_disk_write_fails (test_monitoring_safety.MonitoringSafetyTests.test_scan_returns_failure_when_audit_disk_write_fails) ... [-] Monitoring failure: simulated audit disk failure
+| ok
+| test_unknown_port_is_not_reported_as_only_public_web_ports (test_monitoring_safety.MonitoringSafetyTests.test_unknown_port_is_not_reported_as_only_public_web_ports) ... ok
+| test_watch_recovers_after_dns_failure_and_audits_both_runs (test_monitoring_safety.MonitoringSafetyTests.test_watch_recovers_after_dns_failure_and_audits_both_runs) ... [-] SCAN_FAILED: DNS resolution failed; baseline preserved.
+| ok
+| test_atomic_replace_failure_preserves_previous_baseline (test_reliability.ReliabilityTests.test_atomic_replace_failure_preserves_previous_baseline) ... ok
+| test_confirmed_refusal_removes_port (test_reliability.ReliabilityTests.test_confirmed_refusal_removes_port) ... ok
+| test_corrupt_state_is_preserved_and_rejected (test_reliability.ReliabilityTests.test_corrupt_state_is_preserved_and_rejected) ... ok
+| test_failed_channel_persists_across_restart_without_resending_success (test_reliability.ReliabilityTests.test_failed_channel_persists_across_restart_without_resending_success) ... ok
+| test_full_outbox_does_not_advance_baseline (test_reliability.ReliabilityTests.test_full_outbox_does_not_advance_baseline) ... ok
+| test_full_outbox_recovers_without_losing_new_change (test_reliability.ReliabilityTests.test_full_outbox_recovers_without_losing_new_change) ... ok
+| test_initial_outage_does_not_establish_false_empty_baseline (test_reliability.ReliabilityTests.test_initial_outage_does_not_establish_false_empty_baseline) ... ok
+| test_new_port_and_unscanned_ports (test_reliability.ReliabilityTests.test_new_port_and_unscanned_ports) ... ok
+| test_real_listener_lifecycle (test_reliability.ReliabilityTests.test_real_listener_lifecycle) ... ok
+| test_retry_format_preserves_discovery_time_and_sends_only_selected_channel (test_reliability.ReliabilityTests.test_retry_format_preserves_discovery_time_and_sends_only_selected_channel) ... ok
+| test_simultaneous_open_close_delivers_both_events (test_reliability.ReliabilityTests.test_simultaneous_open_close_delivers_both_events) ... ok
+| test_single_writer_lock_releases_after_failure (test_reliability.ReliabilityTests.test_single_writer_lock_releases_after_failure) ... ok
+| test_timeout_is_uncertain_not_closed_and_recovery_is_not_new_port (test_reliability.ReliabilityTests.test_timeout_is_uncertain_not_closed_and_recovery_is_not_new_port) ... ok
+|
+| ----------------------------------------------------------------------
+| Ran 27 tests in 1.093s
+|
+| OK
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: NEW_PORT_DETECTED] uncertain=[]; pending_alerts=2
+| [EVENT: NO_CHANGE] uncertain=[]; pending_alerts=0
+| [+] Hoàn tất lệnh /scan 127.0.0.1 80,443 (Exit code: 0)
+|
+| [>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 1 ports (Đa luồng 10 workers, timeout=1.0s)
+| -----------------------------------------------------------------
+|      80/tcp  CLOSED   [HTTP (Nginx Web Server)]
+| -----------------------------------------------------------------
+| Thời gian quét : 0.00s | Cổng đang mở (0): Không có
+| Đánh giá rủi ro : Xếp hạng [A+] - CHƯA QUAN SÁT THẤY CỔNG MỞ (Max Risk score: 0.0)
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [+] Báo cáo HTML (Living Dashboard) đã cập nhật: C:\Users\ADMIN\AppData\Local\Temp\tmpkl71ek63\latest.html
+|
+| [>] Bắt đầu quét owned-test.invalid (127.0.0.1): 1 ports (Đa luồng 10 workers, timeout=1.0s)
+| -----------------------------------------------------------------
+|      80/tcp  OPEN     [HTTP (Nginx Web Server)] [INFO - Risk score 0.0]
+| -----------------------------------------------------------------
+| Thời gian quét : 0.00s | Cổng đang mở (1): [80]
+| Đánh giá rủi ro : Xếp hạng [A] - CHỈ QUAN SÁT THẤY CỔNG WEB (Max Risk score: 0.0)
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [+] Báo cáo HTML (Living Dashboard) đã cập nhật: C:\Users\ADMIN\AppData\Local\Temp\tmpqw4dgk2c\latest.html
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: PORT_CLOSED] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=1
+| [EVENT: NO_CHANGE] uncertain=[]; pending_alerts=1
+| [EVENT: NO_CHANGE] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: NEW_PORT_DETECTED] uncertain=[]; pending_alerts=99
+| [EVENT: SCAN_UNCERTAIN] uncertain=[80]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: NEW_PORT_DETECTED] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: NO_CHANGE] uncertain=[]; pending_alerts=0
+| [EVENT: SCAN_UNCERTAIN] uncertain=[56313]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: NEW_PORT_DETECTED] uncertain=[]; pending_alerts=0
+| [EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+| [EVENT: SCAN_UNCERTAIN] uncertain=[80]; pending_alerts=0
+| [EVENT: NO_CHANGE] uncertain=[80]; pending_alerts=0
+| [EVENT: SCAN_RECOVERED] uncertain=[]; pending_alerts=0

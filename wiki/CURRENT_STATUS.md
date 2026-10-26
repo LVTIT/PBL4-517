@@ -1,5 +1,26 @@
 # Current Project Status
 
+**2026-10-26 monitoring safety (#43):** Implemented and verified locally on
+`feature/43-monitoring-safety`, source `82abdff`. Fixed due-alert starvation,
+full-outbox recovery, audit failure propagation and malformed pending-state
+validation. ChatOps now requires both allowed chat/sender and an explicit IPv4
+target allowlist; it is disabled until sender IDs are configured. Removed
+port-scan claims of absolute safety and corrected unknown-port classification.
+27 scanner/ChatOps tests PASS; fresh installs/builds/audits PASS (zero
+vulnerabilities); fresh PostgreSQL 16.15 migration/seed, 17 API subtests, six
+security lifecycle subtests and 54 Playwright cases PASS. APIs/temporary DB stopped
+after testing; working `.env` and existing databases unchanged.
+[Evidence and limits](../evidence/MON-03/local-20261026/README.md).
+
+The [delivery plan](DELIVERY_PLAN.md) maps the teacher's requirements and the user's
+seven-step plan to completed local work and pending acceptance. Next priorities:
+current AWS network/deployment verification (#16/#17/#33), external Ubuntu VM
+scheduling/reboot and new dual-channel receipts (#35/#36/#43), A05 hardening and
+Linux log correlation (#41/#42), ALB design/cost review (#34), then combined
+evidence/human handoff (#44/#45/#46). No new AWS deployment, real chat sends,
+Ubuntu VM reboot or human acceptance is claimed. Latest hosted CI is tracked on
+the task PR separately from parent PR #56's passing revision `00e02df`.
+
 **2026-10-25 local security integration (#44):** SQLi from `59b75f3` adapted to
 KEVILO without dropping catalog/image fields. IDOR read/update/cancel, SQLi,
 persisted review XSS and bounded login-guessing have vulnerable/secure local
@@ -41,7 +62,7 @@ PR human review and full real-data acceptance remain outstanding, tracked on
 [PR #55](https://github.com/LVTIT/PBL4-517/pull/55). API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-25 (Asia/Bangkok; local verification, no AWS availability claim)
+**Last updated:** 2026-10-26 (Asia/Bangkok; local verification, no AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
@@ -136,7 +157,7 @@ PR human review and full real-data acceptance remain outstanding, tracked on
 **Next:**
 
 - Tiếp tục các backlog đã giao:
-  - [#11](https://github.com/LVTIT/PBL4-517/issues/11): Architecture v0.1.
+  - [#33](https://github.com/LVTIT/PBL4-517/issues/33)/[#34](https://github.com/LVTIT/PBL4-517/issues/34): kiểm chứng network và thiết kế ALB; #11 Architecture v0.1 đã CLOSED khi đối chiếu GitHub ngày 2026-10-26.
   - [#16](https://github.com/LVTIT/PBL4-517/issues/16): verify deployment; [#17](https://github.com/LVTIT/PBL4-517/issues/17): tài liệu/evidence triển khai.
   - Các lab OWASP tiếp theo dùng môi trường được kiểm soát theo [SECURITY_PLAN.md](SECURITY_PLAN.md); IDOR #24 đã hoàn thành.
 
