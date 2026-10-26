@@ -1,0 +1,64 @@
+migrations
+|
+| > pbl517-backend@0.1.0 prisma:migrate
+| > prisma migrate deploy
+|
+| npm.cmd : Loaded Prisma config from prisma.config.ts.
+| At D:\PBL4-demo-20261019\pr56-conflict-20261026\verify-local.ps1:45 char:34
+| +     Invoke-Logged 'migrations' { npm.cmd run prisma:migrate }
+| +                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+|     + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+|     + FullyQualifiedErrorId : NativeCommandError
+|
+|
+| Prisma schema loaded from prisma\schema.prisma.
+| Datasource "db": PostgreSQL database "pbl517_security_test", schema "public" at "127.0.0.1:55456"
+|
+| 4 migrations found in prisma/migrations
+|
+| Applying migration `20260914000000_initial`
+| Applying migration `20260918000000_expand_ecommerce`
+| Applying migration `20260918140000_guest_checkout`
+| Applying migration `20261002000000_add_product_image_key`
+|
+| ┌─────────────────────────────────────────────────────────┐
+| │  Update available 7.10.0 -> 8.0.0-rc.27                 │
+| │                                                         │
+| │  This is a major update - please follow the guide at    │
+| │  https://pris.ly/d/major-version-upgrade                │
+| │                                                         │
+| │  Run the following to update                            │
+| │    npm i --save-dev prisma@latest                       │
+| │    npm i @prisma/client@latest                          │
+| └─────────────────────────────────────────────────────────┘
+| The following migration(s) have been applied:
+|
+| migrations/
+|   └─ 20260914000000_initial/
+|     └─ migration.sql
+|   └─ 20260918000000_expand_ecommerce/
+|     └─ migration.sql
+|   └─ 20260918140000_guest_checkout/
+|     └─ migration.sql
+|   └─ 20261002000000_add_product_image_key/
+|     └─ migration.sql
+|
+| All migrations have been successfully applied.
+
+seed
+|
+| > pbl517-backend@0.1.0 prisma:seed
+| > prisma db seed
+|
+| npm.cmd : Loaded Prisma config from prisma.config.ts.
+| At D:\PBL4-demo-20261019\pr56-conflict-20261026\verify-local.ps1:46 char:28
+| +     Invoke-Logged 'seed' { npm.cmd run prisma:seed }
+| +                            ~~~~~~~~~~~~~~~~~~~~~~~
+|     + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+|     + FullyQualifiedErrorId : NativeCommandError
+|
+|
+| Running seed command `tsx prisma/seed.ts` ...
+| Seed complete: demo@example.com, admin@example.com, 6 products with categories, and reviews.
+|
+| The seed command has been executed.

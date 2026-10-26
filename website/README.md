@@ -153,6 +153,8 @@ NODE_ENV=development
 TRUST_PROXY=0
 VULN_IDOR_ENABLED=false
 VULN_SQLI_ENABLED=false
+VULN_XSS_ENABLED=false
+VULN_AUTH_ENABLED=false
 ```
 
 | Biến | Ý nghĩa |
@@ -164,6 +166,8 @@ VULN_SQLI_ENABLED=false
 | `TRUST_PROXY` | `0` khi không có reverse proxy; khi chạy sau Nginx cùng máy có thể cấu hình `loopback`. Chỉ tin proxy thật sự kiểm soát. |
 | `VULN_IDOR_ENABLED` | Cờ lab OWASP A01, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-01/`](../evidence/OWASP-01/README.md). |
 | `VULN_SQLI_ENABLED` | Cờ lab OWASP A03, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-02/`](../evidence/OWASP-02/README.md). |
+| `VULN_XSS_ENABLED` | Cờ lab Stored XSS, mặc định `false`; chỉ dùng review giả trong local lab. Xem [`evidence/OWASP-03/`](../evidence/OWASP-03/README.md). |
+| `VULN_AUTH_ENABLED` | Cờ lab bỏ login rate limiter, mặc định `false`; bcrypt, session và CSRF vẫn hoạt động. Xem [`evidence/OWASP-04/`](../evidence/OWASP-04/README.md). |
 
 Backend **từ chối khởi động** nếu `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bằng `true`, nên lab không thể bị bật nhầm trên production chỉ bằng cách sửa `.env`.
 
@@ -459,7 +463,7 @@ Kiểm chứng local ngày **2026-09-15** trên Windows, Node.js **24.21.0**, np
 
 Đã kiểm thử session qua restart backend, cookie cũ sau logout, PostgreSQL outage trả `503` rồi phục hồi, rate limit `429`, CSRF thiếu/token cũ và cookie Secure sau proxy HTTPS. `npm audit` tại thời điểm kiểm tra: 0 vulnerabilities ở cả hai project. Đây là kết quả local; Docker/Linux/EC2/Nginx/systemd chưa được chạy kiểm thử trong Issue #8. Tiến độ publish/review được duy trì tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md).
 
-Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source này áp dụng security baseline; không cố tình tạo lỗ hổng phục vụ lab (ngoài các cờ `VULN_IDOR_ENABLED` và `VULN_SQLI_ENABLED` mặc định `false`). `src/lib/config.ts` từ chối khởi động khi `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bật.
+Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source giữ security baseline với bốn cờ lab `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` và `VULN_AUTH_ENABLED` mặc định `false`. `src/lib/config.ts` từ chối khởi động khi `NODE_ENV=production` mà bất kỳ cờ lab nào bật.
 
 Backend có scoped npm overrides cho `@prisma/config@7.10.0 → deepmerge-ts@8.0.2` và `prisma@7.10.0 → mysql2@3.24.4` để xử lý advisory [deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) trong dependency bắc cầu. Prisma CLI/Client/adapter vẫn cùng `7.10.0`, database ứng dụng vẫn là PostgreSQL. Khi nâng Prisma 7 sau này, kiểm tra dependency upstream, bỏ override khi đã có bản sửa phù hợp và chạy lại `npm ci`, audit, generate/build, migrate/seed và integration test.
 

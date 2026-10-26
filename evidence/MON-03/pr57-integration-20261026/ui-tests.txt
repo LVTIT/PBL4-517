@@ -1,0 +1,87 @@
+|
+| > pbl4-517-frontend@0.1.0 test:e2e
+| > playwright test --workers=2
+|
+| [WebServer] (node:30532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+| [WebServer] (node:29456) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+|
+| Running 54 tests using 2 workers
+|
+| (node:10252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:12608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+|   ok  1 [desktop-chrome] › tests\e2e\accessibility.spec.ts:10:3 › WCAG 2.2 AA Accessibility Audits › Home page passes automated axe accessibility scan (2.0s)
+|   ok  2 [desktop-chrome] › tests\e2e\accessibility.spec.ts:44:3 › WCAG 2.2 AA Accessibility Audits › Catalog page passes automated accessibility scan (2.0s)
+|   ok  3 [desktop-chrome] › tests\e2e\accessibility.spec.ts:77:3 › WCAG 2.2 AA Accessibility Audits › Cart page passes automated accessibility scan (1.3s)
+|   ok  5 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:13:3 › Brand Identity (B0) & Responsive Layout › Home page displays KEVILO brand identity and correct metadata (340ms)
+|   ok  6 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Mobile 320px (320px) (311ms)
+|   ok  7 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Mobile 390px (390px) (304ms)
+|   ok  4 [desktop-chrome] › tests\e2e\accessibility.spec.ts:88:3 › WCAG 2.2 AA Accessibility Audits › Login and Register pages pass automated accessibility scan (2.5s)
+|   ok  8 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Tablet 768px (768px) (308ms)
+|   ok  9 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Laptop 1024px (1024px) (304ms)
+|   ok 10 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Desktop 1440px (1440px) (371ms)
+|   ok 11 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:68:3 › Brand Identity (B0) & Responsive Layout › Mobile navigation drawer traps focus and closes properly with Escape (499ms)
+|   ok 12 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:94:3 › Brand Identity (B0) & Responsive Layout › Product catalog displays in 2 columns on mobile viewports (320px & 390px) (393ms)
+|   ok 14 [desktop-chrome] › tests\e2e\catalog-and-cart.spec.ts:67:3 › Catalog, Search, and Cart Interactions › Catalog synchronizes category filters with URL search params (363ms)
+|   ok 15 [desktop-chrome] › tests\e2e\catalog-and-cart.spec.ts:81:3 › Catalog, Search, and Cart Interactions › Out-of-stock product card shows out-of-stock badge and disables action (341ms)
+|   ok 13 [desktop-chrome] › tests\e2e\brand-and-layout.spec.ts:116:3 › Brand Identity (B0) & Responsive Layout › Cart page has no horizontal overflow on mobile viewports (320px & 390px) (1.3s)
+|   ok 16 [desktop-chrome] › tests\e2e\catalog-and-cart.spec.ts:88:3 › Catalog, Search, and Cart Interactions › Cart allows adding items and requires valid shipping address (445ms)
+|   ok 18 [desktop-chrome] › tests\e2e\catalog-and-cart.spec.ts:134:3 › Catalog, Search, and Cart Interactions › Adding item up to stock saturation updates button state and shows warning toast (852ms)
+|   ok 17 [desktop-chrome] › tests\e2e\catalog-and-cart.spec.ts:115:3 › Catalog, Search, and Cart Interactions › Search reset immediately clears query and cancels pending debounce (1.1s)
+|   ok 19 [desktop-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Customer checkout saves recipient phone (377ms)
+|   ok 20 [desktop-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Customer checkout allows omitted phone (361ms)
+|   ok 21 [desktop-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Guest checkout saves recipient phone (383ms)
+| [WebServer] 3:52:30 PM [vite] http proxy error: /api/auth/me
+| [WebServer] Error: connect ECONNREFUSED 127.0.0.1:3000
+| [WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+|   ok 22 [desktop-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Guest checkout allows omitted phone (381ms)
+|   ok 23 [desktop-chrome] › tests\e2e\error-resilience.spec.ts:4:3 › Error Resilience & Boundary Handling › Catalog gracefully displays error message and retry button when API fails (248ms)
+| [WebServer] 3:52:31 PM [vite] http proxy error: /api/auth/me
+| [WebServer] Error: connect ECONNREFUSED 127.0.0.1:3000
+| [WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+|   ok 24 [desktop-chrome] › tests\e2e\error-resilience.spec.ts:25:3 › Error Resilience & Boundary Handling › 404 Not Found page displays KEVILO title and return link (241ms)
+|   ok 25 [desktop-chrome] › tests\e2e\order-isolation.spec.ts:6:1 › confirmation waits for auth, survives owner refresh and is cleared on logout (450ms)
+|   ok 26 [desktop-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects another owner confirmation (247ms)
+|   ok 27 [desktop-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects legacy confirmation (228ms)
+| (node:4016) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:32404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+|   ok 28 [mobile-chrome] › tests\e2e\accessibility.spec.ts:10:3 › WCAG 2.2 AA Accessibility Audits › Home page passes automated axe accessibility scan (1.4s)
+|   ok 29 [mobile-chrome] › tests\e2e\accessibility.spec.ts:44:3 › WCAG 2.2 AA Accessibility Audits › Catalog page passes automated accessibility scan (1.4s)
+|   ok 30 [mobile-chrome] › tests\e2e\accessibility.spec.ts:77:3 › WCAG 2.2 AA Accessibility Audits › Cart page passes automated accessibility scan (1.2s)
+|   ok 32 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:13:3 › Brand Identity (B0) & Responsive Layout › Home page displays KEVILO brand identity and correct metadata (321ms)
+|   ok 33 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Mobile 320px (320px) (307ms)
+|   ok 34 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Mobile 390px (390px) (373ms)
+|   ok 31 [mobile-chrome] › tests\e2e\accessibility.spec.ts:88:3 › WCAG 2.2 AA Accessibility Audits › Login and Register pages pass automated accessibility scan (2.3s)
+|   ok 35 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Tablet 768px (768px) (338ms)
+|   ok 36 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Laptop 1024px (1024px) (342ms)
+|   ok 37 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:52:5 › Brand Identity (B0) & Responsive Layout › No horizontal overflow at Desktop 1440px (1440px) (344ms)
+|   ok 38 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:68:3 › Brand Identity (B0) & Responsive Layout › Mobile navigation drawer traps focus and closes properly with Escape (469ms)
+|   ok 39 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:94:3 › Brand Identity (B0) & Responsive Layout › Product catalog displays in 2 columns on mobile viewports (320px & 390px) (419ms)
+|   ok 41 [mobile-chrome] › tests\e2e\catalog-and-cart.spec.ts:67:3 › Catalog, Search, and Cart Interactions › Catalog synchronizes category filters with URL search params (399ms)
+|   ok 42 [mobile-chrome] › tests\e2e\catalog-and-cart.spec.ts:81:3 › Catalog, Search, and Cart Interactions › Out-of-stock product card shows out-of-stock badge and disables action (301ms)
+|   ok 40 [mobile-chrome] › tests\e2e\brand-and-layout.spec.ts:116:3 › Brand Identity (B0) & Responsive Layout › Cart page has no horizontal overflow on mobile viewports (320px & 390px) (1.1s)
+|   ok 43 [mobile-chrome] › tests\e2e\catalog-and-cart.spec.ts:88:3 › Catalog, Search, and Cart Interactions › Cart allows adding items and requires valid shipping address (437ms)
+|   ok 45 [mobile-chrome] › tests\e2e\catalog-and-cart.spec.ts:134:3 › Catalog, Search, and Cart Interactions › Adding item up to stock saturation updates button state and shows warning toast (790ms)
+|   ok 44 [mobile-chrome] › tests\e2e\catalog-and-cart.spec.ts:115:3 › Catalog, Search, and Cart Interactions › Search reset immediately clears query and cancels pending debounce (1.1s)
+|   ok 46 [mobile-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Customer checkout saves recipient phone (340ms)
+|   ok 47 [mobile-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Customer checkout allows omitted phone (359ms)
+|   ok 48 [mobile-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Guest checkout saves recipient phone (399ms)
+|   ok 49 [mobile-chrome] › tests\e2e\checkout-phone.spec.ts:12:5 › Guest checkout allows omitted phone (373ms)
+| [WebServer] 3:52:40 PM [vite] http proxy error: /api/auth/me
+| [WebServer] Error: connect ECONNREFUSED 127.0.0.1:3000
+| [WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+|   ok 50 [mobile-chrome] › tests\e2e\error-resilience.spec.ts:4:3 › Error Resilience & Boundary Handling › Catalog gracefully displays error message and retry button when API fails (241ms)
+| [WebServer] 3:52:40 PM [vite] http proxy error: /api/auth/me
+| [WebServer] Error: connect ECONNREFUSED 127.0.0.1:3000
+| [WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+|   ok 51 [mobile-chrome] › tests\e2e\error-resilience.spec.ts:25:3 › Error Resilience & Boundary Handling › 404 Not Found page displays KEVILO title and return link (271ms)
+|   ok 52 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:6:1 › confirmation waits for auth, survives owner refresh and is cleared on logout (461ms)
+|   ok 53 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects another owner confirmation (229ms)
+|   ok 54 [mobile-chrome] › tests\e2e\order-isolation.spec.ts:34:3 › rejects legacy confirmation (208ms)
+|
+|   54 passed (21.7s)

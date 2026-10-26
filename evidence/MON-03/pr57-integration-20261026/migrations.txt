@@ -1,0 +1,35 @@
+|
+| > pbl517-backend@0.1.0 prisma:migrate
+| > prisma migrate deploy
+|
+| npm.cmd : Loaded Prisma config from prisma.config.ts.
+| At D:\PBL4-demo-20261019\pr57-integration-20261026\verify-local.ps1:45 char:34
+| +     Invoke-Logged 'migrations' { npm.cmd run prisma:migrate }
+| +                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+|     + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+|     + FullyQualifiedErrorId : NativeCommandError
+|
+|
+| Prisma schema loaded from prisma\schema.prisma.
+| Datasource "db": PostgreSQL database "pbl517_security_test", schema "public" at "127.0.0.1:55457"
+|
+| 4 migrations found in prisma/migrations
+|
+| Applying migration `20260914000000_initial`
+| Applying migration `20260918000000_expand_ecommerce`
+| Applying migration `20260918140000_guest_checkout`
+| Applying migration `20261002000000_add_product_image_key`
+|
+| The following migration(s) have been applied:
+|
+| migrations/
+|   └─ 20260914000000_initial/
+|     └─ migration.sql
+|   └─ 20260918000000_expand_ecommerce/
+|     └─ migration.sql
+|   └─ 20260918140000_guest_checkout/
+|     └─ migration.sql
+|   └─ 20261002000000_add_product_image_key/
+|     └─ migration.sql
+|
+| All migrations have been successfully applied.
