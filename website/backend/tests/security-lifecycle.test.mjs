@@ -3,7 +3,10 @@ import 'dotenv/config';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { once } from 'node:events';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { createServer } from 'node:net';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -84,7 +87,7 @@ test('isolated local exploit -> defense lifecycle', { timeout: 120000 }, async s
   const processes = [];
   let browser;
   try {
-    const baseEnv = { ...process.env, NODE_ENV: 'development', TRUST_PROXY: '0',
+    const baseEnv = { ...process.env, NODE_ENV: 'development', TRUST_PROXY: '0', APP_PROFILE: 'lab', LAB_DATA_ACK: 'synthetic-only',
       ...Object.fromEntries(flags.map(flag => [flag, 'false'])) };
     const endpoints = {};
     for (const mode of ['secure', 'vulnerable']) {
@@ -111,11 +114,29 @@ test('isolated local exploit -> defense lifecycle', { timeout: 120000 }, async s
     await suite.test('production refuses each vulnerable flag before serving requests', async () => {
       for (const flag of flags) {
         const child = spawn(process.execPath, ['-e', "import('./dist/lib/config.js')"], {
-          cwd: backend, windowsHide: true, env: { ...baseEnv, NODE_ENV: 'production', [flag]: 'true' }, stdio: 'ignore',
+          cwd: backend, windowsHide: true, env: { ...baseEnv, NODE_ENV: 'production', APP_PROFILE: 'production', [flag]: 'true' }, stdio: 'ignore',
         });
         const [code] = await once(child, 'exit');
         assert.notEqual(code, 0, `${flag} must be rejected in production`);
       }
+    });
+
+    await suite.test('lab with production runtime retains Secure cookies through trusted HTTPS proxy', async () => {
+      const endpoint = await launch('dist/server.js', [], backend, { ...baseEnv, NODE_ENV: 'production', TRUST_PROXY: 'loopback',
+        VULN_IDOR_ENABLED: 'true', PORT: String(await freePort()) }, '/api/health');
+      processes.push(endpoint);
+      const response = await fetch(endpoint.url + '/api/auth/csrf', { headers: { 'X-Forwarded-Proto': 'https' } });
+      assert.equal(response.status, 200);
+      const cookie = response.headers.getSetCookie().find(value => value.startsWith('pbl517.sid='));
+      assert.match(cookie, /; Secure/i);
+      assert.match(cookie, /; HttpOnly/i);
+      assert.match(cookie, /; SameSite=Lax/i);
+      const token = (await response.json()).data.csrfToken;
+      const login = await fetch(endpoint.url + '/api/auth/login', { method: 'POST', headers: { 'X-Forwarded-Proto': 'https',
+        Cookie: cookie.split(';')[0], 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: sessions.secure.owner.user.email, password }) });
+      assert.equal(login.status, 200);
+      assert.ok(login.headers.getSetCookie().some(value => /; Secure/i.test(value)));
     });
 
     await suite.test('IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock', async () => {
@@ -226,6 +247,56 @@ test('isolated local exploit -> defense lifecycle', { timeout: 120000 }, async s
       for (const [path, method] of [['/api/products', 'GET'], ['/api/auth/me', 'GET'], ['/api/orders', 'POST']]) {
         const response = await fetch(offline.url + path, { method });
         assert.equal(response.ok, false, `${method} ${path} must not be fabricated`);
+      }
+    });
+
+    await suite.test('deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest', async () => {
+      const folder = await mkdtemp(path.join(tmpdir(), 'kevilo-lab-'));
+      const manifestPath = path.join(folder, 'fixture.json');
+      let fixture;
+      const execute = (binary, args, env = baseEnv) => {
+        const result = spawnSync(binary, args, { cwd: backend, env, windowsHide: true, encoding: 'utf8', timeout: 60000 });
+        assert.equal(result.status, 0, `Demo command failed: ${result.stdout}\n${result.stderr}`);
+        return result.stdout;
+      };
+      try {
+        const rejected = spawnSync(process.execPath, ['dist/scripts/lab-fixtures.js', '--output', manifestPath], {
+          cwd: backend, env: { ...baseEnv, APP_PROFILE: 'production' }, windowsHide: true,
+        });
+        assert.notEqual(rejected.status, 0, 'Fixture writer must reject the production profile');
+        await assert.rejects(readFile(manifestPath), { code: 'ENOENT' });
+        execute(process.execPath, ['dist/scripts/lab-fixtures.js', '--output', manifestPath]);
+        fixture = JSON.parse(await readFile(manifestPath, 'utf8'));
+        const second = spawnSync(process.execPath, ['dist/scripts/lab-fixtures.js', '--output', manifestPath], { cwd: backend, env: baseEnv, windowsHide: true });
+        assert.notEqual(second.status, 0, 'Must not overwrite a manifest');
+        // Restore only the synthetic order between phases; retain the same IDs and XSS review.
+        for (const mode of ['vulnerable', 'secure']) {
+          execute(process.execPath, ['dist/scripts/lab-fixtures.js', '--reset-order', manifestPath]);
+          assert.equal((await database.query('SELECT stock FROM "Product" WHERE id=$1', [fixture.productId])).rows[0].stock, 48);
+          assert.equal((await database.query('SELECT comment FROM "Review" WHERE id=$1', [fixture.reviewId])).rows[0].comment, fixture.xssPayload);
+          const endpoint = await launch('dist/server.js', [], backend, { ...baseEnv, PORT: String(await freePort()),
+            ...Object.fromEntries(flags.map(flag => [flag, String(mode === 'vulnerable')])) }, '/api/health');
+          processes.push(endpoint);
+          for (const scenario of ['idor', 'idor-update', 'idor-cancel', 'sqli', 'auth']) {
+            const output = execute(process.env.PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3'),
+              ['../../scripts/attacker/demo.py', '--url', endpoint.url, '--fixture', manifestPath, '--expect', mode, '--scenario', scenario]);
+            assert.equal(JSON.parse(output).passed, true);
+          }
+          const port = String(await freePort());
+          const preview = await launch('node_modules/vite/bin/vite.js', ['preview', '--port', port], frontend,
+            { ...process.env, PORT: port, API_PROXY_TARGET: endpoint.url }, '/');
+          processes.push(preview);
+          const output = execute(process.execPath, ['../../scripts/attacker/xss.mjs', '--url', preview.url, '--fixture', manifestPath, '--expect', mode]);
+          assert.equal(JSON.parse(output).passed, true);
+        }
+      } finally {
+        if (fixture) {
+          await database.query('DELETE FROM "Order" WHERE id=$1', [fixture.orderId]);
+          await database.query('DELETE FROM "Product" WHERE id=$1', [fixture.productId]);
+          await database.query('DELETE FROM "session" WHERE sess->>\'userId\' = ANY($1::text[])', [[fixture.owner.id, fixture.attacker.id, fixture.admin.id]]);
+          await database.query('DELETE FROM "User" WHERE id = ANY($1::uuid[])', [[fixture.owner.id, fixture.attacker.id, fixture.admin.id]]);
+        }
+        await rm(folder, { recursive: true, force: true });
       }
     });
 

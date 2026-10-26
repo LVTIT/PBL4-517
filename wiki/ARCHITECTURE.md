@@ -55,3 +55,13 @@ flowchart TB
 Giai đoạn đầu có thể phục vụ trực tiếp qua Nginx trên EC2; ALB thuộc giai đoạn mở rộng đã nêu trong đề tài, chưa triển khai. Cấu hình SG/NACL, subnet, TLS và chuỗi trust proxy phải được xác minh khi triển khai. Scanner chạy từ bên ngoài và không cần truy cập database website.
 
 Tài liệu này lưu kiến trúc lâu dài; chưa thay thế checklist/evidence của [Issue #11 — Architecture v0.1](https://github.com/LVTIT/PBL4-517/issues/11). Các bước EC2, deploy, Linux service, kiểm thử và tài liệu triển khai nằm ở Issues [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17); kiểm tra từng issue trước khi triển khai.
+
+## One-EC2 demo profile — 2026-10-26
+
+The user selected the existing EC2/Nginx HTTPS origin for both secure and
+intentionally vulnerable synthetic-data phases. FE/BE artifacts stay identical
+between phases; only acknowledged lab flags change and the backend restarts.
+A separate synthetic `kevilo_lab` database on that EC2 avoids overwriting existing
+data. Windows Python/browser runs outside AWS. No second EC2 or public backend/DB
+port is required. [Decision](DECISIONS.md), [runbook](../scripts/attacker/README.md).
+Implementation and actual AWS acceptance remain distinct in CURRENT_STATUS.

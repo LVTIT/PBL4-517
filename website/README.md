@@ -162,14 +162,15 @@ VULN_AUTH_ENABLED=false
 | `DATABASE_URL` | PostgreSQL connection URL của database vừa tạo. Nếu mật khẩu có ký tự đặc biệt như `@`, `:`, `/`, `%`, phải percent-encode phần mật khẩu trong URL. |
 | `SESSION_SECRET` | Secret riêng cho mỗi môi trường, tối thiểu 32 ký tự ngẫu nhiên; giữ ổn định giữa các lần restart nếu muốn giữ session. |
 | `PORT` | Backend local mặc định `3000`. Nếu đổi, cập nhật target trong `frontend/vite.config.ts` tương ứng. |
+| `APP_PROFILE` | `production` mặc định; `lab` cần `LAB_DATA_ACK=synthetic-only`. |
 | `NODE_ENV` | Dùng `development` để test HTTP local. `production` bật cookie Secure, cần HTTPS. |
 | `TRUST_PROXY` | `0` khi không có reverse proxy; khi chạy sau Nginx cùng máy có thể cấu hình `loopback`. Chỉ tin proxy thật sự kiểm soát. |
-| `VULN_IDOR_ENABLED` | Cờ lab OWASP A01, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-01/`](../evidence/OWASP-01/README.md). |
-| `VULN_SQLI_ENABLED` | Cờ lab OWASP A03, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-02/`](../evidence/OWASP-02/README.md). |
-| `VULN_XSS_ENABLED` | Cờ lab Stored XSS, mặc định `false`; chỉ dùng review giả trong local lab. Xem [`evidence/OWASP-03/`](../evidence/OWASP-03/README.md). |
+| `VULN_IDOR_ENABLED` | Cờ lab OWASP A01, mặc định `false`. Chỉ bật ở lab được kiểm soát; xem [`evidence/OWASP-01/`](../evidence/OWASP-01/README.md). |
+| `VULN_SQLI_ENABLED` | Cờ lab OWASP A03, mặc định `false`. Chỉ bật ở lab được kiểm soát; xem [`evidence/OWASP-02/`](../evidence/OWASP-02/README.md). |
+| `VULN_XSS_ENABLED` | Cờ lab Stored XSS, mặc định `false`; chỉ dùng review giả trong lab được kiểm soát. Xem [`evidence/OWASP-03/`](../evidence/OWASP-03/README.md). |
 | `VULN_AUTH_ENABLED` | Cờ lab bỏ login rate limiter, mặc định `false`; bcrypt, session và CSRF vẫn hoạt động. Xem [`evidence/OWASP-04/`](../evidence/OWASP-04/README.md). |
 
-Backend **từ chối khởi động** nếu `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bằng `true`, nên lab không thể bị bật nhầm trên production chỉ bằng cách sửa `.env`.
+Backend **từ chối khởi động** nếu `APP_PROFILE=production` (mặc định) mà bất kỳ cờ `VULN_*_ENABLED` nào bằng `true`. Lab cần `APP_PROFILE=lab` và `LAB_DATA_ACK=synthetic-only`; EC2 vẫn giữ `NODE_ENV=production` cho Secure cookies. Xem runbook lab bên dưới.
 
 Không đặt database URL, session secret hay mật khẩu vào biến `VITE_*`; các biến frontend có thể nằm trong bundle gửi đến trình duyệt.
 
@@ -463,7 +464,7 @@ Kiểm chứng local ngày **2026-09-15** trên Windows, Node.js **24.21.0**, np
 
 Đã kiểm thử session qua restart backend, cookie cũ sau logout, PostgreSQL outage trả `503` rồi phục hồi, rate limit `429`, CSRF thiếu/token cũ và cookie Secure sau proxy HTTPS. `npm audit` tại thời điểm kiểm tra: 0 vulnerabilities ở cả hai project. Đây là kết quả local; Docker/Linux/EC2/Nginx/systemd chưa được chạy kiểm thử trong Issue #8. Tiến độ publish/review được duy trì tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md).
 
-Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source giữ security baseline với bốn cờ lab `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` và `VULN_AUTH_ENABLED` mặc định `false`. `src/lib/config.ts` từ chối khởi động khi `NODE_ENV=production` mà bất kỳ cờ lab nào bật.
+Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source giữ security baseline với bốn cờ lab `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` và `VULN_AUTH_ENABLED` mặc định `false`. `src/lib/config.ts` từ chối cờ lab trong `APP_PROFILE=production` mặc định, độc lập với NODE_ENV.
 
 Backend có scoped npm overrides cho `@prisma/config@7.10.0 → deepmerge-ts@8.0.2` và `prisma@7.10.0 → mysql2@3.24.4` để xử lý advisory [deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) trong dependency bắc cầu. Prisma CLI/Client/adapter vẫn cùng `7.10.0`, database ứng dụng vẫn là PostgreSQL. Khi nâng Prisma 7 sau này, kiểm tra dependency upstream, bỏ override khi đã có bản sửa phù hợp và chạy lại `npm ci`, audit, generate/build, migrate/seed và integration test.
 
@@ -492,12 +493,37 @@ guessing. Vite supports `API_PROXY_TARGET` for a different loopback HTTP API por
 it never creates mock orders/catalog when that API is down.
 
 `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` and
-`VULN_AUTH_ENABLED` all default to false. Any true value with
-`NODE_ENV=production` now fails configuration validation before listening. The XSS
-lab exposes unsafe review rendering only through its lab API marker; secure React
-rendering stays escaped. The authentication lab disables only the login limiter;
-bcrypt, sessions and CSRF remain active. Lab flags are for isolated local fake-data
-experiments. The previously documented EC2 IDOR demo is historical: this revision
-must not be deployed with that production flag left true. No EC2 change was made.
+`VULN_AUTH_ENABLED` default false. Local lifecycle child processes explicitly use
+`APP_PROFILE=lab`, `LAB_DATA_ACK=synthetic-only`; the suite also tests the default
+production profile's rejection and lab Secure cookies behind a trusted HTTPS proxy.
+The dedicated database name must contain a `lab` segment (e.g. `kevilo_lab_test`)
+for the deployed-demo fixture lifecycle. The suite invokes the same portable HTTP
+and Playwright probes used for remote demos, including reset of its own synthetic
+order. It never targets AWS or sends chat messages.
 
 [Local matrix and limits](../evidence/TEST-02/local-20261025/README.md).
+
+
+## Controlled EC2 lab and release verification (Refs #44)
+
+- `APP_PROFILE=production` is the default and refuses every enabled lab flag.
+- `APP_PROFILE=lab` requires `LAB_DATA_ACK=synthetic-only`. On EC2 keep
+  `NODE_ENV=production`, `TRUST_PROXY=loopback` and HTTPS; Secure cookies remain.
+- Flags are read at process startup. Editing `.env` requires backend restart;
+  systemd `Environment`/`EnvironmentFile` values override dotenv values. Check the
+  actual service configuration privately; do not paste secret values into reports.
+- `npm run build` stamps `dist/release.json` for each component with Git SHA,
+  dirty state and file SHA-256 hashes. `/api/version` reads backend metadata once
+  at process start. Frontend `/release.json` is a static build artifact. Dirty or
+  missing metadata cannot pass the release verifier; build an exact clean reviewed
+  commit before deploying. Build metadata does not attest an adversarial server.
+- `npm run test:config` validates the profile matrix after building backend.
+- Compiled `npm run lab:fixtures -- --output PRIVATE_PATH` creates two random-password
+  customers, an admin, one product, a pending order and persisted harmless XSS review. It
+  requires a separate database with a `lab` name segment, refuses an existing
+  output file and never runs the development seed. `--reset-order PRIVATE_PATH`
+  restores only its verified order/stock; the XSS review remains for retest.
+
+The canonical deployed demo, Windows commands, private manifest handling,
+mode switching, reset and final checks are in [scripts/attacker/README.md](../scripts/attacker/README.md).
+Historical deployment paragraphs above do not identify the currently served build.

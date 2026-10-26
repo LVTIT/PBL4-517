@@ -411,7 +411,7 @@ export function ProductDetailPage() {
           </div>
         ) : (
           <div className="reviews-list">
-            {product.labUnsafeReviewHtml && <p role="alert">LAB XSS: nội dung đánh giá đang được hiển thị dưới dạng HTML không an toàn. Chỉ dùng dữ liệu giả trong lab local.</p>}
+            {product.labUnsafeReviewHtml && <p role="alert">LAB XSS: nội dung đánh giá đang được hiển thị dưới dạng HTML không an toàn. Chỉ dùng dữ liệu giả trong lab được kiểm soát.</p>}
             {product.reviews?.map((r) => (
               <div key={r.id} className="review-item">
                 <div className="review-meta">

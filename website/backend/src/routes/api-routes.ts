@@ -23,8 +23,14 @@ import { csrfProtection } from '../middleware/csrf.js';
 import { sessionMiddleware } from '../middleware/session.js';
 import { requireAdmin, requireAuth } from '../middleware/auth-guard.js';
 import { authRoutes } from './auth-routes.js';
+import { release } from '../lib/release.js';
 
 export const apiRoutes = Router();
+
+apiRoutes.get('/version', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ data: release });
+});
 
 apiRoutes.get('/health', async (_req, res) => {
   try {

@@ -2,9 +2,39 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-10-26 — One EC2 synthetic-data demo profile (Refs #44)
+
+**Status: Accepted for implementation** — user explicitly requested completing the
+one-EC2 lab plan. Deployment and human PR review remain separate gates.
+
+Use one EC2/Nginx HTTPS origin for full KEVILO FE/BE. `NODE_ENV=production`
+controls runtime/Secure cookies; `APP_PROFILE=production|lab` controls lab eligibility.
+Default production profile rejects every enabled vulnerability flag in every Node
+runtime. Explicit lab profile requires `LAB_DATA_ACK=synthetic-only`; fixture tools
+also require a dedicated database with a `lab` name segment. No real customer data
+or shared production database. Existing application defenses remain when all flags
+are false; changing flags requires backend restart and is not hot reload.
+
+During vulnerable phases restrict ingress to the authorized group/scanner source
+IPs, retain loopback API/database, use bounded scenarios and finish all flags false.
+Profile selection alone provides no network isolation. Same EC2 does not require a
+second instance. Windows Python can be the external scanner/attacker; Ubuntu EC2
+fulfills server/Linux practice. External-VM reboot acceptance in #35 is still a
+separate backlog criterion and is not silently marked complete.
+
+Preserve the same synthetic fixtures for before/after; restore only the verified
+fixture order when a mutation requires PENDING state. Keep the stored XSS review
+for retest. Build-time FE/BE revision metadata and frontend artifact hashes support
+manual deployment verification; they are provenance, not cryptographic attestation
+against a compromised server. No automatic CD or internet-facing mode switch.
+
+**Supersedes:** the NODE_ENV-based flag restriction in the 2026-10-25 decision.
+All other isolation, synthetic data, default defenses and evidence rules remain.
+[Canonical demo commands](../scripts/attacker/README.md).
+
 ## 2026-10-25 ? Local security lifecycle isolation
 
-**Status: Accepted** ? user authorized the reviewed local-first development plan.
+**Status: Superseded in part** by the 2026-10-26 demo profile decision above. Historical local-first implementation follows.
 
 Retain the existing stack and reuse SQLi implementation `59b75f3`. All four lab
 flags default false; any enabled lab flag prevents production startup. Local

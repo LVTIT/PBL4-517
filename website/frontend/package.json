@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node ../../scripts/release/stamp.mjs frontend",
     "preview": "vite preview",
     "test:e2e": "playwright test"
   },
