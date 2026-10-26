@@ -26,6 +26,14 @@ with small jitter. Overlap is prevented by systemd plus the state lock. Runtime
 state/reports/audit are private under StateDirectory; JSON audit rotation is bounded.
 The system journal uses the VM's existing retention policy; check available space.
 
+ChatOps is optional and is not started by this timer. If running the listener
+separately on the same VM, configure `TELEGRAM_ALLOWED_USER_IDS`,
+`SCANNER_ALLOWED_TARGETS` (IPv4 literals only), `SCANNER_TARGET` and
+`SCANNER_STATE_FILE=/var/lib/pbl517-monitor/scanner.state.json` in its private
+environment. Use a runtime identity with access to that state directory; do not
+make state or secrets public to solve permissions. Both chat and sender must be
+authorized, including button callbacks. See the scanner README for limits.
+
 For the EC2 port-change exercise (#36/#41), use a harmless temporary listener and
 restrict its SG source to the scanner IP /32. Capture baseline, change, both real
 channel receipts, rollback and final probes. Filtered after SG rollback means no

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import copy
 import datetime
 import json
 import uuid
@@ -116,6 +117,25 @@ def scan_ports_parallel(
     return results
 
 
+def _deliver_due_alerts(state_file: Path, state: dict, pending: list, now: float, limit: int) -> int:
+    if notify_scan_event is None:
+        return 0
+    due = [event for event in pending if event["next_attempt_at"] <= now][:limit]
+    for event in due:
+        try:
+            result = notify_scan_event(**event["payload"], channels=event["channels"])
+        except Exception:
+            result = {}
+        event["channels"] = [channel for channel in event["channels"] if not result.get(channel)]
+        if not event["channels"]:
+            pending.remove(event)
+        else:
+            event["attempts"] += 1
+            event["next_attempt_at"] = now + min(300, 2 ** min(event["attempts"], 8) * 5)
+        save_state(state_file, state)
+    return len(due)
+
+
 def evaluate_diff_and_notify(
     host_key: str, current_open_ports: list[int], scan_duration: float,
     state_file: Path, banners: dict[int, str | None], reset_baseline: bool = False,
@@ -125,7 +145,7 @@ def evaluate_diff_and_notify(
     """Preserve uncertain observations; persist an alert outbox before delivery."""
     state = load_state(state_file)
     previous = state.get(host_key)
-    record = dict(previous or {"baseline_open_ports": [], "baseline_initialized": False})
+    record = copy.deepcopy(previous or {"baseline_open_ports": [], "baseline_initialized": False})
     pending = record.setdefault("pending_alerts", [])
     now = time.time()
     observed = port_results or {p: ("open" if p in current_open_ports else "closed")
@@ -152,13 +172,20 @@ def evaluate_diff_and_notify(
         events.append(("SCAN_UNCERTAIN" if uncertain else "SCAN_RECOVERED", [], []))
     record["uncertain_ports"] = uncertain
     record["last_scan_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    attempted = 0
     if not no_alert:
         channels = configured_alert_channels()
+        # Drain a saturated outbox using the OLD baseline before accepting a
+        # change. Delivery recovery must remain possible when the queue is full.
+        if channels and len(pending) + len(events) > 100 and previous:
+            attempted = _deliver_due_alerts(state_file, state, previous.get("pending_alerts", []), now, 2)
+            pending = copy.deepcopy(previous.get("pending_alerts", []))
+            record["pending_alerts"] = pending
+        if channels and len(pending) + len(events) > 100:
+            raise RuntimeError("Alert outbox full; delivery retried, stored baseline preserved.")
         for event_type, new_ports, closed_ports in events:
             if not channels:
                 continue
-            if len(pending) >= 100:
-                raise RuntimeError("Alert outbox full; restore delivery before advancing the baseline.")
             event_id = uuid.uuid4().hex
             pending.append({"id": event_id, "channels": channels,
                 "attempts": 0, "next_attempt_at": 0,
@@ -170,21 +197,8 @@ def evaluate_diff_and_notify(
     state[host_key] = record
     save_state(state_file, state)
     # Retry only failed channels; successful channels are never deliberately resent.
-    if not no_alert and notify_scan_event is not None:
-        for event in list(pending)[:2]:
-            if event["next_attempt_at"] > now:
-                continue
-            try:
-                result = notify_scan_event(**event["payload"], channels=event["channels"])
-            except Exception:
-                result = {}
-            event["channels"] = [channel for channel in event["channels"] if not result.get(channel)]
-            if not event["channels"]:
-                pending.remove(event)
-            else:
-                event["attempts"] += 1
-                event["next_attempt_at"] = now + min(300, 2 ** min(event["attempts"], 8) * 5)
-            save_state(state_file, state)
+    if not no_alert:
+        _deliver_due_alerts(state_file, state, pending, now, 2 - attempted)
     event_type = events[0][0] if events else "NO_CHANGE"
     print(f"[EVENT: {event_type}] uncertain={uncertain}; pending_alerts={len(pending)}")
     return event_type

@@ -18,6 +18,7 @@ PBL4-517 tìm hiểu Linux và AWS Cloud thông qua website thương mại đi�
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Kiến trúc hiện tại và mục tiêu; ranh giới kết nối |
 | [DECISIONS.md](DECISIONS.md) | Decision log: Accepted / Superseded / Proposed |
 | [CURRENT_STATUS.md](CURRENT_STATUS.md) | Tiến độ đã kiểm chứng, việc tiếp theo và vấn đề còn lại |
+| [DELIVERY_PLAN.md](DELIVERY_PLAN.md) | Đối chiếu yêu cầu giảng viên, kế hoạch bảy bước và ưu tiên nghiệm thu |
 | [WEB_STACK.md](WEB_STACK.md) | Stack đã chốt và convention web |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Quy trình làm việc, kiểm tra và Git |
 | [SECURITY_PLAN.md](SECURITY_PLAN.md) | Secure baseline và chiến lược OWASP lab |
