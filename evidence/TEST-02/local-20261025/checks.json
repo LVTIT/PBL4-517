@@ -1,0 +1,66 @@
+[
+  {
+    "step": "backend-clean-install",
+    "exit_code": 0
+  },
+  {
+    "step": "backend-audit",
+    "exit_code": 0
+  },
+  {
+    "step": "backend-build",
+    "exit_code": 0
+  },
+  {
+    "step": "frontend-clean-install",
+    "exit_code": 0
+  },
+  {
+    "step": "frontend-audit",
+    "exit_code": 0
+  },
+  {
+    "step": "frontend-build",
+    "exit_code": 0
+  },
+  {
+    "step": "migrations",
+    "exit_code": 0
+  },
+  {
+    "step": "seed",
+    "exit_code": 0
+  },
+  {
+    "step": "policy-tests",
+    "exit_code": 0
+  },
+  {
+    "step": "python-syntax",
+    "exit_code": 0
+  },
+  {
+    "step": "scanner-reliability",
+    "exit_code": 0
+  },
+  {
+    "step": "ui-skill-data",
+    "exit_code": 0
+  },
+  {
+    "step": "ui-skill-tests",
+    "exit_code": 0
+  },
+  {
+    "step": "api-integration",
+    "exit_code": 0
+  },
+  {
+    "step": "playwright",
+    "exit_code": 0
+  },
+  {
+    "step": "security-lifecycle",
+    "exit_code": 0
+  }
+]

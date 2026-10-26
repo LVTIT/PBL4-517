@@ -2,6 +2,21 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-10-25 ? Local security lifecycle isolation
+
+**Status: Accepted** ? user authorized the reviewed local-first development plan.
+
+Retain the existing stack and reuse SQLi implementation `59b75f3`. All four lab
+flags default false; any enabled lab flag prevents production startup. Local
+lifecycle tests use loopback APIs, a disposable PostgreSQL database and synthetic
+data, with a harmless browser marker for XSS. Existing EC2 demo evidence remains
+historical; do not deploy this revision against production with lab flags true.
+Scanner timeouts remain uncertain, separate from confirmed closed ports; scores
+based on port rules are heuristics and do not establish a vulnerability/CVSS finding.
+
+**Related:** [local matrix](../evidence/TEST-02/local-20261025/README.md),
+[website commands](../website/README.md), [monitoring](../scanner/README.md).
+
 ## 2026-10-02 — Thương hiệu KEVILO và Kiến trúc Nâng cấp UI/UX Premium
 
 **Status: Accepted** — theo yêu cầu và phê duyệt trực tiếp của người dùng tại [Issue #51](https://github.com/LVTIT/PBL4-517/issues/51).

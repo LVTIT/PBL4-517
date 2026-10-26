@@ -151,6 +151,10 @@ SESSION_SECRET=
 PORT=3000
 NODE_ENV=development
 TRUST_PROXY=0
+VULN_IDOR_ENABLED=false
+VULN_SQLI_ENABLED=false
+VULN_XSS_ENABLED=false
+VULN_AUTH_ENABLED=false
 ```
 
 | Biến | Ý nghĩa |
@@ -160,6 +164,12 @@ TRUST_PROXY=0
 | `PORT` | Backend local mặc định `3000`. Nếu đổi, cập nhật target trong `frontend/vite.config.ts` tương ứng. |
 | `NODE_ENV` | Dùng `development` để test HTTP local. `production` bật cookie Secure, cần HTTPS. |
 | `TRUST_PROXY` | `0` khi không có reverse proxy; khi chạy sau Nginx cùng máy có thể cấu hình `loopback`. Chỉ tin proxy thật sự kiểm soát. |
+| `VULN_IDOR_ENABLED` | Cờ lab OWASP A01, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-01/`](../evidence/OWASP-01/README.md). |
+| `VULN_SQLI_ENABLED` | Cờ lab OWASP A03, mặc định `false`. Chỉ bật ở local lab; xem [`evidence/OWASP-02/`](../evidence/OWASP-02/README.md). |
+| `VULN_XSS_ENABLED` | Cờ lab Stored XSS, mặc định `false`; chỉ dùng review giả trong local lab. Xem [`evidence/OWASP-03/`](../evidence/OWASP-03/README.md). |
+| `VULN_AUTH_ENABLED` | Cờ lab bỏ login rate limiter, mặc định `false`; bcrypt, session và CSRF vẫn hoạt động. Xem [`evidence/OWASP-04/`](../evidence/OWASP-04/README.md). |
+
+Backend **từ chối khởi động** nếu `NODE_ENV=production` mà bất kỳ cờ `VULN_*_ENABLED` nào bằng `true`, nên lab không thể bị bật nhầm trên production chỉ bằng cách sửa `.env`.
 
 Không đặt database URL, session secret hay mật khẩu vào biến `VITE_*`; các biến frontend có thể nằm trong bundle gửi đến trình duyệt.
 
@@ -367,9 +377,9 @@ Suite kiểm thử Playwright và `@axe-core/playwright` chạy ở chế độ 
 
 Các test catalog/cart dùng API mock. Kết quả API với PostgreSQL thật được kiểm tra riêng bằng backend integration suite; không chạy suite này trên production.
 
-Catalog và chi tiết sản phẩm mặc định loại bỏ item có nhãn kiểm chứng triển khai. Query `includeVerification=true` trên hai API vẫn cho phép đọc item đó và chưa yêu cầu quyền admin; đây là bộ lọc hiển thị, không phải ranh giới phân quyền. Xác nhận đặt hàng hiện lưu toàn bộ `createdOrder` trong `sessionStorage` (`pbl517_last_order`), có thao tác sao chép mã và in. Chưa xác minh cô lập bản lưu này khi đổi tài khoản và chưa có gửi email. Các route quản trị, đơn hàng, hồ sơ và đăng ký được tải bằng `React.lazy`.
+Catalog và chi tiết sản phẩm mặc định loại bỏ item có nhãn kiểm chứng triển khai. Query `includeVerification=true` trên hai API vẫn cho phép đọc item đó và chưa yêu cầu quyền admin; đây là bộ lọc hiển thị, không phải ranh giới phân quyền. Xác nhận đặt hàng lưu trong `sessionStorage` (`pbl517_last_order`) kèm chủ sở hữu và phiên bản định dạng. Chờ auth xác định xong trước khi đọc; bản cũ/khác chủ bị loại bỏ và login/register/logout xóa xác nhận cũ. Lỗi storage không làm đơn đã tạo bị báo thất bại. Có sao chép mã/in; chưa có gửi email. Các route quản trị, đơn hàng, hồ sơ và đăng ký được tải bằng `React.lazy`.
 
-[Kết quả kiểm chứng 2026-10-03 và giới hạn](../evidence/UI-01/public-audit-20261003/commit-verification.md). Nghiệm thu với catalog đã kiểm duyệt và API/PostgreSQL thật vẫn **Planned** theo F14 trong [audit plan](../docs/ui/kevilo-public-audit-20261003.md); Vite dev/preview hiện vẫn có fallback dữ liệu khi backend không kết nối được.
+[Kết quả kiểm chứng 2026-10-03 và giới hạn](../evidence/UI-01/public-audit-20261003/commit-verification.md). Kiểm duyệt toàn bộ catalog và nghiệm thu bản EC2 vẫn **Planned** theo F14 trong [audit plan](../docs/ui/kevilo-public-audit-20261003.md). Vite dev/preview không tạo dữ liệu giả khi backend lỗi; fixtures chỉ nằm trong Playwright tests. Kiểm chứng API/PostgreSQL và checkout local thật xem [ma trận mới](../evidence/TEST-02/local-20261025/README.md).
 
 ## Build
 
@@ -453,6 +463,41 @@ Kiểm chứng local ngày **2026-09-15** trên Windows, Node.js **24.21.0**, np
 
 Đã kiểm thử session qua restart backend, cookie cũ sau logout, PostgreSQL outage trả `503` rồi phục hồi, rate limit `429`, CSRF thiếu/token cũ và cookie Secure sau proxy HTTPS. `npm audit` tại thời điểm kiểm tra: 0 vulnerabilities ở cả hai project. Đây là kết quả local; Docker/Linux/EC2/Nginx/systemd chưa được chạy kiểm thử trong Issue #8. Tiến độ publish/review được duy trì tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md).
 
-Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source này áp dụng security baseline; không cố tình tạo lỗ hổng phục vụ lab (ngoài cờ `VULN_IDOR_ENABLED` mặc định `false`).
+Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source giữ security baseline với bốn cờ lab `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` và `VULN_AUTH_ENABLED` mặc định `false`. `src/lib/config.ts` từ chối khởi động khi `NODE_ENV=production` mà bất kỳ cờ lab nào bật.
 
 Backend có scoped npm overrides cho `@prisma/config@7.10.0 → deepmerge-ts@8.0.2` và `prisma@7.10.0 → mysql2@3.24.4` để xử lý advisory [deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) trong dependency bắc cầu. Prisma CLI/Client/adapter vẫn cùng `7.10.0`, database ứng dụng vẫn là PostgreSQL. Khi nâng Prisma 7 sau này, kiểm tra dependency upstream, bỏ override khi đã có bản sửa phù hợp và chạy lại `npm ci`, audit, generate/build, migrate/seed và integration test.
+
+
+## Local security lifecycle regression ? Refs #37, #38, #40, #44
+
+Build/install both projects using the canonical sections above; migrate a dedicated
+loopback PostgreSQL database with `test`, `security` or `lab` in its name. Set
+`DATABASE_URL`, `SESSION_SECRET` and `NODE_ENV=development` in the current shell.
+Do not copy credentials into a shared script. Install the Playwright browser once
+from frontend with `npx playwright install chromium`.
+
+From backend on PowerShell:
+
+```powershell
+$env:LOCAL_SECURITY_LAB='1'
+npm run test:security
+```
+
+The suite launches fresh compiled APIs on temporary loopback ports, creates its own
+synthetic users/product/orders, checks vulnerable and secure behavior, then cleans
+up those fixtures and processes. It covers IDOR read/update/cancel and DB effects,
+SQLi tautology/UNION with the existing #37 implementation, persisted review XSS in
+Chromium, real browser checkout/phone persistence, proxy outage and bounded login
+guessing. Vite supports `API_PROXY_TARGET` for a different loopback HTTP API port;
+it never creates mock orders/catalog when that API is down.
+
+`VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` and
+`VULN_AUTH_ENABLED` all default to false. Any true value with
+`NODE_ENV=production` now fails configuration validation before listening. The XSS
+lab exposes unsafe review rendering only through its lab API marker; secure React
+rendering stays escaped. The authentication lab disables only the login limiter;
+bcrypt, sessions and CSRF remain active. Lab flags are for isolated local fake-data
+experiments. The previously documented EC2 IDOR demo is historical: this revision
+must not be deployed with that production flag left true. No EC2 change was made.
+
+[Local matrix and limits](../evidence/TEST-02/local-20261025/README.md).

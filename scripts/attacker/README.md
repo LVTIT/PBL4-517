@@ -9,6 +9,7 @@ Thư mục chứa các kịch bản (scripts) tự động phục vụ việc th
 | `exploit_idor.py` | **A01:2021 – Broken Access Control (Read IDOR)** | Đăng nhập phiên Kẻ tấn công (`hacker@example.com`), gửi request `GET /api/orders/<id>` để đọc trộm đơn hàng của Nạn nhân (`demo@example.com`). |
 | `exploit_idor_update.py` | **A01:2021 – Broken Access Control (Write IDOR - Sửa địa chỉ)** | Đăng nhập phiên Kẻ tấn công, gửi request `PATCH /api/orders/<id>` để đổi địa chỉ nhận hàng của đơn hàng nạn nhân về địa chỉ của hacker. |
 | `exploit_idor_cancel.py` | **A01:2021 – Broken Access Control (Write IDOR - Hủy đơn)** | Đăng nhập phiên Kẻ tấn công, gửi request `POST /api/orders/<id>/cancel` để phá hoại, hủy đơn hàng đang chờ xử lý của nạn nhân. |
+| `exploit_sqli.py` | **A03:2021 – Injection (SQL Injection)** | Gửi `GET /api/products?search=<payload>` để chứng minh tìm kiếm sản phẩm bị SQL injection. Endpoint public, **không cần đăng nhập**. Payload mặc định chỉ đọc dữ liệu, không phá hủy database. |
 
 ---
 
@@ -46,3 +47,39 @@ Trong file `website/backend/.env`:
   VULN_IDOR_ENABLED=false
   ```
   $\rightarrow$ Script chạy sẽ in ra: `[-] SECURE: Access control enforced (403 Forbidden)`.
+
+---
+
+## Hướng dẫn sử dụng: Kịch bản A03 SQL Injection (`exploit_sqli.py`)
+
+### 1. Yêu cầu môi trường
+- Python 3.x
+- **Không cần thư viện ngoài**: script chỉ dùng `urllib` chuẩn của Python.
+
+### 2. Cách chạy script
+```bash
+python exploit_sqli.py
+python exploit_sqli.py --url http://<IP_MAY_CHU>:3000
+python exploit_sqli.py --payload "' UNION SELECT 1 --"
+```
+
+Payload mặc định là tautology `' OR '1'='1`, chỉ đọc dữ liệu. **Không dùng
+`DROP TABLE`/`DELETE`**: script này nhằm chứng minh khả năng đọc dữ liệu ngoài ý muốn,
+không nhằm phá hủy database lab.
+
+### 3. Điều khiển trạng thái Bị lỗi $\leftrightarrow$ Đã bịt lỗi
+Trong file `website/backend/.env`:
+- **Chế độ Lỗ hổng (Vulnerable - phục vụ demo khai thác):**
+  ```dotenv
+  VULN_SQLI_ENABLED=true
+  ```
+  $\rightarrow$ Script in ra: `[+] VULNERABLE: SQL injection confirmed` kèm toàn bộ sản phẩm trả về.
+- **Chế độ An toàn (Secure Baseline - mặc định):**
+  ```dotenv
+  VULN_SQLI_ENABLED=false
+  ```
+  $\rightarrow$ Script in ra: `[-] SECURE: input treated as a literal search value (no injection).`
+
+Backend phải restart sau mỗi lần đổi cờ. Ngoài ra `website/backend/src/lib/config.ts`
+từ chối khởi động khi `NODE_ENV=production` mà cờ lab bật, nên không thể vô tình bật
+SQL injection trên production.

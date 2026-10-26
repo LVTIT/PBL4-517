@@ -12,11 +12,13 @@ Tạo báo cáo kiểm toán an ninh mạng chuyên nghiệp định dạng HTML
 from __future__ import annotations
 
 import datetime
+import os
+from html import escape
 from pathlib import Path
 
 from scanner.risk_matrix import assess_port, calculate_system_posture
 
-REPORTS_DIR = Path(__file__).resolve().parent / "reports"
+REPORTS_DIR = Path(os.environ.get("PBL517_REPORTS_DIR", str(Path(__file__).resolve().parent / "reports")))
 MAX_ARCHIVED_REPORTS = 10
 
 
@@ -64,13 +66,13 @@ def generate_markdown_report(
         f"- **Thời điểm kiểm toán:** {now_str} (UTC+7)",
         f"- **Thời gian quét:** {scan_duration:.2f} giây",
         f"- **Sự kiện ghi nhận:** `{event_type}`",
-        f"- **Xếp hạng an ninh tổng thể:** **[{posture['grade']}] - {posture['status']}** (Điểm CVSS cao nhất: {posture['max_cvss']:.1f}/10)",
+        f"- **Xếp hạng an ninh tổng thể:** **[{posture['grade']}] - {posture['status']}** (Điểm Heuristic score cao nhất: {posture['max_cvss']:.1f}/10)",
         f"",
         f"---",
         f"",
         f"## 1. Chi tiết các cổng đang mở & Đánh giá rủi ro (Findings)",
         f"",
-        f"| Cổng | Dịch vụ mạng | Banner / Phiên bản thu thập | Mức rủi ro | CVSS | Nguy cơ an ninh (OWASP A05) | Khuyến nghị khắc phục |",
+        f"| Cổng | Dịch vụ mạng | Banner / Phiên bản thu thập | Mức rủi ro | Heuristic score | Nguy cơ an ninh (OWASP A05) | Khuyến nghị khắc phục |",
         f"| :--- | :--- | :--- | :---: | :---: | :--- | :--- |",
     ]
 
@@ -154,7 +156,7 @@ def generate_html_report(
             <tr>
               <td><span class="port-num">{p}/tcp</span></td>
               <td><strong>{_get_service_name(p)}</strong></td>
-              <td><code class="banner-code">{banner}</code></td>
+              <td><code class="banner-code">{escape(banner)}</code></td>
               <td><span class="badge {profile.color_badge}">{profile.severity}</span></td>
               <td><span class="cvss-score">{profile.cvss_score:.1f}</span></td>
               <td>{profile.impact}</td>
@@ -365,7 +367,7 @@ def generate_html_report(
       </div>
 
       <div class="card">
-        <div class="card-title">Điểm CVSS cao nhất</div>
+        <div class="card-title">Điểm Heuristic score cao nhất</div>
         <div class="card-value" style="color: {posture['color_hex']};">{posture['max_cvss']:.1f} <span style="font-size: 1rem; color: var(--text-muted);">/ 10</span></div>
         <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Mức cao nhất: <strong>{posture['highest_severity']}</strong></p>
       </div>
@@ -393,7 +395,7 @@ def generate_html_report(
             <th>Dịch vụ</th>
             <th>Banner / Phiên bản thu thập</th>
             <th>Mức độ</th>
-            <th>CVSS</th>
+            <th>Heuristic score</th>
             <th>Tác động / Nguy cơ an ninh (OWASP A05)</th>
             <th>Khuyến nghị khắc phục (AWS)</th>
           </tr>

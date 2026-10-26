@@ -1,0 +1,24 @@
+[Unit]
+Description=PBL4 external monitor for one authorized target
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=pbl517-monitor
+Group=pbl517-monitor
+WorkingDirectory=/opt/pbl4-517
+EnvironmentFile=/etc/pbl517-monitor.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PBL517_REPORTS_DIR=/var/lib/pbl517-monitor/reports
+ExecStart=/usr/bin/python3 /opt/pbl4-517/scanner/scan.py ${SCANNER_TARGET} --ports ${SCANNER_PORTS} --state-file /var/lib/pbl517-monitor/scanner.state.json --no-banner
+StateDirectory=pbl517-monitor
+UMask=0077
+TimeoutStartSec=60
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+StandardOutput=journal
+StandardError=journal

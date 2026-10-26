@@ -17,7 +17,8 @@
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
     "catalog:import": "tsx src/scripts/import-catalog.ts",
-    "test:integration": "node --test tests/api.integration.test.mjs"
+    "test:integration": "node --test tests/api.integration.test.mjs",
+    "test:security": "node --test tests/security-lifecycle.test.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

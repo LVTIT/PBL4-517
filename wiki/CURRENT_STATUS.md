@@ -1,5 +1,26 @@
 # Current Project Status
 
+**2026-10-26 PR #56 integration:** Updated `feature/44-local-security-regression`
+with `main` at `3af7f9f` after PR #55 was squash-merged. Resolved eight conflicts
+without changing the previously tested #56 application/scanner source; the #55
+pre-squash baseline `8625681` has the same tree as `3af7f9f`. Current verification,
+issue closure audit and remaining human/VM/AWS gates are recorded in
+[integration evidence](../evidence/TEST-02/pr56-integration-20261026/README.md).
+PR #56 and related issues remain pending required human review; a merge is not
+issue acceptance. Current hosted CI must be checked on the latest PR revision.
+
+**2026-10-25 local security integration (#44):** SQLi from `59b75f3` adapted to
+KEVILO without dropping catalog/image fields. IDOR read/update/cancel, SQLi,
+persisted review XSS and bounded login-guessing have vulnerable/secure local
+controls; production rejects every lab flag. Real browser checkout persists phone
+and address to PostgreSQL. Scanner adds uncertain/recovery observations, atomic
+state/single writer, per-channel durable retry and rotating audit; scheduler is a
+template pending Ubuntu VM install/reboot. [Matrix and verified results](../evidence/TEST-02/local-20261025/README.md).
+Delivery: [PR #56](https://github.com/LVTIT/PBL4-517/pull/56) on `feature/44-local-security-regression`; parent baseline fixes from [PR #55](https://github.com/LVTIT/PBL4-517/pull/55) were merged on 2026-10-26 as `3af7f9f` (all five main CI jobs PASS). Hosted CI status for #56 is tracked on its latest revision.
+No AWS changes, real-channel alert sends, issue closure or human acceptance were
+performed in that verification. #33/#35/#36/#41/#42/#43 AWS/VM evidence remains pending. Historical deployment
+paragraphs below describe earlier revisions, not today's availability.
+
 **2026-10-25 local baseline (#51):** dependency audits zero vulnerabilities; both builds, fresh PostgreSQL 16 migration/seed, 16 API subtests and 54 Playwright runs PASS. Removed API mock fallback; confirmation storage bound to authenticated owner and cleared across login/logout. AWS not rechecked; human review/hosted CI and broader lab regression tracked separately. [Evidence](../evidence/UI-01/local-baseline-20261025/README.md).
 
 **Latest #51 deployment — 2026-10-19 16:37 Asia/Saigon:** Application
@@ -25,15 +46,15 @@ preserved under the owner's explicit IDOR demo instruction; this is a lab-mode
 deployment, not live secure-baseline acceptance. Protected `production`
 environment configured as reviewed; manual activation only, automatic CD still
 disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-checkout-phone-20261019/README.md).
-PR human review and full real-data acceptance remain outstanding, tracked on
-[PR #55](https://github.com/LVTIT/PBL4-517/pull/55). API contract:
+[PR #55](https://github.com/LVTIT/PBL4-517/pull/55) was merged on 2026-10-26;
+full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-19 (Asia/Saigon; checkout phone deployed at 16:37; full deployed real-account acceptance and PR human review pending)
+**Last updated:** 2026-10-26 (Asia/Saigon; PR #56 integration and issue audit, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
-**Current phase:** Issues [#8](https://github.com/LVTIT/PBL4-517/issues/8), [#10](https://github.com/LVTIT/PBL4-517/issues/10), [#15](https://github.com/LVTIT/PBL4-517/issues/15) and [#24](https://github.com/LVTIT/PBL4-517/issues/24) are **CLOSED / completed** with Tasks/DoD checked after evidence and CI review and explicit user closure instruction. For #8, the user explicitly confirmed another member cloned and ran the website. PR #48 is merged; current main `13bbfe4` passed all five [CI checks](https://github.com/LVTIT/PBL4-517/actions/runs/36983994593). [Closure audit and skill verification](../evidence/DEVTOOLS-01/README.md). UI skill delivery is tracked separately in [#49](https://github.com/LVTIT/PBL4-517/issues/49).
+**Current phase:** Local-first security integration is implemented and verified; hosted CI and required human review are tracked on the integration PR. EC2/Ubuntu VM/network acceptance remains pending. Historical completed issue evidence below is preserved.
 
 **Completed:**
 
@@ -117,9 +138,9 @@ PR human review and full real-data acceptance remain outstanding, tracked on
     - Tích hợp vào job `backend-integration` trong `ci.yml` và script `backend-integration.sh`.
     - Kết quả lịch sử: cả frontend và backend build PASS, audit 0 vulnerabilities ở revision đã kiểm tra trước đó; kết quả mới nhất ghi trong bằng chứng bàn giao ở trên.
 
-- [#49 — Project-local UI UX Pro Max](https://github.com/LVTIT/PBL4-517/issues/49): **Installed / locally verified.** Pinned upstream `09170ee` in `.agents/skills/ui-ux-pro-max`, repository paths and plain-CSS stack constraints added. Data validation, 39 upstream core tests and design-system/UX/React smoke checks PASS. [Usage and provenance](../.agents/skills/ui-ux-pro-max/INSTALLATION.md), [evidence](../evidence/DEVTOOLS-01/README.md). Latest PR CI and required human review/merge remain delivery gates.
+- [#49 — Project-local UI UX Pro Max](https://github.com/LVTIT/PBL4-517/issues/49): **CLOSED / completed; PR #50 merged**, confirmed on GitHub 2026-10-26. Pinned upstream `09170ee` in `.agents/skills/ui-ux-pro-max`, repository paths and plain-CSS stack constraints added. Data validation, 39 upstream core tests and design-system/UX/React smoke checks PASS. [Usage and provenance](../.agents/skills/ui-ux-pro-max/INSTALLATION.md), [evidence](../evidence/DEVTOOLS-01/README.md).
 
-- [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **Implemented / hosted CI verified; chờ human review và Team Leader merge ở [PR #29](https://github.com/LVTIT/PBL4-517/pull/29)**. [Run triển khai](https://github.com/LVTIT/PBL4-517/actions/runs/35713164678) PASS cả 5 checks; PostgreSQL 16.15 thật, 3 migration, seed, health, integration 16/16 PASS; audit cả hai project 0 vulnerabilities. Đã thêm PR template, policy/evidence governance và [CI/CD docs](../docs/devops/ci-cd.md). [Evidence và giới hạn](../evidence/DEVOPS-01/README.md) ghi rõ SHA; trước merge phải đối chiếu latest PR checks, kể cả commit cập nhật docs. Branch protection hiện chưa bật; [đề xuất settings](../docs/devops/github-branch-protection.md) chờ human review trước áp dụng. CD chưa triển khai, không deploy EC2 hay tự đóng Issue.
+- [#28 — GitHub CI/process](https://github.com/LVTIT/PBL4-517/issues/28): **CLOSED / completed; [PR #29](https://github.com/LVTIT/PBL4-517/pull/29) merged**, confirmed on GitHub 2026-10-26; the issue records human review and delivery as complete. [Historical run](https://github.com/LVTIT/PBL4-517/actions/runs/35713164678) PASS cả 5 checks; PostgreSQL 16.15 thật, 3 migration, seed, health, integration 16/16 PASS; audit cả hai project 0 vulnerabilities. PR template, policy/evidence governance và [CI/CD docs](../docs/devops/ci-cd.md) đã được triển khai. [Evidence và giới hạn](../evidence/DEVOPS-01/README.md) ghi rõ SHA. Branch protection/rulesets vẫn chưa bật theo API audit 2026-10-26; [đề xuất settings](../docs/devops/github-branch-protection.md) cần human review trước áp dụng. Automatic CD chưa bật.
 
 **Next:**
 

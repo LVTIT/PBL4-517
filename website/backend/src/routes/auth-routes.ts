@@ -3,6 +3,7 @@ import { rateLimit } from 'express-rate-limit';
 import { changePasswordController, getCsrf, getMe, login, logout, register, updateProfileController } from '../controllers/auth-controller.js';
 import { csrfProtection } from '../middleware/csrf.js';
 import { sessionMiddleware } from '../middleware/session.js';
+import { config } from '../lib/config.js';
 
 export const authRoutes = Router();
 
@@ -26,7 +27,7 @@ const registerLimiter = rateLimit({
 
 authRoutes.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 // Limit before accessing the session store or calculating password hashes.
-authRoutes.post('/login', loginLimiter);
+if (config.VULN_AUTH_ENABLED !== 'true') authRoutes.post('/login', loginLimiter);
 authRoutes.post('/register', registerLimiter);
 authRoutes.use(sessionMiddleware, csrfProtection);
 authRoutes.get('/csrf', getCsrf);

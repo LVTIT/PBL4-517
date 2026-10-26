@@ -3,7 +3,7 @@
 Chương trình phân tích và giám sát các điểm yếu bảo mật từ bên ngoài:
 - Quét nhanh danh sách port TCP bằng đa luồng (ThreadPoolExecutor).
 - Thu thập banner và nhận diện phiên bản dịch vụ thực tế (Banner Grabbing).
-- Đánh giá mức độ rủi ro an ninh theo chuẩn quốc tế (CVSS & OWASP Top 10 - A05).
+- Đánh giá mức độ rủi ro an ninh theo chuẩn quốc tế (Risk score & OWASP Top 10 - A05).
 - Tự động lưu mốc Baseline và phát hiện cổng mới mở thêm (scanner_state.json).
 - Tự động đẩy cảnh báo tức thì tới Discord Webhook và Telegram Group Bot.
 - Xuất Báo cáo Kiểm toán An ninh mạng chuyên nghiệp (HTML Dashboard tự chứa).
@@ -18,6 +18,7 @@ import argparse
 import concurrent.futures
 import datetime
 import json
+import uuid
 import socket
 import sys
 import time
@@ -49,6 +50,7 @@ except ImportError:
     }
     notify_scan_event = None  # type: ignore
 
+from scanner.state_store import load_state, save_state, state_lock, write_audit
 from scanner.prober import grab_banner
 from scanner.risk_matrix import assess_port, calculate_system_posture
 from scanner.reporter import generate_html_report
@@ -114,106 +116,100 @@ def scan_ports_parallel(
     return results
 
 
-def load_state(state_file: Path) -> dict[str, dict]:
-    """Đọc file lịch sử trạng thái scanner."""
-    if not state_file.is_file():
-        return {}
-    try:
-        with open(state_file, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def save_state(state_file: Path, state_data: dict[str, dict]) -> None:
-    """Lưu an toàn trạng thái scanner ra file JSON."""
-    try:
-        state_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(state_file, "w", encoding="utf-8") as f:
-            json.dump(state_data, f, indent=2, ensure_ascii=False)
-    except Exception as exc:
-        print(f"[-] Cảnh báo: Không thể lưu file state ({exc})", file=sys.stderr)
-
-
 def evaluate_diff_and_notify(
-    host_key: str,
-    current_open_ports: list[int],
-    scan_duration: float,
-    state_file: Path,
-    banners: dict[int, str | None],
-    reset_baseline: bool = False,
-    no_alert: bool = False,
-    scanned_ports: list[int] | None = None,
+    host_key: str, current_open_ports: list[int], scan_duration: float,
+    state_file: Path, banners: dict[int, str | None], reset_baseline: bool = False,
+    no_alert: bool = False, scanned_ports: list[int] | None = None,
+    port_results: dict[int, str] | None = None,
 ) -> str:
-    """So sánh với Baseline cũ, phân loại sự kiện và kích hoạt gửi cảnh báo."""
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """Preserve uncertain observations; persist an alert outbox before delivery."""
     state = load_state(state_file)
-
-    host_record = state.get(host_key)
-    event_type = "NO_CHANGE"
-    new_ports: list[int] = []
-    closed_ports: list[int] = []
-
-    if reset_baseline or host_record is None:
-        # Lần đầu tiên hoặc yêu cầu reset baseline
-        event_type = "INITIAL_SCAN"
-        state[host_key] = {
-            "last_scan_at": now_str,
-            "baseline_open_ports": current_open_ports,
-        }
-        save_state(state_file, state)
-        print(f"\n[+] [EVENT: INITIAL_SCAN] Đã ghi nhận Baseline ban đầu cho {host_key}: {current_open_ports}")
-    else:
-        prev_open_set = set(host_record.get("baseline_open_ports", []))
-        curr_open_set = set(current_open_ports)
-        scanned_set = set(scanned_ports) if scanned_ports is not None else (curr_open_set | prev_open_set)
-
-        new_ports = sorted(curr_open_set - prev_open_set)
-        # Chỉ đánh dấu closed nếu port đó nằm trong danh sách các port THỰC SỰ ĐƯỢC QUÉT lần này
-        closed_ports = sorted((prev_open_set & scanned_set) - curr_open_set)
-        updated_open_ports = sorted((prev_open_set - scanned_set) | curr_open_set)
-
+    previous = state.get(host_key)
+    record = dict(previous or {"baseline_open_ports": [], "baseline_initialized": False})
+    pending = record.setdefault("pending_alerts", [])
+    now = time.time()
+    observed = port_results or {p: ("open" if p in current_open_ports else "closed")
+                                for p in (scanned_ports or current_open_ports)}
+    current = set(current_open_ports)
+    closed = {p for p, status in observed.items() if status == "closed"}
+    uncertain = sorted(p for p, status in observed.items() if status not in ("open", "closed"))
+    old = set(record["baseline_open_ports"])
+    events = []
+    initialized = record.get("baseline_initialized", previous is not None)
+    if (not initialized or reset_baseline) and (current or closed):
+        record["baseline_open_ports"] = sorted(current)
+        record["baseline_initialized"] = True
+        events.append(("INITIAL_SCAN", [], []))
+    elif initialized and not reset_baseline:
+        new_ports = sorted(current - old)
+        closed_ports = sorted(old & closed)
+        record["baseline_open_ports"] = sorted((old - closed) | current)
         if new_ports:
-            event_type = "NEW_PORT_DETECTED"
-            state[host_key] = {
-                "last_scan_at": now_str,
-                "baseline_open_ports": updated_open_ports,
-            }
+            events.append(("NEW_PORT_DETECTED", new_ports, []))
+        if closed_ports:
+            events.append(("PORT_CLOSED", [], closed_ports))
+    if uncertain != record.get("uncertain_ports", []):
+        events.append(("SCAN_UNCERTAIN" if uncertain else "SCAN_RECOVERED", [], []))
+    record["uncertain_ports"] = uncertain
+    record["last_scan_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if not no_alert:
+        channels = configured_alert_channels()
+        for event_type, new_ports, closed_ports in events:
+            if not channels:
+                continue
+            if len(pending) >= 100:
+                raise RuntimeError("Alert outbox full; restore delivery before advancing the baseline.")
+            event_id = uuid.uuid4().hex
+            pending.append({"id": event_id, "channels": channels,
+                "attempts": 0, "next_attempt_at": 0,
+                "payload": {"event_type": event_type, "target_host": host_key,
+                    "event_id": event_id, "detected_at": record["last_scan_at"],
+                    "open_ports": sorted(current), "new_ports": new_ports,
+                    "closed_ports": closed_ports, "scan_duration": scan_duration,
+                    "banners": banners}})
+    state[host_key] = record
+    save_state(state_file, state)
+    # Retry only failed channels; successful channels are never deliberately resent.
+    if not no_alert and notify_scan_event is not None:
+        for event in list(pending)[:2]:
+            if event["next_attempt_at"] > now:
+                continue
+            try:
+                result = notify_scan_event(**event["payload"], channels=event["channels"])
+            except Exception:
+                result = {}
+            event["channels"] = [channel for channel in event["channels"] if not result.get(channel)]
+            if not event["channels"]:
+                pending.remove(event)
+            else:
+                event["attempts"] += 1
+                event["next_attempt_at"] = now + min(300, 2 ** min(event["attempts"], 8) * 5)
             save_state(state_file, state)
-            print(f"\n[!] [EVENT: NEW_PORT_DETECTED] CẢNH BÁO: Phát hiện cổng mới mở: {new_ports}")
-        elif closed_ports:
-            event_type = "PORT_CLOSED"
-            state[host_key] = {
-                "last_scan_at": now_str,
-                "baseline_open_ports": updated_open_ports,
-            }
-            save_state(state_file, state)
-            print(f"\n[+] [EVENT: PORT_CLOSED] Cổng đã đóng an toàn: {closed_ports}")
-        else:
-            event_type = "NO_CHANGE"
-            state[host_key]["last_scan_at"] = now_str
-            save_state(state_file, state)
-            print("\n[*] [EVENT: NO_CHANGE] Không có thay đổi so với Baseline. Không cần gửi alert.")
-
-    # Gửi cảnh báo đa kênh (Discord + Telegram) nếu có sự kiện và không bật --no-alert
-    if not no_alert and notify_scan_event is not None and event_type != "NO_CHANGE":
-        print(f"[*] Đang gửi thông báo sự kiện '{event_type}' tới Discord & Telegram...")
-        res = notify_scan_event(
-            event_type=event_type,
-            target_host=host_key,
-            open_ports=current_open_ports,
-            new_ports=new_ports,
-            closed_ports=closed_ports,
-            scan_duration=scan_duration,
-            banners=banners,
-        )
-        print(f"    - Discord  : {'ĐÃ GỬI' if res.get('discord') else 'BỎ QUA / LỖI'}")
-        print(f"    - Telegram : {'ĐÃ GỬI' if res.get('telegram') else 'BỎ QUA / LỖI'}")
-
+    event_type = events[0][0] if events else "NO_CHANGE"
+    print(f"[EVENT: {event_type}] uncertain={uncertain}; pending_alerts={len(pending)}")
     return event_type
 
 
+def configured_alert_channels() -> list[str]:
+    from alerts.notifier import get_credentials
+    discord, token, chat = get_credentials()
+    return (["discord"] if discord else []) + (["telegram"] if token and chat else [])
+
+
 def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -> int:
+    try:
+        with state_lock(Path(args.state_file)):
+            return _run_single_scan(args, ports, resolved)
+    except (OSError, ValueError, RuntimeError) as error:
+        print(f"[-] Monitoring failure: {error}", file=sys.stderr)
+        try:
+            write_audit(Path(args.state_file), target=args.host, event="SCAN_FAILED", exit_status=2)
+        except OSError:
+            pass
+        return 2
+
+
+def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -> int:
     """Thực thi một vòng quét duy nhất."""
     start_time = time.time()
     print(f"\n[>] Bắt đầu quét {args.host} ({resolved}): {len(ports)} ports (Đa luồng {args.workers} workers, timeout={args.timeout}s)")
@@ -243,7 +239,7 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
             risk = assess_port(port, banner)
 
             banner_display = f" » {banner}" if banner else ""
-            print(f"  {port:>5}/tcp  {mark:<8} [{service_name}]{banner_display} [{risk.severity} - CVSS {risk.cvss_score:.1f}]")
+            print(f"  {port:>5}/tcp  {mark:<8} [{service_name}]{banner_display} [{risk.severity} - Risk score {risk.cvss_score:.1f}]")
         else:
             service_desc = f" [{service_name}]" if service_name else ""
             print(f"  {port:>5}/tcp  {mark:<8}{service_desc}")
@@ -251,7 +247,7 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
     print("-" * 65)
     posture = calculate_system_posture(open_ports)
     print(f"Thời gian quét : {duration:.2f}s | Cổng đang mở ({len(open_ports)}): {open_ports if open_ports else 'Không có'}")
-    print(f"Đánh giá rủi ro : Xếp hạng [{posture['grade']}] - {posture['status']} (Max CVSS: {posture['max_cvss']:.1f})")
+    print(f"Đánh giá rủi ro : Xếp hạng [{posture['grade']}] - {posture['status']} (Max Risk score: {posture['max_cvss']:.1f})")
 
     # Đánh giá thay đổi và gửi cảnh báo
     state_file = Path(args.state_file)
@@ -265,6 +261,7 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
         reset_baseline=args.reset_baseline,
         no_alert=args.no_alert,
         scanned_ports=ports,
+        port_results=results,
     )
 
     # Xuất Báo cáo HTML tự chứa (Living Dashboard + Snapshot nếu có sự cố)
@@ -285,7 +282,11 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
     if archive_snapshot:
         print("[+] Đã lưu snapshot lịch sử sự cố vào thư mục reports/ (tự động lưu tối đa 10 bản gần nhất).")
 
-    return 0
+    record = load_state(state_file).get(args.host, {})
+    result = 1 if record.get("uncertain_ports") or record.get("pending_alerts") else 0
+    write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, results=results,
+                pending_alerts=len(record.get("pending_alerts", [])), exit_status=result)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -361,27 +362,28 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[-] Lỗi danh sách port: {exc}", file=sys.stderr)
         return 2
 
-    try:
-        resolved = socket.gethostbyname(args.host)
-    except socket.gaierror:
-        print(f"[-] Lỗi: Không thể phân giải DNS/IP cho máy chủ {args.host!r}.", file=sys.stderr)
-        return 2
+    def resolve_and_scan():
+        try:
+            resolved = socket.gethostbyname(args.host)
+        except socket.gaierror:
+            print("[-] SCAN_FAILED: DNS resolution failed; baseline preserved.", file=sys.stderr)
+            try:
+                write_audit(Path(args.state_file), target=args.host, event="DNS_FAILED", exit_status=2)
+            except OSError:
+                pass
+            return 2
+        return run_single_scan(args, ports, resolved)
 
     if args.watch and args.watch > 0:
-        print(f"[*] Bắt đầu chế độ Giám sát liên tục (Watch Mode) mỗi {args.watch}s cho mục tiêu: {args.host}")
-        print("[*] Nhấn Ctrl + C để dừng giám sát bất kỳ lúc nào.\n")
         try:
             while True:
-                run_single_scan(args, ports, resolved)
-                # Tắt cờ reset-baseline sau vòng quét đầu tiên trong loop
-                args.reset_baseline = False
-                print(f"\n[~] Đang chờ {args.watch}s trước lần quét tiếp theo...")
+                status = resolve_and_scan()
+                if status != 2:
+                    args.reset_baseline = False
                 time.sleep(args.watch)
         except KeyboardInterrupt:
-            print("\n[*] Đã dừng chế độ giám sát.")
             return 0
-    else:
-        return run_single_scan(args, ports, resolved)
+    return resolve_and_scan()
 
 
 if __name__ == "__main__":
