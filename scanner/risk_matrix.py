@@ -165,11 +165,11 @@ def calculate_system_posture(open_ports: list[int]) -> dict:
     if not open_ports:
         return {
             "grade": "A+",
-            "status": "AN TOÀN TUYỆT ĐỐI",
+            "status": "CHƯA QUAN SÁT THẤY CỔNG MỞ",
             "highest_severity": "INFO",
             "max_cvss": 0.0,
             "color_hex": "#2ECC71",
-            "summary": "Không có cổng nhạy cảm nào bị phơi bày ra ngoài.",
+            "summary": "Không quan sát thấy kết nối TCP thành công trong phạm vi quét; chưa kết luận bảo mật ứng dụng hay các cổng chưa kiểm tra.",
         }
 
     severities = [assess_port(p).severity for p in open_ports]
@@ -202,11 +202,20 @@ def calculate_system_posture(open_ports: list[int]) -> dict:
             "color_hex": "#F39C12",
             "summary": "Có cổng quản trị mở ra ngoài, khuyến nghị giới hạn IP truy cập.",
         }
+    if "LOW" in severities:
+        return {
+            "grade": "A-",
+            "status": "CẦN XÁC MINH DỊCH VỤ",
+            "highest_severity": "LOW",
+            "max_cvss": max_cvss,
+            "color_hex": "#95A5A6",
+            "summary": "Có cổng chưa nhận diện trong phạm vi quét; cần đối chiếu tiến trình và cấu hình được phép.",
+        }
     return {
         "grade": "A",
-        "status": "ĐẠT CHUẨN AN TOÀN",
+        "status": "CHỈ QUAN SÁT THẤY CỔNG WEB",
         "highest_severity": "INFO",
         "max_cvss": max_cvss,
         "color_hex": "#2ECC71",
-        "summary": "Chỉ mở các cổng Web công cộng hợp lệ (80/443).",
+        "summary": "Chỉ thấy 80/443 mở trong phạm vi quét; vẫn cần kiểm thử ứng dụng, TLS và quyền truy cập.",
     }

@@ -273,9 +273,9 @@ def notify_scan_event(
 
     elif event_type == "PORT_CLOSED":
         closed_list_str = ", ".join(format_port_label(p) for p in (closed_ports or []))
-        title_discord = "🛡️ [AN TOÀN TRỞ LẠI] Cổng nhạy cảm đã được đóng"
+        title_discord = "🛡️ [PORT_CLOSED] Đã xác nhận đóng cổng"
         color_discord = 0x2ECC71  # Xanh lá an toàn
-        desc_discord = f"Hệ thống ghi nhận cổng bất thường trên **`{target_host}`** đã được đóng lại/chặn thành công."
+        desc_discord = f"Kết nối TCP tới các cổng liệt kê trên **`{target_host}`** bị từ chối rõ ràng. Không suy ra bảo mật của các dịch vụ còn lại."
         fields_discord = [
             {"name": "🎯 Mục tiêu", "value": f"`{target_host}`", "inline": True},
             {"name": "🔒 Cổng vừa được đóng", "value": closed_list_str, "inline": False},
@@ -284,14 +284,14 @@ def notify_scan_event(
         ]
 
         text_telegram = (
-            f"🛡️ *[THÔNG BÁO - ĐÃ BỊT ĐIỂM YẾU]*\n"
+            f"🛡️ *[PORT_CLOSED - ĐÃ XÁC NHẬN ĐÓNG CỔNG]*\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"🎯 *Mục tiêu:* `{target_host}`\n"
             f"🕒 *Thời gian:* `{now_str}`\n"
             f"🔒 *Cổng đã được đóng lại:* {closed_list_str}\n"
-            f"🔓 *Cổng còn mở an toàn:* {open_list_str}\n"
+            f"🔓 *Cổng còn mở:* {open_list_str}\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"✅ *Hạ tầng mạng đã trở về trạng thái an toàn.*"
+            f"✅ *Đã xác nhận đóng các cổng liệt kê; cần đánh giá riêng những cổng còn mở và bảo mật ứng dụng.*"
         )
     elif event_type in ("SCAN_UNCERTAIN", "SCAN_RECOVERED"):
         title_discord = "[PBL4 SCANNER] " + ("Kết quả quét chưa xác định" if event_type == "SCAN_UNCERTAIN" else "Kết nối giám sát đã phục hồi")

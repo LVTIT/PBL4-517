@@ -86,7 +86,7 @@ def generate_markdown_report(
             )
     else:
         md_lines.append(
-            "| - | - | - | - | - | ✅ Không có cổng nhạy cảm nào bị phơi bày ra ngoài Internet | Hệ thống an toàn |"
+            "| - | - | - | - | - | Chưa quan sát thấy cổng mở trong phạm vi quét | Đối chiếu kết quả chưa xác định và kiểm thử ứng dụng riêng |"
         )
 
     md_lines.extend([

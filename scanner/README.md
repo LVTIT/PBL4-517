@@ -88,9 +88,25 @@ Khởi động Bot Listener:
 python alerts/bot_listener.py
 ```
 
+ChatOps yêu cầu **đồng thời** đúng `TELEGRAM_CHAT_ID` và ID người gửi nằm trong
+`TELEGRAM_ALLOWED_USER_IDS` (danh sách số phân cách bằng dấu phẩy). Mặc định danh
+sách người gửi rỗng nên bot từ chối khởi động; tin nhắn/callback thiếu sender, sai
+chat hoặc sai người dùng không được thực thi hay phản hồi. Các alert tự động của
+scanner không phụ thuộc danh sách người dùng ChatOps.
+
+Đặt `SCANNER_TARGET` làm IPv4 mặc định và liệt kê từng IPv4 được phép trong
+`SCANNER_ALLOWED_TARGETS` (mặc định chỉ `127.0.0.1`). Lệnh từ xa không nhận hostname
+hoặc CIDR và giới hạn 32 port/lần; CLI scanner vẫn hỗ trợ hostname theo phạm vi
+được người vận hành cho phép. Nút quét dùng target mặc định này, không tự quét
+loopback của VM thay cho EC2. `/scan` bỏ qua banner để giữ thời gian xử lý hữu hạn.
+
+Nếu dùng cùng VM với timer, cấu hình `SCANNER_STATE_FILE` trỏ tới state của timer;
+`/scan` và `/status` cùng dùng file đó và quyền runtime phải đọc/ghi được thư mục.
+Xem tên biến tại [`.env.example`](../.env.example); giữ cấu hình thật ngoài Git.
+
 Các lệnh tương tác hỗ trợ:
-- `/scan [target] [ports]`: Kích hoạt scanner từ xa cho mục tiêu chỉ định (mặc định: `127.0.0.1`).
-- `/status [target]`: Kiểm tra nhanh các cổng đang mở trong Baseline mà không cần quét lại.
+- `/scan [target] [ports]`: Quét IPv4 trong allowlist (mặc định: `SCANNER_TARGET`); `/scan 80,443` chọn port trên target mặc định.
+- `/status`: Xem Baseline đã lưu của các target mà không cần quét lại.
 - `/ping`: Kiểm tra độ trễ và tình trạng sẵn sàng của ChatOps Bot.
 - `/help`: Xem hướng dẫn sử dụng và danh sách lệnh.
 
@@ -127,7 +143,7 @@ Toàn bộ bộ bằng chứng thực nghiệm đạt chuẩn kiểm thử cho I
 | :--- | :--- | :--- |
 | **`INITIAL_SCAN`** | Lần đầu quét một host (hoặc dùng `--reset-baseline`) | Ghi nhận mốc Baseline. Gửi thông báo khởi tạo thành công tới Discord & Telegram. |
 | **`NEW_PORT_DETECTED`** | Phát hiện cổng mới mở thêm ($P_{\text{mới}} = P_{\text{hiện tại}} \setminus P_{\text{baseline}}$) | Cập nhật Baseline. **Bắn chuông báo động đỏ khẩn cấp** kèm điểm heuristic và nút hướng dẫn xử lý! |
-| **`PORT_CLOSED`** | Cổng bất thường đã được đóng lại/bịt thành công | Cập nhật Baseline. Gửi thông báo xanh lá xác nhận hệ thống an toàn trở lại. |
+| **`PORT_CLOSED`** | Kết nối TCP tới cổng bị từ chối rõ ràng | Cập nhật Baseline và cảnh báo đóng cổng; không suy ra các cổng còn lại hay ứng dụng đã an toàn. |
 | **`NO_CHANGE`** | Trạng thái cổng không đổi so với Baseline | Cập nhật thời gian quét. **Im lặng hoàn toàn** (tránh gây phiền nhiễu cho nhóm chat). |
 
 
@@ -145,16 +161,21 @@ fails visibly; preserve the damaged file and restore a known-good backup rather
 than resetting the baseline automatically. The state record includes a durable
 alert outbox: failed channels retry after 10 seconds with exponential backoff up
 to 300 seconds; successful channels are removed. At most two due events are
-attempted per scan and the queue is capped at 100. A full queue fails without
-advancing the stored baseline. Delivery is at-least-once: a crash after remote
+attempted per scan and the queue is capped at 100. Due events are selected before
+applying that limit, so backoff entries do not block later due events. If a change
+would overflow the queue, delivery is retried against the old baseline first;
+if space is still insufficient the scan fails without advancing that baseline.
+The two-event budget includes these recovery attempts. Delivery is at-least-once: a crash after remote
 acceptance but before local acknowledgement can duplicate a message. Missing
 credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
 new alerts; it preserves existing pending events. No tokens enter the outbox.
 
 Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
-observations or pending delivery; 2 = configuration/state/lock/DNS failure.
+observations or pending delivery; 2 = configuration/state/lock/DNS/audit failure.
 JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at
-1 MiB with two backups. Reports can use `PBL517_REPORTS_DIR`; score values are
+1 MiB with two backups. Audit write/rotation errors propagate as a failed scan;
+outbox metadata/payload are validated before baseline changes. Legacy baseline
+files without an outbox remain supported. Reports can use `PBL517_REPORTS_DIR`; score values are
 local port-based heuristics, not a validated CVSS assessment or proof of a CVE.
 
 Run `python -m unittest discover -s scanner/tests -v` from the repository root.

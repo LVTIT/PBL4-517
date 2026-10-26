@@ -1,13 +1,36 @@
 # Current Project Status
 
+**2026-10-26 PR #57 integration (#43):** Updated
+`feature/43-monitoring-safety` with `main` at `5a7abb7` after PR #56 was
+squash-merged. Resolved nine conflicts while retaining #57's alert recovery,
+strict audit/state validation, ChatOps chat/sender/IPv4 boundaries and honest
+port-reporting behavior. Runtime source remains identical to `f30f01e`;
+the #56 documentation/evidence corrections are retained. Current verification
+and remaining acceptance are recorded in
+[integration evidence](../evidence/MON-03/pr57-integration-20261026/README.md).
+Latest hosted CI and required human review are tracked on
+[PR #57](https://github.com/LVTIT/PBL4-517/pull/57).
+
+Monitoring local regression originally passed 27 scanner/ChatOps checks, builds,
+audits, real PostgreSQL API/security lifecycle and browser tests on `82abdff`;
+[historical verification](../evidence/MON-03/local-20261026/README.md).
+The [delivery plan](DELIVERY_PLAN.md) separates local implementation from the
+next operational work: external Ubuntu VM scheduling/reboot and current real
+dual-channel receipts (#35/#36/#43), AWS/deployment/network verification
+(#16/#17/#33), A05 hardening/log correlation (#41/#42), then combined evidence and
+human handoff (#44/#45/#46). No VM reboot, live chat receipt, deployment or AWS
+acceptance is inferred from local tests. Issue #43 remains open.
+
 **2026-10-26 PR #56 integration:** Updated `feature/44-local-security-regression`
 with `main` at `3af7f9f` after PR #55 was squash-merged. Resolved eight conflicts
 without changing the previously tested #56 application/scanner source; the #55
 pre-squash baseline `8625681` has the same tree as `3af7f9f`. Current verification,
 issue closure audit and remaining human/VM/AWS gates are recorded in
 [integration evidence](../evidence/TEST-02/pr56-integration-20261026/README.md).
-PR #56 and related issues remain pending required human review; a merge is not
-issue acceptance. Current hosted CI must be checked on the latest PR revision.
+[PR #56](https://github.com/LVTIT/PBL4-517/pull/56) was merged on 2026-10-26 as
+`5a7abb7`; all five [main CI jobs](https://github.com/LVTIT/PBL4-517/actions/runs/40293698090)
+PASS. The related issues still require their own DoD/review acceptance; merge is
+not issue completion.
 
 **2026-10-25 local security integration (#44):** SQLi from `59b75f3` adapted to
 KEVILO without dropping catalog/image fields. IDOR read/update/cancel, SQLi,
@@ -50,7 +73,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-26 (Asia/Saigon; PR #56 integration and issue audit, no new AWS availability claim)
+**Last updated:** 2026-10-26 (Asia/Saigon; PR #57 integration and monitoring handoff, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 

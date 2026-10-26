@@ -11,6 +11,8 @@ Cho phép tương tác hai chiều (ChatOps) trực tiếp từ nhóm Telegram:
 from __future__ import annotations
 
 import json
+import ipaddress
+import os
 import subprocess
 import sys
 import time
@@ -31,7 +33,33 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from alerts.notifier import get_credentials, send_telegram_alert
+from alerts.notifier import get_credentials, load_env, send_telegram_alert
+
+
+def _setting(name: str, default: str = "") -> str:
+    return os.environ.get(name, load_env().get(name, default))
+
+
+def _authorized_sender(chat_id: str, user_id: str | int | None) -> bool:
+    _, _, allowed_chat = get_credentials()
+    allowed_users = {value.strip() for value in _setting("TELEGRAM_ALLOWED_USER_IDS").split(",")
+                     if value.strip().isascii() and value.strip().isdigit()}
+    return bool(allowed_chat and str(chat_id) == allowed_chat and user_id is not None
+                and str(user_id) in allowed_users)
+
+
+def _scan_target(target: str) -> str:
+    # Only explicit IPv4 literals: no arbitrary hostnames or DNS rebinding.
+    address = str(ipaddress.IPv4Address(target))
+    allowed = {str(ipaddress.IPv4Address(value.strip()))
+               for value in _setting("SCANNER_ALLOWED_TARGETS", "127.0.0.1").split(",") if value.strip()}
+    if address not in allowed:
+        raise ValueError("Target is outside SCANNER_ALLOWED_TARGETS.")
+    return address
+
+
+def _state_file() -> Path:
+    return Path(_setting("SCANNER_STATE_FILE", str(ROOT_DIR / "scanner" / "scanner_state.json")))
 
 
 def register_bot_commands(bot_token: str, chat_id: str | None = None) -> None:
@@ -93,9 +121,13 @@ def answer_callback_query(bot_token: str, query_id: str, text: str = "") -> None
         pass
 
 
-def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
+def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: str | int | None = None) -> None:
     """Xử lý các câu lệnh nhận được từ người dùng trên Telegram."""
+    if not _authorized_sender(chat_id, user_id):
+        return
     parts = command_text.strip().split()
+    if not parts:
+        return
     cmd = parts[0].lower().split("@")[0]  # Bỏ @bot_username nếu có
     args = parts[1:]
 
@@ -120,10 +152,10 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             "━━━━━━━━━━━━━━━━━━━━\n"
             "Danh sách các lệnh điều khiển từ xa:\n\n"
             "🔍 `/scan [host] [ports]` — Quét an ninh mạng:\n"
-            "   • `/scan` : Quét các cổng mặc định trên `127.0.0.1`\n"
+            "   • `/scan` : Quét các cổng mặc định trên target đã cấu hình\n"
             "   • `/scan 8080` : Quét cổng cụ thể `8080`\n"
             "   • `/scan 80,443,8080` : Quét nhóm cổng Web\n"
-            "   • `/scan 127.0.0.1 5432` : Quét cổng DB trên máy chủ chỉ định\n"
+            "   • `/scan 127.0.0.1 5432` : Quét IPv4 đã cho phép, tối đa 32 cổng\n"
             "📊 `/status` — Xem trạng thái Baseline và các cổng đang mở\n"
             "🏓 `/ping` — Kiểm tra trạng thái hoạt động của Bot\n"
             "❓ `/help` — Hiển thị menu hướng dẫn này\n"
@@ -141,7 +173,7 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
         )
 
     elif cmd == "/status":
-        state_file = ROOT_DIR / "scanner" / "scanner_state.json"
+        state_file = _state_file()
         if not state_file.is_file():
             send_telegram_alert(
                 bot_token,
@@ -176,7 +208,7 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             send_telegram_alert(bot_token, chat_id, f"[-] Lỗi đọc trạng thái: `{exc}`")
 
     elif cmd == "/scan":
-        target = "127.0.0.1"
+        target = _setting("SCANNER_TARGET", "127.0.0.1")
         ports_arg = None
 
         if len(args) == 1:
@@ -184,19 +216,34 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
             # Nếu người dùng truyền số hoặc chuỗi port (VD: 8080 hoặc 80,443)
             if all(c.isdigit() or c in ",-" for c in first):
                 ports_arg = first
-                target = "127.0.0.1"
             else:
                 target = first
         elif len(args) >= 2:
             target = args[0].strip()
             ports_arg = args[1].strip()
 
+        try:
+            from scanner.scan import parse_ports
+            target = _scan_target(target)
+            if len(args) > 2:
+                raise ValueError("Use /scan [IPv4] [ports].")
+            if ports_arg:
+                requested_ports = parse_ports(ports_arg)
+                if len(requested_ports) > 32:
+                    raise ValueError("ChatOps scans are limited to 32 ports.")
+                ports_arg = ",".join(map(str, requested_ports))
+        except ValueError:
+            send_telegram_alert(bot_token, chat_id,
+                "❌ Mục tiêu/cổng không hợp lệ: chỉ IPv4 trong SCANNER_ALLOWED_TARGETS, tối đa 32 cổng.")
+            return
+
         ports_desc = f" (Cổng: `{ports_arg}`)" if ports_arg else " (Mặc định 6 cổng)"
         ack_msg = f"⏳ *Đang tiến hành dò quét an ninh cho mục tiêu:* `{target}`{ports_desc}...\n*Vui lòng đợi vài giây!*"
         send_telegram_alert(bot_token, chat_id, ack_msg)
 
         # Chạy scanner/scan.py dưới dạng subprocess
-        cmd_run = [sys.executable, str(ROOT_DIR / "scanner" / "scan.py"), target]
+        cmd_run = [sys.executable, str(ROOT_DIR / "scanner" / "scan.py"), target,
+                   "--state-file", str(_state_file()), "--no-banner"]
         if ports_arg:
             cmd_run.extend(["--ports", ports_arg])
 
@@ -208,13 +255,13 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=30,
+                timeout=60,
             )
             print(f"[+] Hoàn tất lệnh /scan {target} {ports_arg or ''} (Exit code: {proc.returncode})")
 
             if proc.returncode == 0:
                 duration_str = "1.0s"
-                posture_str = "An toàn"
+                posture_str = "Chưa có dữ liệu đánh giá"
                 open_ports_str = "Không có cổng nào mở"
 
                 for line in proc.stdout.splitlines():
@@ -242,7 +289,7 @@ def handle_command(bot_token: str, chat_id: str, command_text: str) -> None:
                 ]
 
                 if is_no_change:
-                    summary_lines.append("ℹ️ *Trạng thái:* An toàn, không có cổng mới mở so với Baseline.")
+                    summary_lines.append("ℹ️ *Trạng thái:* Không có thay đổi cổng đã xác nhận; không phải kết luận hết lỗ hổng.")
                 elif is_initial:
                     summary_lines.append("ℹ️ *Trạng thái:* Đã khởi tạo mốc Baseline ban đầu thành công.")
                 else:
@@ -278,33 +325,40 @@ def handle_callback_query(bot_token: str, callback: dict) -> None:
     message = callback.get("message", {})
     chat = message.get("chat", {})
     chat_id = str(chat.get("id", ""))
+    sender = callback.get("from", {})
+    user_id = sender.get("id")
 
-    if not chat_id:
+    if sender.get("is_bot") or not _authorized_sender(chat_id, user_id):
         return
 
     answer_callback_query(bot_token, query_id, f"Đang thực hiện: {data}")
 
     if data in ("scan_local", "scan_default"):
-        handle_command(bot_token, chat_id, "/scan 127.0.0.1")
+        handle_command(bot_token, chat_id, "/scan", user_id=user_id)
     elif data == "scan_web":
-        handle_command(bot_token, chat_id, "/scan 127.0.0.1 80,443,3000,8080")
+        handle_command(bot_token, chat_id, "/scan 80,443,8080", user_id=user_id)
     elif data == "scan_db":
-        handle_command(bot_token, chat_id, "/scan 127.0.0.1 5432,3306,6379")
+        handle_command(bot_token, chat_id, "/scan 5432,3306,6379", user_id=user_id)
     elif data == "status":
-        handle_command(bot_token, chat_id, "/status")
+        handle_command(bot_token, chat_id, "/status", user_id=user_id)
     elif data == "ping":
-        handle_command(bot_token, chat_id, "/ping")
+        handle_command(bot_token, chat_id, "/ping", user_id=user_id)
     elif data == "help":
-        handle_command(bot_token, chat_id, "/help")
+        handle_command(bot_token, chat_id, "/help", user_id=user_id)
 
 
-def run_listener() -> None:
+def run_listener() -> int:
     """Vòng lặp lắng nghe lệnh từ Telegram (Long Polling)."""
     _, tele_token, tele_chat_id = get_credentials()
 
     if not tele_token:
         print("[-] Lỗi: Không tìm thấy TELEGRAM_BOT_TOKEN trong file .env!", file=sys.stderr)
-        return
+        return 2
+
+    if not tele_chat_id or not any(value.strip().isascii() and value.strip().isdigit()
+                                 for value in _setting("TELEGRAM_ALLOWED_USER_IDS").split(",")):
+        print("[-] ChatOps requires TELEGRAM_CHAT_ID and TELEGRAM_ALLOWED_USER_IDS.", file=sys.stderr)
+        return 2
 
     print("[*] Đang đồng bộ danh sách lệnh và nút Menu với Telegram API...")
     register_bot_commands(tele_token, tele_chat_id)
@@ -314,7 +368,7 @@ def run_listener() -> None:
     if tele_chat_id:
         ready_buttons = [
             [
-                {"text": "🔍 Quét Cổng 127.0.0.1", "callback_data": "scan_local"},
+                {"text": "🔍 Quét target đã cấu hình", "callback_data": "scan_local"},
                 {"text": "📊 Xem Baseline", "callback_data": "status"},
             ],
             [
@@ -365,10 +419,10 @@ def run_listener() -> None:
                 text = msg.get("text", "").strip()
                 chat = msg.get("chat", {})
                 chat_id = str(chat.get("id", ""))
+                sender = msg.get("from", {})
 
-                if text.startswith("/"):
-                    print(f"[+] Nhận lệnh: '{text}' từ Chat ID: {chat_id}")
-                    handle_command(tele_token, chat_id, text)
+                if text.startswith("/") and not sender.get("is_bot") and _authorized_sender(chat_id, sender.get("id")):
+                    handle_command(tele_token, chat_id, text, user_id=sender.get("id"))
 
         except urllib.error.URLError:
             time.sleep(3)
@@ -378,8 +432,9 @@ def run_listener() -> None:
         except Exception as exc:
             print(f"[-] Lỗi polling: {exc}", file=sys.stderr)
             time.sleep(3)
+    return 0
 
 
 if __name__ == "__main__":
-    run_listener()
+    raise SystemExit(run_listener())
 

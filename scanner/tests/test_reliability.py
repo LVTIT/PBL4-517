@@ -103,15 +103,39 @@ class ReliabilityTests(unittest.TestCase):
             pass
 
     @patch('scanner.scan.configured_alert_channels', return_value=['telegram'])
-    def test_full_outbox_does_not_advance_baseline(self, channels):
+    @patch('scanner.scan.notify_scan_event', return_value={'telegram': False})
+    def test_full_outbox_does_not_advance_baseline(self, notify, channels):
         self.scan({80: 'open'})
         state = load_state(self.state)
-        state['127.0.0.1']['pending_alerts'] = [{'id': str(i)} for i in range(100)]
+        state['127.0.0.1']['pending_alerts'] = [{
+            'id': str(i), 'channels': ['telegram'], 'attempts': 0, 'next_attempt_at': 0,
+            'payload': {'event_type': 'INITIAL_SCAN', 'target_host': '127.0.0.1', 'open_ports': [80]},
+        } for i in range(100)]
         save_state(self.state, state)
-        before = self.state.read_bytes()
         with self.assertRaises(RuntimeError):
             self.scan({80: 'open', 8080: 'open'}, no_alert=False)
-        self.assertEqual(self.state.read_bytes(), before)
+        saved = load_state(self.state)['127.0.0.1']
+        self.assertEqual(saved['baseline_open_ports'], [80])
+        self.assertEqual(len(saved['pending_alerts']), 100)
+        self.assertEqual(notify.call_count, 2)
+        self.assertEqual(saved['pending_alerts'][0]['attempts'], 1)
+
+    @patch('scanner.scan.configured_alert_channels', return_value=['telegram'])
+    @patch('scanner.scan.notify_scan_event', return_value={'telegram': True})
+    def test_full_outbox_recovers_without_losing_new_change(self, notify, channels):
+        self.scan({80: 'open'})
+        state = load_state(self.state)
+        state['127.0.0.1']['pending_alerts'] = [{
+            'id': str(i), 'channels': ['telegram'], 'attempts': 0, 'next_attempt_at': 0,
+            'payload': {'event_type': 'INITIAL_SCAN', 'target_host': '127.0.0.1', 'open_ports': [80]},
+        } for i in range(100)]
+        save_state(self.state, state)
+        self.assertEqual(self.scan({80: 'open', 8080: 'open'}, no_alert=False), 'NEW_PORT_DETECTED')
+        saved = load_state(self.state)['127.0.0.1']
+        self.assertEqual(notify.call_count, 2, 'Recovery must share the two-event scan budget')
+        self.assertEqual(saved['baseline_open_ports'], [80, 8080])
+        self.assertEqual(len(saved['pending_alerts']), 99)
+        self.assertEqual(saved['pending_alerts'][-1]['payload']['new_ports'], [8080])
 
     @patch('alerts.notifier.get_credentials', return_value=('unused-discord', 'unused-token', 'unused-chat'))
     @patch('alerts.notifier.send_discord_alert')
