@@ -1,5 +1,23 @@
 # Current Project Status
 
+**2026-11-01 ALB integration design (#34): Proposed only; nothing created on AWS.**
+[docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current
+direct-to-EC2 topology, the proposed Internet -> ALB -> Nginx -> Express flow, and
+the six constraints that decide whether the change is safe: ALB requires at least
+two subnets in different Availability Zones; the target group must point at Nginx
+port 80 because the backend binds loopback; ACM public certificates need a DNS
+name so the current IP certificate cannot be reused; `X-Forwarded-Proto` must be
+forwarded instead of overwritten or the `Secure` session cookie will break login;
+the real client IP needs `real_ip` with the ALB subnets; and the 80 -> 443
+redirect has to move to the ALB listener. Security Group rules, listener, target
+group, health check, ALB attributes, cost structure, a gated rollout plan and the
+live questions to confirm are included. Verified while writing: the live
+certificate is issued for the IP only (no `DNSName`) and rotates on a ~6.7-day
+`shortlived` cycle, so Certbot renewal is working but the window for noticing a
+failure is short. Four decisions block implementation: domain name, budget owner,
+target date and actual region. No ALB, target group, listener, subnet or Security
+Group was created, and no DNS, certificate or server change was made.
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
