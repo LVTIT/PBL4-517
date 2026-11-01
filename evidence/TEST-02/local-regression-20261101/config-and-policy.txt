@@ -1,0 +1,54 @@
+﻿
+> pbl517-backend@0.1.0 test:config
+> node --test tests/config.test.mjs
+
+Γ£ö secure profile is default and refuses every flag in every Node runtime (9359.6253ms)
+Γ£ö explicit lab acknowledgment permits flags with production runtime (6747.2342ms)
+Γä╣ tests 2
+Γä╣ suites 0
+Γä╣ pass 2
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 16379.6089
+
+
+=== scanner tests ===
+
+ok
+ok
+ok
+Ran 27 tests in 1.351s
+OK
+
+=== attacker tests ===
+
+Ran 8 tests in 0.046s
+OK
+
+=== ci helper tests ===
+
+Ran 5 tests in 1.006s
+OK
+
+=== python syntax ===
+
+
+exit=0
+
+=== repository policy ===
+
+Repository policy: 411 index entries, 0 violation(s).
+
+
+=== artifact revision check ===
+
+{"result":"ARTIFACTS_VERIFIED","component":"backend","revision":"6d4f569786b8045bddde8065900148bf1741e87b"}
+
+{"result":"ARTIFACTS_VERIFIED","component":"frontend","revision":"6d4f569786b8045bddde8065900148bf1741e87b"}
+
+
+=== git revision ===
+
+6d4f569786b8045bddde8065900148bf1741e87b

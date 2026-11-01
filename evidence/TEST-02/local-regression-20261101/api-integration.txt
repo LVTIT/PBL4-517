@@ -1,0 +1,34 @@
+﻿Backend /api/health PASS on 127.0.0.1:3057 (secure baseline, all VULN_* false)
+
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+Γû╢ real PostgreSQL API and session authentication
+  Γ£ö health and security headers (94.4577ms)
+  Γ£ö products match database rows with exact decimal money (246.4601ms)
+  Γ£ö public catalog excludes deployment verification items (120.6024ms)
+  Γ£ö anonymous user and rejected missing CSRF token (108.2163ms)
+  Γ£ö wrong password and unknown email have same error (1928.1336ms)
+  Γ£ö strict input validation, malformed JSON and body size limit (62.5723ms)
+  Γ£ö correct login rotates session and stores only password hash (1740.3817ms)
+  Γ£ö new client with existing cookie restores the session (16.6532ms)
+  Γ£ö logout invalidates session including replayed cookie (43.3541ms)
+  Γ£ö unknown API paths keep JSON error format (7.978ms)
+  Γ£ö user registration and duplicate detection (843.0191ms)
+  Γ£ö product search and detail with reviews (40.162ms)
+  Γ£ö product search rejects SQL injection payloads (53.3568ms)
+  Γ£ö orders, server-side pricing, and IDOR protection (2258.0579ms)
+  Γ£ö admin authorization guard (761.3589ms)
+  Γ£ö guest checkout without authentication (87.7025ms)
+  Γ£ö role boundaries: admin cannot place orders or post reviews (1075.9821ms)
+Γ£ö real PostgreSQL API and session authentication (9501.3829ms)
+Γä╣ tests 18
+Γä╣ suites 0
+Γä╣ pass 18
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 9891.3192
+

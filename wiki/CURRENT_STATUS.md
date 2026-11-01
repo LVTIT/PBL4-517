@@ -1,5 +1,21 @@
 # Current Project Status
 
+**2026-11-01 full security regression (#44): local scenarios verified; AWS/VM/monitoring blocked.**
+Re-ran the whole local gate on `6d4f569` (branch `feature/44-local-regression-20261101`,
+based on `main` `43bebb1`): lifecycle 9, API 18, UI 54, scanner 27, demo
+classification 8, CI helpers 5, config 2 and repository policy 0 violations all
+PASS; both build artifacts verify for the tested SHA. IDOR, SQLi, stored XSS and
+bounded auth guessing keep their vulnerable/secure contrast, and the live EC2
+still refuses a SQLi tautology and an unauthenticated order read. Two findings:
+PR #58 added a subtest that did not fit the suite's 120 s budget (raised to 300 s,
+assertions unchanged), and the deployed host is **stale** - it returns 404 for the
+`/api/version` metadata added in #58 with a frontend `Last-Modified` of
+2026-10-19, so no regression claim can be made for the running deployment. A05,
+SG/NACL, service/reboot and real Telegram/Discord receipts remain blocked or
+unverified (#16, #17, #33, #35, #36, #41, #42, #43). No AWS/VM change, deployment,
+real alert, review or closure was performed.
+[Matrix, logs and limits](../evidence/TEST-02/local-regression-20261101/README.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
