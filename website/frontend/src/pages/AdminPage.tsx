@@ -45,6 +45,17 @@ const ORDER_STATUS_CLASSES: Record<OrderStatus, string> = {
   CANCELLED: 'status-cancelled',
 };
 
+// Mirrors the server's ALLOWED_TRANSITIONS. Presenting only reachable states
+// keeps the operator from picking a transition the API will reject, and makes
+// it obvious that CANCELLED is terminal (stock was already returned).
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['DELIVERED'],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
 export function AdminPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'products' | 'orders'>('products');
@@ -533,7 +544,7 @@ export function AdminPage() {
                         <select
                           aria-label={`Thay đổi trạng thái cho đơn ${order.id}`}
                           value={order.status}
-                          disabled={updatingOrderId === order.id}
+                          disabled={updatingOrderId === order.id || ORDER_STATUS_TRANSITIONS[order.status].length === 0}
                           onChange={(e) => void handleStatusChange(order.id, e.target.value as OrderStatus)}
                           className="status-select"
                           style={{
@@ -545,11 +556,12 @@ export function AdminPage() {
                             fontSize: '0.8125rem',
                           }}
                         >
-                          <option value="PENDING">PENDING (Chờ xác nhận)</option>
-                          <option value="CONFIRMED">CONFIRMED (Đã xác nhận)</option>
-                          <option value="SHIPPED">SHIPPED (Đang giao)</option>
-                          <option value="DELIVERED">DELIVERED (Đã giao)</option>
-                          <option value="CANCELLED">CANCELLED (Đã hủy)</option>
+                          <option value={order.status}>{ORDER_STATUS_LABELS[order.status]}</option>
+                          {ORDER_STATUS_TRANSITIONS[order.status].map((next) => (
+                            <option key={next} value={next}>
+                              {ORDER_STATUS_LABELS[next]}
+                            </option>
+                          ))}
                         </select>
                         {updatingOrderId === order.id && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} aria-hidden="true" />}
                       </div>

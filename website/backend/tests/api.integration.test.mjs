@@ -364,6 +364,135 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.equal(cancelOwnOrder.body.data.status, 'CANCELLED');
     });
 
+    // Regression for #65: the admin status endpoint updated the row blindly.
+    // Cancelling there never returned stock (the units vanished), and a
+    // CANCELLED order could be reopened, so cancel -> reopen -> cancel released
+    // the same units again. Both are data corruption on the secure baseline.
+    await suite.test('admin status changes keep inventory honest', async () => {
+      const stockOf = async (session, productId) =>
+        (await session.request(`/products/${productId}`)).body.data.stock;
+
+      const admin = new BrowserSession();
+      const adminCsrf = await admin.csrf();
+      const adminLogin = await admin.request('/auth/login', {
+        method: 'POST', csrfToken: adminCsrf,
+        body: { email: 'admin@example.com', password: 'AdminOnly517!' },
+      });
+      assert.equal(adminLogin.status, 200, 'admin seed account is required for this check');
+
+      const customer = new BrowserSession();
+      const customerCsrf = await customer.csrf();
+      const customerLogin = await customer.request('/auth/login', {
+        method: 'POST', csrfToken: customerCsrf,
+        body: { email: 'demo@example.com', password: 'DemoOnly517!' },
+      });
+      assert.equal(customerLogin.status, 200, 'demo seed account is required for this check');
+
+      const catalogue = await customer.request('/products');
+      const product = catalogue.body.data.find((p) => p.stock >= 4);
+      assert.ok(product, 'At least one product with stock >= 4 is required.');
+
+      const before = await stockOf(customer, product.id);
+      const order = await customer.request('/orders', {
+        method: 'POST',
+        csrfToken: await customer.csrf(),
+        body: {
+          items: [{ productId: product.id, quantity: 2 }],
+          shippingAddress: '123 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
+        },
+      });
+      assert.equal(order.status, 201);
+      const orderId = order.body.data.id;
+      assert.equal(await stockOf(customer, product.id), before - 2, 'creating the order holds the units');
+
+      // 1. An admin cancellation must put the units back, exactly like the
+      //    customer cancellation path does.
+      const adminCancel = await admin.request(`/admin/orders/${orderId}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
+      });
+      assert.equal(adminCancel.status, 200);
+      assert.equal(adminCancel.body.data.status, 'CANCELLED');
+      assert.equal(await stockOf(customer, product.id), before, 'admin cancel must restock the order');
+
+      // 2. CANCELLED is terminal. Reopening it would let the same units be
+      //    released again by a second cancellation.
+      for (const status of ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED']) {
+        const reopen = await admin.request(`/admin/orders/${orderId}/status`, {
+          method: 'PATCH', csrfToken: await admin.csrf(), body: { status },
+        });
+        assert.equal(reopen.status, 409, `a cancelled order must not move to ${status}`);
+        assert.equal(reopen.body.error.code, 'INVALID_STATUS_TRANSITION');
+      }
+      assert.equal(await stockOf(customer, product.id), before, 'rejected transitions must not touch stock');
+
+      // 3. Cancelling the already cancelled order again is a conflict, not a
+      //    second restock.
+      const secondCancel = await admin.request(`/admin/orders/${orderId}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
+      });
+      assert.equal(secondCancel.status, 409);
+      assert.equal(secondCancel.body.error.code, 'INVALID_STATUS_TRANSITION');
+      assert.equal(await stockOf(customer, product.id), before, 'no phantom stock after a repeated cancel');
+
+      // 4. The customer path is unaffected: a live PENDING order still cancels
+      //    once, and the loop that produced phantom stock cannot be replayed.
+      const second = await customer.request('/orders', {
+        method: 'POST',
+        csrfToken: await customer.csrf(),
+        body: {
+          items: [{ productId: product.id, quantity: 2 }],
+          shippingAddress: '456 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
+        },
+      });
+      assert.equal(second.status, 201);
+      const customerCancel = await customer.request(`/orders/${second.body.data.id}/cancel`, {
+        method: 'POST', csrfToken: await customer.csrf(),
+      });
+      assert.equal(customerCancel.status, 200);
+      assert.equal(await stockOf(customer, product.id), before, 'customer cancel still restocks');
+
+      const reopenAfterCustomerCancel = await admin.request(`/admin/orders/${second.body.data.id}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'PENDING' },
+      });
+      assert.equal(reopenAfterCustomerCancel.status, 409, 'the cancel loop must be closed');
+
+      const replayCancel = await customer.request(`/orders/${second.body.data.id}/cancel`, {
+        method: 'POST', csrfToken: await customer.csrf(),
+      });
+      assert.equal(replayCancel.status, 400);
+      assert.equal(replayCancel.body.error.code, 'CANNOT_CANCEL');
+      assert.equal(await stockOf(customer, product.id), before, 'no phantom stock from the replay attempt');
+
+      // 5. An order that is still PENDING follows the forward path and does not
+      //    move stock when it is merely confirmed.
+      const third = await customer.request('/orders', {
+        method: 'POST',
+        csrfToken: await customer.csrf(),
+        body: {
+          items: [{ productId: product.id, quantity: 1 }],
+          shippingAddress: '789 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
+        },
+      });
+      assert.equal(third.status, 201);
+      const held = await stockOf(customer, product.id);
+      const confirm = await admin.request(`/admin/orders/${third.body.data.id}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CONFIRMED' },
+      });
+      assert.equal(confirm.status, 200);
+      assert.equal(await stockOf(customer, product.id), held, 'confirming an order must not move stock');
+
+      const backwards = await admin.request(`/admin/orders/${third.body.data.id}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'PENDING' },
+      });
+      assert.equal(backwards.status, 409, 'CONFIRMED must not go back to PENDING');
+
+      // Leave the fixture database as we found it.
+      await admin.request(`/admin/orders/${third.body.data.id}/status`, {
+        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
+      });
+      assert.equal(await stockOf(customer, product.id), before, 'final stock matches the starting level');
+    });
+
     await suite.test('admin authorization guard', async () => {
       // Normal user cannot create products
       const userBrowser = new BrowserSession();

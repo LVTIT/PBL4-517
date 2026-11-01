@@ -277,9 +277,23 @@ Các tài khoản này có mật khẩu công khai, chỉ dùng development/test
 | `POST` | `/api/orders` | Public (Khách / User) | Tạo đơn hàng (tính tiền & trừ kho phía server; chặn Admin). |
 | `GET` | `/api/orders/:id` | Chủ đơn / Admin | Chi tiết đơn hàng (bảo vệ chống **IDOR**). |
 | `GET` | `/api/admin/orders` | Admin | Toàn bộ đơn hàng trong hệ thống (bao gồm đơn khách vãng lai). |
-| `PATCH` | `/api/admin/orders/:id/status` | Admin | Cập nhật trạng thái đơn (`PENDING`, `CONFIRMED`, `SHIPPED`...). |
+| `PATCH` | `/api/admin/orders/:id/status` | Admin | Cập nhật trạng thái đơn theo bảng chuyển trạng thái hợp lệ (xem bên dưới). |
 
 Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
+
+Admin chỉ được chuyển đơn theo các bước tiến hợp lệ; `CANCELLED` là trạng thái cuối:
+
+| Từ | Được phép sang |
+| --- | --- |
+| `PENDING` | `CONFIRMED`, `CANCELLED` |
+| `CONFIRMED` | `SHIPPED`, `CANCELLED` |
+| `SHIPPED` | `DELIVERED` |
+| `DELIVERED` | — |
+| `CANCELLED` | — |
+
+Chuyển sang `CANCELLED` sẽ hoàn kho đúng một lần trong cùng transaction, giống luồng
+khách tự hủy đơn. Mọi chuyển trạng thái khác trả `409 INVALID_STATUS_TRANSITION` và
+không thay đổi tồn kho. Đơn không tồn tại trả `404 NOT_FOUND`.
 
 Checkout hiển thị ô **Số điện thoại người nhận (tùy chọn)** riêng với địa chỉ cho cả
 khách đã đăng nhập và khách vãng lai. Với khách đã đăng nhập, `POST /api/orders`

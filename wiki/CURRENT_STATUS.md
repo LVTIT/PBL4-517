@@ -1,5 +1,18 @@
 # Current Project Status
 
+**2026-11-01 admin status changes keep inventory honest (#65): implemented and locally verified; not deployed.**
+`PATCH /api/admin/orders/:id/status` was a single blind `order.update`, so an
+admin cancellation never returned the stock that `createOrder` had taken, and a
+`CANCELLED` order could be reopened. Together those let cancel → reopen → cancel
+release the same units repeatedly: measured +4 phantom units on a 15-unit
+product. `updateOrderStatus` now validates an explicit transition table
+(`CANCELLED` is terminal), claims the transition with a conditional `updateMany`
+inside the transaction, and restocks once before returning. The new HTTP subtest
+fails on the old code (17/19) and passes on the new code (19/19); security
+lifecycle 9/9 PASS, both builds PASS, repository policy 0 violations. No schema,
+migration, lab flag, `.env` or AWS change. Related to #61 and #63, which touch
+the same service; [reproduction and limits](../evidence/BUG-65/README.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
@@ -87,7 +100,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-26 (Asia/Saigon; PR #57 integration and monitoring handoff, no new AWS availability claim)
+**Last updated:** 2026-11-01 (Asia/Saigon; #65 admin status/inventory fix verified locally, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 

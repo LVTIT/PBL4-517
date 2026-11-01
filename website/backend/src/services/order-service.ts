@@ -398,14 +398,103 @@ export async function cancelOrder(
   }
 }
 
+// Allowed forward transitions. CANCELLED is terminal: once stock has been
+// returned an order must not be reopened, otherwise the same units can be
+// released again by cancelling a second time.
+const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['DELIVERED'],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   try {
-    const order = await prisma.order.update({
+    // Read first: the transition decision and the stock bookkeeping depend on
+    // the current state, so a blind update is not enough.
+    const current = await prisma.order.findUnique({
       where: { id: orderId },
-      data: { status },
+      select: {
+        id: true,
+        status: true,
+        items: { select: { productId: true, quantity: true } },
+      },
     });
-    return { ...order, totalPrice: order.totalPrice.toFixed(2) };
-  } catch {
+
+    if (!current) {
+      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    }
+
+    if (current.status === status) {
+      throw new AppError(
+        409,
+        'INVALID_STATUS_TRANSITION',
+        `Đơn hàng đã ở trạng thái "${current.status}".`,
+      );
+    }
+
+    if (!ALLOWED_TRANSITIONS[current.status].includes(status)) {
+      throw new AppError(
+        409,
+        'INVALID_STATUS_TRANSITION',
+        `Không thể chuyển đơn hàng từ "${current.status}" sang "${status}".`,
+      );
+    }
+
+    // Collapse duplicate lines so a product listed twice is restocked once with
+    // its total quantity instead of once per line.
+    const restockByProduct = new Map<string, number>();
+    for (const item of current.items) {
+      restockByProduct.set(item.productId, (restockByProduct.get(item.productId) ?? 0) + item.quantity);
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      // Claim the transition inside the transaction. createOrder decrements
+      // stock, cancelOrder returns it, so an admin cancellation must return it
+      // too; two admins racing on the same order must only restock once.
+      const claim = await tx.order.updateMany({
+        where: { id: orderId, status: current.status },
+        data: { status },
+      });
+
+      if (claim.count === 0) {
+        throw new AppError(
+          409,
+          'INVALID_STATUS_TRANSITION',
+          'Trạng thái đơn hàng vừa thay đổi. Vui lòng tải lại và thử lại.',
+        );
+      }
+
+      if (status === 'CANCELLED') {
+        for (const [productId, quantity] of restockByProduct) {
+          await tx.product.update({
+            where: { id: productId },
+            data: { stock: { increment: quantity } },
+          });
+        }
+      }
+
+      return tx.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          items: {
+            include: {
+              product: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+    });
+
+    return {
+      ...updated,
+      totalPrice: updated.totalPrice.toFixed(2),
+      items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
     throw databaseUnavailable();
   }
 }
