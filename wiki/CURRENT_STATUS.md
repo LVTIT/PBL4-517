@@ -1,5 +1,20 @@
 # Current Project Status
 
+**2026-11-01 data errors keep their 4xx status (#63): implemented and locally verified; not deployed.**
+Services ended every path with `catch { throw databaseUnavailable(); }`, so all
+Prisma failures became `503 DATABASE_UNAVAILABLE`. A malformed UUID, a missing
+record and a delete blocked by an order all told the client the service was down
+and invited a retry that could never succeed. A shared `translatePrismaError()`
+now maps `P2007`/`P2023` to `400 INVALID_ID`, `P2025` and friends to `404 NOT_FOUND`,
+`P2003` to `409 CONFLICT`, `P2002` to `409` (and `409 EMAIL_EXISTS` on the raced
+registration path), `P2000`/`P2004` to `400 INVALID_INPUT`, and leaves genuine
+infrastructure failures and unknown codes at `503` so real outages are not masked.
+Product routes also reject a non-UUID id before touching the database. The new
+HTTP subtest fails on the old code (17/19) and passes on the new code (19/19); the
+unit mapping test is 3/3, API integration 19/19 and security lifecycle 9/9 PASS.
+No schema, migration, lab flag, `.env` or AWS change.
+[Reproduction, code table and limits](../evidence/BUG-63/README.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.

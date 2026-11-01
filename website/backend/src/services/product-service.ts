@@ -1,6 +1,7 @@
 import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
-import { AppError, databaseUnavailable } from '../lib/errors.js';
+import { rethrowDataError } from '../lib/data-errors.js';
+import { AppError } from '../lib/errors.js';
 
 function isSqlInjectionVulnerable(): boolean {
   return config.VULN_SQLI_ENABLED === 'true';
@@ -50,8 +51,8 @@ export async function listProducts(search?: string, category?: string, includeVe
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     return products.map((product) => ({ ...product, price: product.price.toFixed(2) }));
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -90,7 +91,7 @@ export async function getProductById(id: string, includeVerification = false) {
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -114,8 +115,8 @@ export async function createProduct(data: {
       },
     });
     return { ...product, price: product.price.toFixed(2) };
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -144,8 +145,8 @@ export async function updateProduct(
       data: updateData,
     });
     return { ...product, price: product.price.toFixed(2) };
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -153,8 +154,8 @@ export async function deleteProduct(id: string) {
   try {
     await prisma.product.delete({ where: { id } });
     return { success: true };
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -177,7 +178,7 @@ export async function addReview(productId: string, userId: string, rating: numbe
     });
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -190,7 +191,7 @@ export async function listReviews(productId: string) {
       },
       orderBy: { createdAt: 'desc' },
     });
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }

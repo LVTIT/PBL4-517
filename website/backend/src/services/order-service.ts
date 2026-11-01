@@ -1,6 +1,7 @@
 import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
-import { AppError, databaseUnavailable } from '../lib/errors.js';
+import { rethrowDataError } from '../lib/data-errors.js';
+import { AppError } from '../lib/errors.js';
 import type { OrderStatus } from '../generated/prisma/client.js';
 
 function isIdorVulnerable(): boolean {
@@ -34,9 +35,7 @@ export async function createOrder(
   const customerPhone = recipientPhone?.trim() || guestInfo?.phone?.trim() || null;
 
   if (userId) {
-    const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => {
-      throw databaseUnavailable();
-    });
+    const user = await prisma.user.findUnique({ where: { id: userId } }).catch(rethrowDataError);
     if (!user) {
       throw new AppError(404, 'USER_NOT_FOUND', 'Tài khoản người dùng không tồn tại.');
     }
@@ -60,9 +59,7 @@ export async function createOrder(
   const productIds = items.map((item) => item.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-  }).catch(() => {
-    throw databaseUnavailable();
-  });
+  }).catch(rethrowDataError);
 
   if (products.length !== productIds.length) {
     throw new AppError(400, 'INVALID_PRODUCT', 'Một số sản phẩm trong đơn hàng không tồn tại.');
@@ -130,7 +127,7 @@ export async function createOrder(
     });
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -152,8 +149,8 @@ export async function getUserOrders(userId: string) {
       totalPrice: o.totalPrice.toFixed(2),
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -175,8 +172,8 @@ export async function getAllOrders() {
       totalPrice: o.totalPrice.toFixed(2),
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }
 
@@ -240,7 +237,7 @@ export async function getOrderById(orderId: string, requestingUserId: string, is
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -310,7 +307,7 @@ export async function updateOrderDetails(
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -394,7 +391,7 @@ export async function cancelOrder(
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    throw rethrowDataError(error);
   }
 }
 
@@ -405,7 +402,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
       data: { status },
     });
     return { ...order, totalPrice: order.totalPrice.toFixed(2) };
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    throw rethrowDataError(error);
   }
 }

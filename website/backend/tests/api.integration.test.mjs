@@ -226,6 +226,47 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.ok(Array.isArray(detailRes.body.data.reviews));
     });
 
+    // Regression for #63: every Prisma failure used to surface as 503, so a bad id
+    // or a missing record looked like an outage and invited a pointless retry.
+    await suite.test('data errors keep their 4xx status instead of 503', async () => {
+      const invalidId = await browser.request('/products/not-a-uuid');
+      assert.equal(invalidId.status, 400, 'a malformed product id is a client error');
+      assert.equal(invalidId.body.error.code, 'INVALID_ID');
+
+      const missingProduct = await browser.request('/products/00000000-0000-4000-8000-0000000009f0');
+      assert.equal(missingProduct.status, 404, 'a missing product is not an outage');
+      assert.equal(missingProduct.body.error.code, 'NOT_FOUND');
+
+      const invalidOrderId = await browser.request('/orders/not-a-uuid');
+      assert.notEqual(invalidOrderId.status, 503);
+      assert.ok([400, 401].includes(invalidOrderId.status), 'no 503 for a malformed order id');
+
+      // Admin-only: deleting a product referenced by an order must be a conflict,
+      // and the row must survive.
+      const admin = new BrowserSession();
+      const adminCsrf = await admin.csrf();
+      const adminLogin = await admin.request('/auth/login', {
+        method: 'POST', csrfToken: adminCsrf,
+        body: { email: 'admin@example.com', password: 'AdminOnly517!' },
+      });
+      assert.equal(adminLogin.status, 200, 'admin seed account is required for this check');
+
+      const owned = await database.query(
+        'SELECT "productId" FROM "OrderItem" ORDER BY "orderId" LIMIT 1',
+      );
+      if (owned.rows.length > 0) {
+        const productId = owned.rows[0].productId;
+        const deleteCsrf = await admin.csrf();
+        const blocked = await admin.request(`/products/${productId}`, {
+          method: 'DELETE', csrfToken: deleteCsrf,
+        });
+        assert.equal(blocked.status, 409, 'a referenced product is a conflict, not an outage');
+        assert.equal(blocked.body.error.code, 'CONFLICT');
+        const stillThere = await database.query('SELECT count(*)::int AS count FROM "Product" WHERE id = $1', [productId]);
+        assert.equal(stillThere.rows[0].count, 1, 'the conflicting delete must not change data');
+      }
+    });
+
     await suite.test('product search rejects SQL injection payloads', async () => {
       // Secure Baseline: payload must be treated as a literal search value.
       const tautology = await browser.request(`/products?search=${encodeURIComponent("' OR '1'='1")}`);

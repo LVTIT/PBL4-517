@@ -1,0 +1,12 @@
+﻿Γ£ö known Prisma failures map to the status the caller deserves (1334.5876ms)
+Γ£ö genuine infrastructure failures still report 503 (259.7795ms)
+Γ£ö an AppError passes through unchanged (114.9803ms)
+Γä╣ tests 3
+Γä╣ suites 0
+Γä╣ pass 3
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 1777.9543
+
