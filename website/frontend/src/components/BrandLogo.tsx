@@ -1,3 +1,8 @@
+﻿// Brand marks. The symbol is a white tile with an orange "K"; the wordmark stays
+// the same ink colour as the rest of the header so it reads on white.
+const BRAND_ORANGE = '#EA580C';
+const BRAND_TILE = '#FFFFFF';
+
 export function KeviloSymbol({ size = 32, className = '' }: { size?: number; className?: string }) {
   return (
     <svg
@@ -9,11 +14,11 @@ export function KeviloSymbol({ size = 32, className = '' }: { size?: number; cla
       className={className}
       aria-hidden="true"
     >
-      <rect width="32" height="32" rx="8" fill="#111827" />
-      <rect x="7" y="6" width="4" height="20" rx="1.5" fill="#FFFFFF" />
-      <path d="M12.5 15.5 L22.5 6 H26.5 L15.5 17 Z" fill="#FFFFFF" />
-      <path d="M14 14.5 L25 26 H20.5 L11.5 17 Z" fill="#FFFFFF" />
-      <circle cx="24" cy="8" r="1.5" fill="#1D4ED8" />
+      {/* Border keeps the white tile visible on white and light surfaces. */}
+      <rect width="32" height="32" rx="8" fill={BRAND_TILE} stroke="#F1E4D8" strokeWidth="1.5" />
+      <rect x="7" y="6" width="4" height="20" rx="1.5" fill={BRAND_ORANGE} />
+      <path d="M12.5 15.5 L22.5 6 H26.5 L15.5 17 Z" fill={BRAND_ORANGE} />
+      <path d="M14 14.5 L25 26 H20.5 L11.5 17 Z" fill={BRAND_ORANGE} />
     </svg>
   );
 }

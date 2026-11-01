@@ -1,5 +1,15 @@
 # Current Project Status
 
+**2026-11-01 brand logo moved to a white/orange tone (#67): implemented and locally verified; not deployed.**
+The K symbol is now a white rounded tile with an orange mark (`#EA580C`) instead
+of the graphite tile with a cobalt dot; the `KEVILO` wordmark uses `#C2410C`
+(5.18:1 on white), and `favicon.svg` plus the regenerated `favicon.png` follow
+the same geometry. Both tones come from CSS custom properties, so the mark and
+the text stay one hue. Cobalt stays the accent for buttons and links; only brand
+identification changed. Verified with a real Chromium run at desktop and 390px
+(computed wordmark colour, mark fill, drawer header) plus the full Playwright
+suite. No schema, API, `.env` or AWS change.
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.

@@ -126,6 +126,12 @@
   --color-primary-hover: #1E40AF;
   --color-primary-active: #172554;
   --color-primary-subtle: #EFF6FF;
+
+  /* Brand mark: a white tile with an orange K. Two tones of one hue — the bright
+     one for the graphic, the darker one for text, which needs >= 4.5:1 on white. */
+  --color-brand-orange: #EA580C;
+  --color-brand-orange-ink: #C2410C;
+  --color-brand-tile-edge: #F1E4D8;
   
   --color-border: #DCE1E8;
   --color-border-subtle: #E9EDF2;
@@ -422,11 +428,18 @@ a {
   gap: 10px;
 }
 
+/* The mark is a white tile with an orange K. On the white header the tile needs
+   a hairline edge and a soft shadow, otherwise only the K appears to float. */
+.brand-lockup > svg:first-child {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.08), 0 1px 1px rgba(17, 24, 39, 0.04);
+}
+
 .brand-wordmark {
   font-weight: 700;
   font-size: 1.25rem;
   letter-spacing: 0.08em;
-  color: var(--color-text);
+  color: var(--color-brand-orange-ink);
 }
 
 /* Desktop nav */

@@ -54,6 +54,8 @@ based on port rules are heuristics and do not establish a vulnerability/CVSS fin
 **Decision:**
 1. Đổi tên thương mại giao diện website thành **KEVILO**, tagline *"Nâng chuẩn góc làm việc."*, định vị cửa hàng phụ kiện công nghệ cho góc làm việc. Giữ nguyên mã đề tài `PBL4-517`, khóa giỏ hàng `pbl517_cart_*`, cookie `pbl517.sid` và cơ sở dữ liệu hiện có.
 2. Thiết kế giao diện theo phong cách công nghệ cao cấp (Graphite `#111827`, Nền `#F6F7F9`, Card trắng `#FFFFFF`, Accent Cobalt `#1D4ED8`, Border `#DCE1E8`). Typography dùng font **Be Vietnam Pro** (OFL 1.1) tự host đầy đủ các tệp WOFF2. Giữ nguyên ràng buộc công nghệ React + TypeScript + Vite + CSS thuần, không thêm thư viện runtime CSS/animation.
+
+   **Cập nhật 2026-11-01 (Refs #67):** logo mark đổi sang tone **trắng–cam**: ô nền trắng bo góc, chữ `K` cam `#EA580C`, wordmark cam đậm `#C2410C` (5.18:1 trên trắng), favicon SVG/PNG đồng bộ. Accent Cobalt `#1D4ED8` của nút/link **không đổi**; thay đổi này chỉ áp dụng cho nhận diện logo.
 3. Bộ ảnh studio gồm 10 sản phẩm AI và 1 ảnh hero góc làm việc xuất định dạng WebP tối ưu (≤66KB, đạt chỉ tiêu dung lượng ≤180KB và ≤350KB). Mở rộng schema Prisma với trường nullable `imageKey` và script nạp catalog độc lập `npm run catalog:import` (mặc định dry-run) bảo toàn số lượng tồn kho và không tạo trùng tài khoản.
 4. Đáp ứng tiêu chuẩn trợ năng **WCAG 2.2 AA** (vùng tương tác chuẩn 44×44px, độ tương phản ≥ 4.5:1, hỗ trợ phím/Escape/aria-live) và bổ sung bộ kiểm thử tự động Playwright + axe-core trong `devDependencies` bao phủ toàn diện 28 kịch bản responsive, catalog, cart, resilience.
 
