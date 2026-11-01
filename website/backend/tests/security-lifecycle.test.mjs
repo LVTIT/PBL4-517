@@ -74,7 +74,10 @@ class Session {
   }
 }
 
-test('isolated local exploit -> defense lifecycle', { timeout: 120000 }, async suite => {
+// The suite launches several short-lived servers, two Vite previews, ten Python demo
+// probes and two Chromium sessions. The budget only covers wall-clock time: every
+// subtest keeps its assertions, and a hung child still fails the run.
+test('isolated local exploit -> defense lifecycle', { timeout: 300000 }, async suite => {
   assert.equal(process.env.LOCAL_SECURITY_LAB, '1', 'Set LOCAL_SECURITY_LAB=1 explicitly.');
   assert.notEqual(process.env.NODE_ENV, 'production');
   const connection = new URL(process.env.DATABASE_URL);
