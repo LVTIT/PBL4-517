@@ -364,6 +364,111 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       assert.equal(cancelOwnOrder.body.data.status, 'CANCELLED');
     });
 
+    // Regression for #61: the stock guard and the stock write used to live in
+    // different places. Two concurrent checkouts both read the pre-sale level,
+    // both passed, and the trailing CHECK constraint turned the loser into a 503
+    // instead of a 400. The same shape let a double cancel restore stock twice.
+    await suite.test('concurrent stock claim: no oversell and no phantom stock', async () => {
+      const product = await database.query(
+        'SELECT id, price::text, stock FROM "Product" WHERE stock >= 0 ORDER BY "createdAt", id LIMIT 1',
+      );
+      const { id: productId, stock: originalStock } = product.rows[0];
+      if (!productId) return;
+
+      try {
+        await database.query('UPDATE "Product" SET stock = 3 WHERE id = $1', [productId]);
+
+        const placeOrder = async (email) => {
+          const client = new BrowserSession();
+          const token = await client.csrf();
+          const result = await client.request('/orders', {
+            method: 'POST',
+            csrfToken: token,
+            body: {
+              items: [{ productId, quantity: 1 }],
+              shippingAddress: '789 Đường Tranh Chấp, Huế',
+              guestInfo: { name: 'Race Guest', email },
+            },
+          });
+          return { client, token, result };
+        };
+
+        const emails = Array.from({ length: 5 }, (_, index) => `race_${Date.now()}_${index}@example.com`);
+        const outcomes = await Promise.all(emails.map(placeOrder));
+        const statuses = outcomes.map((entry) => entry.result.status);
+
+        assert.equal(statuses.filter((status) => status === 201).length, 3, 'exactly the available units may sell');
+        for (const entry of outcomes) {
+          if (entry.result.status === 201) continue;
+          assert.equal(entry.result.status, 400, 'a sold-out checkout is a client error, not 503');
+          assert.equal(entry.result.body.error.code, 'OUT_OF_STOCK');
+        }
+
+        const afterSale = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
+        assert.equal(afterSale.rows[0].stock, 0, 'stock must not fall below zero');
+        const created = await database.query(
+          'SELECT count(*)::int AS count FROM "Order" WHERE "customerEmail" = ANY($1::text[])',
+          [emails],
+        );
+        assert.equal(created.rows[0].count, 3, 'order count must match units sold');
+
+        // Double cancel must restore stock exactly once. Cancelling requires an
+        // authenticated owner, so this part uses a registered account rather than
+        // the guest sessions used above.
+        const owner = new BrowserSession();
+        const ownerCsrf = await owner.csrf();
+        const ownerEmail = `race_owner_${Date.now()}@example.com`;
+        await owner.request('/auth/register', {
+          method: 'POST',
+          csrfToken: ownerCsrf,
+          body: { name: 'Race Owner', email: ownerEmail, password: 'LocalLabOnly517!' },
+        });
+        const ownerLoginCsrf = await owner.csrf();
+        const ownerLogin = await owner.request('/auth/login', {
+          method: 'POST',
+          csrfToken: ownerLoginCsrf,
+          body: { email: ownerEmail, password: 'LocalLabOnly517!' },
+        });
+        assert.equal(ownerLogin.status, 200, 'race-test owner must be able to log in');
+
+        await database.query('UPDATE "Product" SET stock = 5 WHERE id = $1', [productId]);
+        const orderCsrf = await owner.csrf();
+        const ownerOrder = await owner.request('/orders', {
+          method: 'POST',
+          csrfToken: orderCsrf,
+          body: {
+            items: [{ productId, quantity: 2 }],
+            shippingAddress: '321 Đường Hoàn Kho, Huế',
+          },
+        });
+        assert.equal(ownerOrder.status, 201);
+        const orderId = ownerOrder.body.data.id;
+
+        const beforeCancel = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
+        assert.equal(beforeCancel.rows[0].stock, 3, 'two units were taken from stock');
+
+        const cancelCsrf = await owner.csrf();
+        const firstCancel = await owner.request(`/orders/${orderId}/cancel`, {
+          method: 'POST', csrfToken: cancelCsrf,
+        });
+        assert.equal(firstCancel.status, 200);
+        const secondCancel = await owner.request(`/orders/${orderId}/cancel`, {
+          method: 'POST', csrfToken: cancelCsrf,
+        });
+        assert.equal(secondCancel.status, 400, 'cancelling twice is a client error');
+        assert.equal(secondCancel.body.error.code, 'CANNOT_CANCEL');
+
+        const afterCancel = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
+        assert.equal(afterCancel.rows[0].stock, 5, 'only the cancelled units may be restored, once');
+
+        await database.query('DELETE FROM "Order" WHERE "userId" = (SELECT id FROM "User" WHERE email = $1)', [ownerEmail]);
+        await database.query('DELETE FROM "User" WHERE email = $1', [ownerEmail]);
+      } finally {
+        await database.query('DELETE FROM "Order" WHERE "customerEmail" LIKE $1', [`race\\_%@example.com`]);
+        await database.query('UPDATE "Product" SET stock = $2 WHERE id = $1', [productId, originalStock]);
+      }
+    });
+
     await suite.test('admin authorization guard', async () => {
       // Normal user cannot create products
       const userBrowser = new BrowserSession();

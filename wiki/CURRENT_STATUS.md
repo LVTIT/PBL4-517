@@ -1,5 +1,19 @@
 # Current Project Status
 
+**2026-11-01 inventory race fixed (#61): implemented and locally verified; not deployed.**
+Order stock checks lived outside their write transactions. Two concurrent checkouts
+both read the pre-sale level, both passed, and the trailing `CHECK ("stock" >= 0)`
+turned the loser into `503 DATABASE_UNAVAILABLE` instead of `400 OUT_OF_STOCK`
+(measured 3/3 times). A double cancel restored stock twice, leaving +2 phantom
+units that could be sold again. Both write paths now claim first and mutate after:
+`createOrder` decrements through `updateMany` with `stock >= quantity`, deduplicates
+repeated product lines, and reports the real remaining quantity; `cancelOrder`
+claims `PENDING -> CANCELLED` inside the transaction before restoring stock, and
+carries the owner scope into that claim. A regression subtest fails on the old code
+(17/19) and passes on the new code (19/19). API integration 19/19 and security
+lifecycle 9/9 PASS. No schema, migration, lab flag, `.env` or AWS change.
+[Reproduction, before/after and limits](../evidence/BUG-61/README.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
