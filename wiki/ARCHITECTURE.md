@@ -17,6 +17,21 @@ flowchart LR
 
 Frontend gọi `/api/...` bằng relative URL. Express tách routes, controllers, services, middleware và database client; `server.ts` chỉ khởi động/dừng server. PostgreSQL chứa user, product và session. Danh sách sản phẩm đi qua Prisma; giá dùng Decimal. Session cookie HttpOnly trỏ tới session phía server; login/logout kiểm tra CSRF token. Hợp đồng API và cách chạy ở [website/README.md](../website/README.md).
 
+### Local launcher và lab — Refs #68
+
+`dev.ps1` điều phối một PostgreSQL 16 Compose (host loopback 55432), BE 3000 và
+FE 5173. Volume `pbl517-local-data` chứa `kevilo_local` và `kevilo_demo_lab`;
+mỗi DB có application role không superuser riêng. Lab dùng BE 3001/FE 5174,
+credential/fixture riêng và restart để đổi cờ. Cookie browser tách host: website
+127.0.0.1, lab localhost. Source/schema/migration dùng chung, dữ liệu tách biệt.
+Setup và lifecycle canonical tại [website](../website/README.md#local-nhanh-tren-windows)
+và [scripts/dev](../scripts/dev/README.md).
+
+Monitoring dùng cấu hình root .env, state/outbox .local/runtime và report
+.local/reports/scanner. Process env ưu tiên, đường dẫn tương đối tính từ root repo.
+Telegram và CLI cùng quy tắc; state deployment/scheduler có thể cấu hình đường
+dẫn tuyệt đối riêng. Migration giữ baseline/outbox, không suy ra dữ liệu từ HTML.
+
 ## Website production trên EC2
 
 **Status: Implemented; service lifecycle and reboot/autostart verified in Issue #15 (2026-10-02).** Nginx phục vụ frontend và HTTPS/API với chứng chỉ IP, PostgreSQL và Express chỉ loopback. Backend chạy bằng systemd, active/enabled; stop/start/restart, journal và tự khởi động sau một lần reboot đã kiểm chứng. [Service evidence và giới hạn](../evidence/LINUX-02/README.md), [cấu hình/bàn giao](../docs/aws/linux-service-review.md). CI/review của PR được theo dõi riêng với kết quả vận hành.

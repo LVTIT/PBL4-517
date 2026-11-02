@@ -60,10 +60,10 @@ SSH/scp thêm `-i <key>` nếu cần. Không chia sẻ key hoặc manifest.
 ```powershell
 npm.cmd --prefix website/frontend ci
 npm.cmd --prefix website/frontend exec -- playwright install chromium
-New-Item -ItemType Directory -Force .local/demo | Out-Null
-scp ubuntu@13.251.128.130:.local/kevilo-demo/run1.json .local/demo/run1.json
+New-Item -ItemType Directory -Force .local/private | Out-Null
+scp ubuntu@13.251.128.130:.local/kevilo-demo/run1.json .local/private/ec2-run1.json
 $target = 'https://13.251.128.130'
-$fixture = '.local/demo/run1.json'
+$fixture = '.local/private/ec2-run1.json'
 $revision = 'THAY_BANG_SHA_40_KY_TU_DA_DUYET'
 python scripts/attacker/demo.py --scenario release --url $target --revision $revision
 ```
@@ -94,7 +94,7 @@ Cấu hình token/webhook theo [scanner README](../../scanner/README.md).
 Lệnh sau **gửi thông báo thật** về kênh nhóm khi người vận hành chạy:
 
 ```powershell
-python scanner/scan.py 13.251.128.130 --ports 22,80,443,3000,5432,8080 --watch 15 --state-file .local/demo/demo.state.json --no-banner
+python scanner/scan.py 13.251.128.130 --ports 22,80,443,3000,5432,8080 --watch 15 --state-file .local/runtime/ec2-demo.state.json --no-banner
 ```
 
 - Dùng state mới lần đầu: lưu danh sách port và receipt Telegram/Discord.
@@ -167,7 +167,7 @@ transaction; giữ ID và review XSS. Chạy cùng payload ở secure. CANNOT_CA
 | RELEASE_VERIFIED | FE/BE đúng revision sạch, FE hash và health phù hợp | 0 |
 
 Output JSON không chứa password/cookie/response cá nhân. Ghi stdout vào
-`.local/demo/<scenario>-<phase>.json`, kiểm tra `$LASTEXITCODE`. Chỉ đưa báo cáo đã
+`.local/reports/security/<scenario>-<phase>.json`, kiểm tra `$LASTEXITCODE`. Chỉ đưa báo cáo đã
 rà soát vào evidence, không đưa manifest credential. Ghi SHA/URL/thời điểm/run ID,
 cờ, trước/sau, control, receipt và hạn chế. 502/503 hoặc sai CSRF **không** là đã vá.
 Tắt cờ chọn nhánh phòng vệ: khi trình bày giải thích query scoping, Prisma

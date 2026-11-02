@@ -4,7 +4,7 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
 - **Quét mạng đa luồng:** Quét nhanh danh sách cổng TCP với `ThreadPoolExecutor`, hỗ trợ cả IP và Domain.
 - **Thu thập Banner giao thức (Deep Banner Grabbing):** Thăm dò chi tiết phiên bản HTTP (`Server`, `X-Powered-By`), SSH handshake, PostgreSQL SSLRequest, MySQL packet, Redis PING.
 - **Đánh giá rủi ro theo heuristic & OWASP A05:** Chấm điểm heuristic score, xếp hạng độ nghiêm trọng (CRITICAL / HIGH / MEDIUM / INFO) và xếp loại Posture hệ thống (Grade A+ đến F).
-- **Phát hiện dị thường theo Baseline (Diffing Engine):** Tự động phát hiện cổng mới mở thêm hoặc cổng đã được bịt lại dựa trên mốc lưu trữ tại `scanner_state.json`.
+- **Phát hiện dị thường theo Baseline (Diffing Engine):** So sánh theo state mặc định `.local/runtime/scanner.state.json` (có thể cấu hình).
 - **Hệ thống cảnh báo kép (Dual Alerts) với nút bấm tương tác:**
   - **Discord Webhook:** Rich Embed trực quan kèm Action Row Link Buttons dẫn tới cẩm nang khắc phục AWS Security Group & tài liệu chuẩn OWASP A05.
   - **Telegram Group Bot:** Thông báo định dạng Markdown an toàn kèm Inline Keyboard nút bấm tương tác nhanh.
@@ -48,6 +48,20 @@ python alerts/notifier.py
 ---
 
 ## 3. Hướng dẫn Sử dụng Scanner
+
+CLI và Telegram đọc cùng root `.env`: biến môi trường của process ưu tiên hơn
+file, sau đó mới tới giá trị mặc định. Đường dẫn tương đối tính từ root repository.
+`PBL517_REPORTS_DIR` mặc định `.local/reports/scanner`; `SCANNER_STATE_FILE` mặc định
+`.local/runtime/scanner.state.json`. Nếu chưa có state mới và vẫn có
+`scanner/scanner_state.json`, tiếp tục dùng state cũ để giữ baseline/outbox cho đến
+khi [migration](../scripts/dev/README.md#di-chuyen-runtime-cu). Restart listener sau đổi config.
+Exit code 1 vẫn có report khi có cổng uncertain hoặc pending delivery; không đồng
+nghĩa toàn bộ lượt scan thất bại.
+
+Local Compose xuất PostgreSQL ở 55432; quét mặc định sáu cổng vẫn là
+22,80,443,3000,5432,8080. Demo local chọn đúng cổng, ví dụ `--ports 3000,5173,55432`
+(lab thêm 3001,5174). Report ở thư mục nào không quyết định local hay production;
+mục tiêu và danh sách cổng của lượt scan mới quyết định.
 
 ### 3.1. Quét cơ bản & Khởi tạo Baseline:
 ```bash
@@ -114,7 +128,7 @@ Các lệnh tương tác hỗ trợ:
 
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
-Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục `scanner/reports/`:
+Hệ thống xuất hai dạng báo cáo tại `.local/reports/scanner/` mặc định:
 1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, cảnh báo trực quan, biểu đồ tình trạng, và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
 2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).

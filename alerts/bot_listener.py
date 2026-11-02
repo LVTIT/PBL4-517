@@ -33,11 +33,12 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from alerts.notifier import get_credentials, load_env, send_telegram_alert
+from alerts.notifier import get_credentials, send_telegram_alert
+from scanner.config import setting, state_file, reports_dir
 
 
 def _setting(name: str, default: str = "") -> str:
-    return os.environ.get(name, load_env().get(name, default))
+    return setting(name, default)
 
 
 def _authorized_sender(chat_id: str, user_id: str | int | None) -> bool:
@@ -59,7 +60,7 @@ def _scan_target(target: str) -> str:
 
 
 def _state_file() -> Path:
-    return Path(_setting("SCANNER_STATE_FILE", str(ROOT_DIR / "scanner" / "scanner_state.json")))
+    return state_file()
 
 
 def register_bot_commands(bot_token: str, chat_id: str | None = None) -> None:
@@ -259,7 +260,7 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
             )
             print(f"[+] Hoàn tất lệnh /scan {target} {ports_arg or ''} (Exit code: {proc.returncode})")
 
-            if proc.returncode == 0:
+            if proc.returncode in (0, 1):
                 duration_str = "1.0s"
                 posture_str = "Chưa có dữ liệu đánh giá"
                 open_ports_str = "Không có cổng nào mở"
@@ -288,13 +289,16 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
                     "━━━━━━━━━━━━━━━━━━━━",
                 ]
 
-                if is_no_change:
+                if proc.returncode == 1:
+                    summary_lines.append("⚠️ Kết quả chưa đầy đủ: có cổng timeout/filtered hoặc cảnh báo chờ gửi lại. Xem báo cáo; không kết luận cổng đã đóng.")
+                elif is_no_change:
                     summary_lines.append("ℹ️ *Trạng thái:* Không có thay đổi cổng đã xác nhận; không phải kết luận hết lỗ hổng.")
                 elif is_initial:
                     summary_lines.append("ℹ️ *Trạng thái:* Đã khởi tạo mốc Baseline ban đầu thành công.")
                 else:
                     summary_lines.append("⚠️ *Trạng thái:* Đã phát hiện thay đổi cổng và gửi thông báo chi tiết!")
 
+                summary_lines.append(f"📄 HTML trên máy scanner: `{reports_dir() / 'latest.html'}`")
                 send_telegram_alert(
                     bot_token,
                     chat_id,

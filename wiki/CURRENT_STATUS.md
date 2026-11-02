@@ -1,5 +1,27 @@
 # Current Project Status
 
+**2026-11-02 local workflow cleanup (#68): Implemented on feature branch; review pending.**
+Root `dev.ps1` dispatches setup/up/down/status/bot/demo/probe. One Compose
+PostgreSQL 16 with a named external volume serves separate website/lab databases
+and restricted application roles. Shared monitoring config resolves CLI and bot
+paths from repository root; migration retains baseline, pending delivery and audit.
+Runtime, reports, private data and archives are grouped under `.local/`; source
+and historical evidence paths are preserved. Canonical setup: [website README](../website/README.md#local-nhanh-tren-windows);
+operations: [local commands](../scripts/dev/README.md); [demo](../scripts/demo/README.md).
+
+Verified locally: clean-copy dependency install/build, fresh database migrations,
+seed and lab preparation; managed start/idempotence/stop; 31 scanner/ChatOps tests,
+5 runtime migration tests; IDOR read, SQLi, stored XSS and auth before/after probes.
+Three existing PBL4 databases were dumped, restored and compared table-by-table
+before consolidating the active website/lab data; legacy data has a private backup.
+Backend config (2), API (17 subtests + parent), security lifecycle (8 subtests +
+parent) and 54 Playwright runs also PASS. The two verified legacy PBL4 containers
+and volumes were removed; PBL3 resources were preserved. Details are in
+[local workflow evidence](../evidence/DEVTOOLS-01/local-runtime-20261102/README.md).
+Hosted CI is tracked with the #68 PR. Human review remains
+required. No live notification, AWS deployment, permission change or issue closure
+is inferred from this local verification; production architecture/gates are unchanged.
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
@@ -87,7 +109,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-26 (Asia/Saigon; PR #57 integration and monitoring handoff, no new AWS availability claim)
+**Last updated:** 2026-11-02 (Asia/Bangkok; #68 local runtime/Compose cleanup, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 

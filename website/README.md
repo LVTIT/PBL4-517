@@ -7,7 +7,7 @@ Website thương mại điện tử phụ kiện bàn làm việc và không gia
 - Git.
 - **Node.js 24 LTS** và npm đi kèm. Kiểm tra bằng `node --version` và `npm --version`.
 - **PostgreSQL 16** đang chạy, kèm công cụ `psql`; hoặc Docker để chạy PostgreSQL 16 theo lựa chọn bên dưới.
-- Hai terminal để chạy backend và frontend.
+- Windows launcher quản lý BE/FE nền; cách thủ công cần hai terminal.
 
 Frontend dùng React, TypeScript, Vite và CSS thuần (tuân thủ design system KEVILO, font tự host Be Vietnam Pro, hỗ trợ WCAG 2.2 AA và Playwright/axe e2e tests). Backend dùng Express 5, TypeScript và Prisma ORM 7. Hai project có `package-lock.json` riêng; dùng `npm ci` để cài đúng phiên bản đã khóa.
 
@@ -55,9 +55,43 @@ cd PBL4-517
 
 Các lệnh dưới đây bắt đầu từ thư mục repository, trừ khi đã ghi thư mục khác.
 
-## Setup database
+## Local nhanh tren Windows
 
-Chọn **một** trong hai cách. Database ví dụ là `pbl517`, user là `pbl517_app`. Chuỗi `local_dev_password` chỉ là mật khẩu minh họa cho database local; thay bằng mật khẩu của bạn và dùng cùng giá trị trong `.env`.
+Bật Docker Desktop, cài Node.js 24/npm, Python 3.12+ và Git. Tại root repository:
+
+```powershell
+.\dev.ps1 setup
+.\dev.ps1 up
+```
+
+Setup cài dependency theo lockfile, build BE/FE, tạo một PostgreSQL 16 bằng
+`compose.yaml`, áp dụng migration, seed chỉ khi User/Product cùng rỗng, chuẩn bị
+DB lab riêng và Chromium cho XSS. Giữ dữ liệu/cấu hình cũ; database trùng tên nhưng
+thiếu cấu hình sẽ bị chặn. Dùng `dev.ps1 down` trước khi setup lại để BE/FE không
+dùng dependency/build đang thay đổi.
+
+Mở <http://127.0.0.1:5173>. Những lần sau dùng `dev.ps1 up`; `dev.ps1 down` dừng
+BE/FE/lab/bot và DB nhưng giữ dữ liệu. `dev.ps1 status` xem trạng thái.
+Nếu PowerShell chặn: `powershell -NoProfile -ExecutionPolicy Bypass -File .\dev.ps1 setup`.
+
+Container `pbl517-db`, volume `pbl517-local-data`, bind `127.0.0.1:55432`.
+Website dùng `kevilo_local`/`kevilo_local_app`, lab dùng
+`kevilo_demo_lab`/`kevilo_demo_lab_app`; application roles không là superuser.
+Admin random ở `.local/private/database.env`; website ở `website/backend/.env`;
+lab ở `.local/private/lab.env`; root `.env` chỉ monitoring. Không commit các file này.
+
+[Local commands](../scripts/dev/README.md) mô tả log, database tools, backup/rollback
+và migration setup cũ. [Demo](../scripts/demo/README.md) có lệnh trước/sau phòng thủ.
+Tài khoản web seed chỉ dùng local/testing; lab riêng ở `.local/private/lab-fixtures.json`.
+Máy có container/DB cũ cần backup và restore kiểm tra trước chuyển sang Compose;
+setup không tự nhập hoặc xóa dữ liệu cũ. Không chạy tiếp setup thủ công bên dưới
+sau setup tự động. Production giữ Nginx/systemd theo
+[deployment](../docs/aws/ec2-deployment-review.md), dùng secret riêng, không seed/lab local.
+
+## Setup database thủ công (PostgreSQL đã cài)
+
+Phần này dành cho PostgreSQL tự quản lý, không dùng launcher Compose.
+Database ví dụ `pbl517`, user `pbl517_app`; thay mật khẩu minh họa bằng mật khẩu riêng.
 
 ### Cách A: PostgreSQL 16 đã cài trên máy
 
@@ -97,23 +131,8 @@ Kiểm tra kết nối từ TCP bằng lệnh sau và nhập mật khẩu vừa 
 psql -h 127.0.0.1 -p 5432 -U pbl517_app -d pbl517 -c "SELECT version();"
 ```
 
-### Cách B: PostgreSQL 16 trong Docker
-
-Khi Docker đang chạy, thực hiện một lệnh sau trên Windows PowerShell hoặc Linux:
-
-```sh
-docker run --name pbl517-postgres -e POSTGRES_USER=pbl517_app -e POSTGRES_PASSWORD=local_dev_password -e POSTGRES_DB=pbl517 -p 127.0.0.1:5432:5432 -v pbl517-postgres-data:/var/lib/postgresql/data -d postgres:16
-```
-
-Đợi database sẵn sàng:
-
-```sh
-docker exec pbl517-postgres pg_isready -U pbl517_app -d pbl517
-```
-
-Kết quả phải có `accepting connections`. Dữ liệu được giữ trong Docker volume. Lần sau dùng `docker start pbl517-postgres`; dừng bằng `docker stop pbl517-postgres`. Biến `POSTGRES_*` chỉ khởi tạo user/password/database khi volume còn trống. Đây là cấu hình development local, không phải mẫu phân quyền production.
-
-Nếu máy đã có PostgreSQL chiếm port 5432, dùng cách A hoặc đổi phần publish thành `127.0.0.1:5433:5432` và đổi port trong `DATABASE_URL` thành `5433`.
+Docker local dùng duy nhất [Compose ở trên](#local-nhanh-tren-windows); không tạo
+thêm container `pbl517-postgres` bằng hướng dẫn cũ.
 
 ## Environment
 

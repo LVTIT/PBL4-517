@@ -45,37 +45,18 @@ KNOWN_SERVICES: dict[int, str] = {
 }
 
 
-def load_env() -> dict[str, str]:
-    """Tự động đọc các biến cấu hình từ file .env ở thư mục gốc (không cần python-dotenv)."""
-    env_vars: dict[str, str] = {}
-    current = Path(__file__).resolve().parent
-    root = current.parent
-    candidates = [root / ".env", current / ".env", Path(".env")]
-
-    for env_path in candidates:
-        if env_path.is_file():
-            try:
-                with open(env_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line or line.startswith("#") or "=" not in line:
-                            continue
-                        key, val = line.split("=", 1)
-                        key = key.strip()
-                        val = val.strip().strip("'\"")
-                        env_vars[key] = val
-                break
-            except Exception:
-                pass
-    return env_vars
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+from scanner.config import load_env
 
 
 def get_credentials() -> tuple[str | None, str | None, str | None]:
     """Lấy thông tin cấu hình từ os.environ hoặc file .env."""
     env = load_env()
-    discord_url = os.environ.get("DISCORD_WEBHOOK_URL") or env.get("DISCORD_WEBHOOK_URL")
-    tele_token = os.environ.get("TELEGRAM_BOT_TOKEN") or env.get("TELEGRAM_BOT_TOKEN")
-    tele_chat_id = os.environ.get("TELEGRAM_CHAT_ID") or env.get("TELEGRAM_CHAT_ID")
+    discord_url = os.environ.get("DISCORD_WEBHOOK_URL", env.get("DISCORD_WEBHOOK_URL"))
+    tele_token = os.environ.get("TELEGRAM_BOT_TOKEN", env.get("TELEGRAM_BOT_TOKEN"))
+    tele_chat_id = os.environ.get("TELEGRAM_CHAT_ID", env.get("TELEGRAM_CHAT_ID"))
     return discord_url, tele_token, tele_chat_id
 
 

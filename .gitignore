@@ -20,7 +20,6 @@ scanner_state.json.lock
 *.state.json.lock
 *.state.json
 scanner/reports/*
-!scanner/reports/.gitkeep
 
 # Logs and editor settings
 *.log

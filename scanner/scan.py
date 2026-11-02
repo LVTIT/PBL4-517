@@ -51,13 +51,14 @@ except ImportError:
     }
     notify_scan_event = None  # type: ignore
 
+from scanner.config import state_file, resolve_path
 from scanner.state_store import load_state, save_state, state_lock, write_audit
 from scanner.prober import grab_banner
 from scanner.risk_matrix import assess_port, calculate_system_posture
 from scanner.reporter import generate_html_report
 
 DEFAULT_PORTS = (22, 80, 443, 3000, 5432, 8080)
-DEFAULT_STATE_FILE = Path(__file__).resolve().parent / "scanner_state.json"
+DEFAULT_STATE_FILE = ROOT_DIR / ".local/runtime/scanner.state.json"
 
 
 def parse_ports(value: str) -> list[int]:
@@ -327,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--state-file",
-        default=str(DEFAULT_STATE_FILE),
+        default=str(state_file()),
         help=f"Đường dẫn file lưu Baseline trạng thái (Mặc định: {DEFAULT_STATE_FILE.name})",
     )
     parser.add_argument(
@@ -362,6 +363,9 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+    args.state_file = str(resolve_path(args.state_file))
+    if args.html_output:
+        args.html_output = str(resolve_path(args.html_output))
 
     if args.timeout <= 0:
         print("[-] Lỗi: --timeout phải lớn hơn 0.", file=sys.stderr)

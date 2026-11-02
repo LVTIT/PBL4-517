@@ -2,6 +2,31 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-11-02 — Local runtime và một PostgreSQL Compose (Refs #68)
+
+**Status: Accepted (hướng tổ chức theo yêu cầu người dùng; PR vẫn cần human review).**
+
+**Decision:** Giữ source website/frontend, website/backend, scanner và alerts.
+Gom lifecycle/database helpers vào scripts/dev, điều phối lab vào scripts/demo,
+tái sử dụng probes scripts/attacker. dev.ps1 là điểm vào setup/up/down/demo.
+Local dùng một PostgreSQL 16 Compose với volume external đặt tên rõ ràng;
+website và lab có DB/application role riêng không superuser. Không dùng database
+website cho probe phá dữ liệu. Không tự xóa dữ liệu khi setup lại.
+
+Runtime/log/state ở .local/runtime, reports ở .local/reports, credentials/backup
+ở .local/private, artifact cũ ở .local/archive. CLI/Telegram cùng đọc root .env;
+process environment ưu tiên, đường dẫn tương đối tính từ root repo. State cũ
+được giữ tương thích hoặc chuyển tường minh có backup, giữ pending delivery.
+
+**Reason:** Người dùng yêu cầu dọn thư mục, bỏ Docker PBL4 thừa và demo bằng vài lệnh.
+
+**Consequences:** DB chỉ bind loopback 55432 trên host. Schema/migration vẫn duy
+nhất ở website/backend/prisma. Đây là quy ước local; production giữ PostgreSQL 16,
+Nginx/systemd, secrets riêng, CI và human approval hiện hành. Không thêm production
+CD hoặc coi lab local là production acceptance. Hướng dẫn canonical tại
+[website](../website/README.md), [local commands](../scripts/dev/README.md),
+[demo](../scripts/demo/README.md); trạng thái kiểm chứng ở CURRENT_STATUS.
+
 ## 2026-10-26 — One EC2 synthetic-data demo profile (Refs #44)
 
 **Status: Accepted for implementation** — user explicitly requested completing the

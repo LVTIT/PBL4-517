@@ -1,3 +1,22 @@
+# Tài liệu chuyên sâu
+
+Context hiện hành ở [wiki](../wiki/README.md); setup thuộc README subsystem.
+
+| Nội dung | Tài liệu |
+| --- | --- |
+| Local commands / migration | [scripts/dev](../scripts/dev/README.md) |
+| Local security demo | [scripts/demo](../scripts/demo/README.md) |
+| Kiến trúc v0.1 (hồ sơ) | [Architecture](architecture/v0.1.md) |
+| EC2 launch / environment | [Launch](aws/ec2-launch.md), [Environment](aws/ec2-web-environment.md) |
+| Deploy / Linux service | [Deploy](aws/ec2-deployment-review.md), [Service](aws/linux-service-review.md) |
+| CI/CD / protection proposal | [CI/CD](devops/ci-cd.md), [Protection](devops/github-branch-protection.md) |
+| UI audit (lịch sử) | [KEVILO audit](ui/kevilo-public-audit-20261003.md) |
+| Kết quả đã kiểm chứng | [Evidence index](../evidence/README.md) |
+
+## Hồ sơ quyết định stack — Issue #7
+
+Giữ nguyên nội dung lịch sử dưới đây; stack hiện hành tại [WEB_STACK](../wiki/WEB_STACK.md).
+
 # Quyết định web technology stack
 
 > Bản ghi lịch sử của Issue #7 tại ngày chốt stack. Context hiện hành được quản lý trong [wiki/README.md](../wiki/README.md); stack tại [wiki/WEB_STACK.md](../wiki/WEB_STACK.md), quyết định tại [wiki/DECISIONS.md](../wiki/DECISIONS.md), tiến độ tại [wiki/CURRENT_STATUS.md](../wiki/CURRENT_STATUS.md). Các mô tả “chưa tạo/chưa kiểm thử” bên dưới phản ánh thời điểm Issue #7; xem [website/README.md](../website/README.md) để chạy source hiện tại.

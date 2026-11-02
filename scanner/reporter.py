@@ -5,27 +5,30 @@ Tạo báo cáo kiểm toán an ninh mạng chuyên nghiệp định dạng HTML
 - Không phụ thuộc mạng Internet/CDN (mở xem offline khi chấm bài hoàn hảo).
 - Nút bấm In ấn / Xuất PDF trực tiếp trên giao diện trình duyệt.
 - Tự động sinh báo cáo định dạng Markdown (latest.md) để dễ dàng kẹp vào bài nộp Word đồ án.
-- Cơ chế Living Dashboard chống đầy ổ cứng: Mặc định ghi đè file `scanner/reports/latest.html`.
+- Cơ chế Living Dashboard chống đầy ổ cứng: Mặc định ghi đè file `.local/reports/scanner/latest.html`.
 - Cơ chế lưu trữ sự cố: Tự động lưu snapshot khi có cảnh báo và giới hạn tối đa 10 file gần nhất.
 """
 
 from __future__ import annotations
 
 import datetime
-import os
 from html import escape
 from pathlib import Path
 
 from scanner.risk_matrix import assess_port, calculate_system_posture
 
-REPORTS_DIR = Path(os.environ.get("PBL517_REPORTS_DIR", str(Path(__file__).resolve().parent / "reports")))
+from scanner.config import reports_dir
+
+# None uses shared dynamic configuration; tests may override with a temporary Path.
+REPORTS_DIR: Path | None = None
 MAX_ARCHIVED_REPORTS = 10
 
 
 def ensure_reports_dir() -> Path:
     """Đảm bảo thư mục lưu báo cáo tồn tại."""
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    return REPORTS_DIR
+    directory = REPORTS_DIR if REPORTS_DIR is not None else reports_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
 
 
 def clean_old_reports(reports_dir: Path, max_keep: int = MAX_ARCHIVED_REPORTS) -> None:
