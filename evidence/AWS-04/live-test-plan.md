@@ -15,7 +15,7 @@ required by this plan. Do not open 8080 or run a listener to make a test pass.
 
 | Port | Service | Expected SG | Expected runtime / evidence to collect | Live verified now |
 | --- | --- | --- | --- | --- |
-| 22/TCP | SSH | Approved admin `/32`; audit observed `117.3.54.230/32` | TCP reachable from confirmed admin source; no reachability from a separately authorized non-admin source; record both source IPs | NO — DEFERRED |
+| 22/TCP | SSH | Admin `/32`; follow-up observed `171.225.185.44/32`, matching workstation public IP | TCP reachable from confirmed admin source; no reachability from a separately authorized non-admin source; record both source IPs | NO — DEFERRED |
 | 80/TCP | Nginx HTTP | IPv4 public | HTTP request returns expected redirect to EIP HTTPS; ACME webroot is an intentional exception to general redirect | NO — DEFERRED |
 | 443/TCP | Nginx HTTPS | IPv4 public | Trusted certificate matches current origin, website and `/api/health` respond as expected; no certificate bypass | NO — DEFERRED |
 | 3000/TCP | Express | No public rule | External TCP connection not established; separately authorized host inspection confirms `127.0.0.1:3000` binding and service health | NO — DEFERRED |

@@ -2,6 +2,10 @@
 
 Refs #33. Collection started **2026-11-03 16:02 UTC / 23:02 Asia/Bangkok**.
 Collection completed by **16:13 UTC / 23:13 Asia/Bangkok**, with EC2 still Stopped.
+SSH-source follow-up started **16:40 UTC / 23:40 Asia/Bangkok** the same day,
+after the user reported changing SSH to their current IP. [Updated SG evidence](security-group.md)
+supersedes only the original source warning; other resources retain their
+initial snapshot timestamps.
 Base: `680aee7539625b917f59d2b40c5221149c927202`; branch
 `feature/33-vpc-sg-nacl-review`, created from freshly fast-forwarded `main`.
 
@@ -36,15 +40,18 @@ association and instance/ENI/private-IP mapping while the instance is stopped.
 
 ## Collection boundaries
 
-No AWS mutations, EC2 start/stop/reboot, SSH, application deployment, resource
+No agent AWS mutations, EC2 start/stop/reboot, SSH, application deployment, resource
 creation, lab listener, scanner, external port probe or alert send. Runtime
 verification is **DEFERRED — EC2 intentionally stopped**. No runtime PASS is
 inferred from network configuration or historical service checks.
+The user separately edited the SSH source between snapshots. This is explicitly
+attributed to the human, not omitted from the change history or claimed as an
+agent remediation. Follow-up reads do not authorize further AWS changes.
 
 ## Evidence index
 
 - [VPC, subnet, effective routes and matching IGW](vpc-subnet-route.md)
-- [Complete attached SG matrices and SSH-source warning](security-group.md)
+- [Complete attached SG matrices and SSH-source follow-up](security-group.md)
 - [Complete NACL matrices, association and ephemeral ports](nacl.md)
 - [Architecture diagram and SG vs NACL comparison](../../docs/aws/network-control-plane.md)
 - [Deferred live matrix](live-test-plan.md)
@@ -65,18 +72,18 @@ records are transcriptions, not raw AWS API responses or immutable audit logs.
 | PASS | SG public web only; restricted SSH `/32`; no rule covering 3000/5432/8080 | [Complete SG](security-group.md) |
 | PASS | Effective NACL association and every inbound/outbound rule reviewed; IPv6 absence checked across layers | [NACL](nacl.md) |
 | INFO | Default VPC/NACL, IPv4 allow-all NACL and unrestricted SG egress | Configuration permits intended response traffic; does not add selective subnet hardening |
-| WARNING | Current authorization/ownership of SSH source `117.3.54.230/32` awaits Team Leader confirmation; older #12 snapshot differs | No rule changed; [conditional remediation/rollback](security-group.md) |
+| PASS | User's SSH-source update independently verified: `171.225.185.44/32` matches workstation public IPv4; old source absent | Same SSH rule ID; [current matrix and historical warning](security-group.md); actual access remains deferred |
 | DEFERRED | Runtime reachability, current host bindings, HTTP redirect/TLS/application health | [Future test plan](live-test-plan.md); EC2 intentionally stopped |
 
-No observed configuration FAIL requiring remediation in this phase. The SSH
-source warning remains explicit; the audit does not claim successful admin
-access or ownership. Any approved remediation is separate work, never an audit
-side effect. PR #60 is OPEN/unmerged at audit time; no ALB is represented in the
+No observed configuration FAIL requiring remediation in this phase. The initial
+SSH-source warning is resolved for the current configuration after the human edit;
+successful SSH access is still not claimed. Agent inspection remains read-only.
+PR #60 is OPEN/unmerged at initial audit time; no ALB is represented in the
 current path and no ALB resource was created. This phase did not inventory ALBs.
 
 **CONTROL-PLANE REVIEW COMPLETE / LIVE VERIFICATION DEFERRED / ISSUE REMAINS OPEN.**
 All requested network relationships/rule directions were reviewed. Human review,
-SSH-source confirmation, team understanding/demo and the issue's live DoD remain
+team understanding/demo and the issue's live DoD remain
 pending. Required CI must pass on the latest PR head before reporting
 `READY FOR HUMAN REVIEW — CONTROL PLANE PHASE`. No issue checklist or human
 acceptance item was changed by this task.

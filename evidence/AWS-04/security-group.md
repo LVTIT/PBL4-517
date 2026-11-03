@@ -1,6 +1,11 @@
 # Attached Security Group — current Console observation
 
 Refs #33. Collected 2026-11-03, starting 16:02 UTC, in `ap-southeast-1`.
+**SSH-source follow-up: 2026-11-03 after 16:40 UTC / 23:40 Asia/Bangkok.**
+The user reported replacing the SSH source. Agent reloaded the same SG page,
+read the complete inbound/outbound tabs and checked this workstation's public
+IPv4. Matrices below reflect that follow-up; original warning is retained below
+as history. Other network components retain their initial collection timestamps.
 Provenance and base SHA: [audit index](README.md).
 
 EC2 Networking lists exactly one primary ENI and one attached SG:
@@ -16,7 +21,7 @@ no filters applied, one page. All rule descriptions and Name fields are `–`.
 | --- | --- | --- | --- | --- | --- |
 | `sgr-0f3d64042fccd37c3` | IPv4 | TCP | 443 | `0.0.0.0/0` | None |
 | `sgr-0d9d1ff2bf39ae7b7` | IPv4 | TCP | 80 | `0.0.0.0/0` | None |
-| `sgr-0c58efa55b9ff94a3` | IPv4 | TCP | 22 | `117.3.54.230/32` | None |
+| `sgr-0c58efa55b9ff94a3` | IPv4 | TCP | 22 | `171.225.185.44/32` | None |
 
 ## Complete outbound matrix
 
@@ -37,23 +42,36 @@ no filters applied, one page. All rule descriptions and Name fields are `–`.
   and is not an inbound permission. SG tracks allowed flows and permits their
   response traffic. Restricting egress would require dependency review; not
   requested or performed here.
-- **WARNING / confirmation pending:** the authorized operator for
-  `117.3.54.230/32` is not established by a CIDR alone. Historical AWS-03 #12
-  describes this source as old and records `171.225.185.22/32` at its own
-  observation date. Current control plane now shows `117.3.54.230/32`; neither
-  historical value establishes today's administrator IP. Team Leader must
-  confirm ownership/current use before claiming admin-source acceptance.
+- **PASS (current administrator-source configuration):** user reported changing
+  SSH to their current IP. Reloaded AWS Console shows `171.225.185.44/32` on the
+  same SSH rule ID; the complete inbound list contains no `117.3.54.230/32`.
+  A read-only request from this workstation to `https://checkip.amazonaws.com`
+  returned `171.225.185.44`, independently matching the configured source.
+  This checks the source configuration at observation time, not successful SSH,
+  a permanent address assignment or human review. If the public egress IP changes,
+  recheck the source; do not broaden it to Anywhere to avoid that maintenance.
 - **DEFERRED:** external reachability and actual Linux binding. Loopback binding
   in prior deployment evidence does not excuse a broad SG or prove current runtime.
 
-## Conditional remediation proposal — not applied
+## Initial warning and conditional proposal — historical
+
+At 16:02–16:13 UTC the SSH source was `117.3.54.230/32`, with current operator
+unconfirmed. Historical AWS-03 #12 records `171.225.185.22/32` at its own date;
+neither historical source proves today's public IP. The user later stated the
+old source likely was no longer used, then reported manually updating it to
+their current IP. Agent's follow-up verifies the new configuration above.
+This resolves the old-source configuration warning, while actual SSH remains
+DEFERRED. The earlier conditional proposal is preserved, not an executed agent
+change procedure or proof that live tests/rollback were performed:
 
 | Item | Proposal if the SSH source is confirmed obsolete |
 | --- | --- |
-| Current | TCP 22 from `117.3.54.230/32` |
+| Initial observation | TCP 22 from `117.3.54.230/32` |
 | Desired | Only verified authorized administrator source(s), normally `/32` |
 | Risk | Wrong CIDR can lock out SSH; adding a source expands administrative access |
 | Change | Team Leader reviews the exact replacement IP and access/recovery plan; in a separately authorized window, add verified `/32`, test it, then remove obsolete source |
 | Rollback | Retain exact prior rule evidence and authorized recovery access; restore the previous rule only if needed and approved for recovery, then investigate |
 
-No rule changes, connectivity tests or SSH were performed in this audit.
+No rule changes, connectivity tests to EC2 or SSH were performed by the agent.
+The human SSH-source edit is reported and independently observed; its exact
+mutation time is not established by this Console snapshot. No CloudTrail claim.

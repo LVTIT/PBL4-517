@@ -5,12 +5,14 @@ DEFERRED; Issue OPEN.** Read-only AWS Console audit confirms the expected EC2
 is **Stopped**, EIP `52.221.157.206` → primary ENI/private `172.31.11.224`, default
 VPC `172.31.0.0/16`, subnet `172.31.0.0/20` in `ap-southeast-1c`, implicit main
 route table with active IGW default route and matching VPC attachment. Actual
-SG: SSH `117.3.54.230/32`, public 80/443, no ingress permission covering
+SG: SSH `171.225.185.44/32`, public 80/443, no ingress permission covering
 3000/5432/8080; all-IPv4 egress. Default NACL: rule 100 IPv4 allow-all then `*`
-deny, inbound and outbound. No IPv6 CIDR/route/address/rule observed. Current
-authorized operator for SSH `/32` awaits confirmation; broad egress/default ACL
-are documented as INFO. No AWS mutation, EC2 start, SSH, scan, deploy, resource
-creation or alert. [Sanitized evidence/verification](../evidence/AWS-04/README.md),
+deny, inbound and outbound. No IPv6 CIDR/route/address/rule observed. After the
+user's manual SSH-source update, read-only follow-up after 16:40 UTC confirms
+the new `/32` matches this workstation's public IP and the old source is absent;
+original source warning resolved. Broad egress/default ACL are INFO. No agent
+AWS mutation, EC2 start, SSH, scan, deploy, resource creation or alert.
+[Sanitized evidence/verification](../evidence/AWS-04/README.md),
 [network architecture](../docs/aws/network-control-plane.md),
 [deferred live matrix](../evidence/AWS-04/live-test-plan.md). Hosted CI and human
 review are tracked on the delivery PR; no team understanding, runtime acceptance,

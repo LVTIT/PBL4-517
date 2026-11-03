@@ -2,6 +2,8 @@
 
 **CURRENT / VERIFIED: control-plane snapshot, 2026-11-03.** EC2 was **Stopped**
 during collection. [Sanitized evidence and findings](../../evidence/AWS-04/README.md).
+SSH source refreshed after 16:40 UTC following the user's manual rule edit;
+other network relationships retain the original snapshot timestamps.
 **DEFERRED:** live network/service verification; #33 remains OPEN.
 **PROPOSED / outside this phase:** ALB expansion in #34 / PR #60. This audit
 does not implement an ALB, listener, Target Group, certificate or DNS change.
@@ -19,7 +21,7 @@ flowchart TB
         subgraph Subnet["Public subnet subnet-029c5dafae1ddbd89: 172.31.0.0/20, ap-southeast-1c"]
             RT["Implicit main rtb-0b1f06b4e04d1d90c"]
             ACL["NACL acl-09f35ebbd208397c7: IPv4 allow all both ways"]
-            SG["SG sg-0c0ebd38764b1df74: 22 from 117.3.54.230/32; 80/443 public"]
+            SG["SG sg-0c0ebd38764b1df74: 22 from 171.225.185.44/32; 80/443 public"]
             ENI["Primary ENI eni-00488b028c979c5da: 172.31.11.224"]
             EC2["EC2 i-0ccfb2772f854e78b: STOPPED"]
             ACL --> SG --> ENI --> EC2
@@ -42,11 +44,12 @@ No IPv6 CIDR, route, ENI address/prefix or SG/NACL IPv6 rule was observed.
 [Exact VPC/subnet/routes/IGW evidence](../../evidence/AWS-04/vpc-subnet-route.md).
 
 The only attached SG has exactly three inbound permissions: TCP 22 from
-`117.3.54.230/32`, TCP 80 and 443 from `0.0.0.0/0`. No rule covers 3000, 5432 or
-8080. Outbound allows all IPv4 traffic. The SSH CIDR is restricted, but its
-current authorized operator still needs confirmation; older documentation is
-not proof of today's administrator source. [Complete SG matrix and conditional
-remediation](../../evidence/AWS-04/security-group.md).
+`171.225.185.44/32`, TCP 80 and 443 from `0.0.0.0/0`. No rule covers 3000, 5432 or
+8080. Outbound allows all IPv4 traffic. The user reported updating SSH to their
+current IP; the reloaded Console rule and workstation public-IP check agree.
+The old source is absent. The `/32` is a snapshot, not an automatic IP-tracking
+rule; live SSH remains deferred. [Complete SG matrix, follow-up and historical
+proposal](../../evidence/AWS-04/security-group.md).
 
 ## SG vs NACL in this project
 
@@ -78,8 +81,9 @@ historical runtime evidence, not a claim of availability during this audit.
 - **PASS:** resource identity/EIP mapping, public route/IGW relationship, complete
   SG/NACL policy review, no public 3000/5432/8080 SG permission, IPv6 review.
 - **INFO:** default VPC/NACL, unrestricted IPv4 egress and permissive NACL boundary.
-- **WARNING:** confirm the current authorized SSH `/32` with Team Leader; document
-  any proposed replacement and rollback, without modifying AWS in #33.
+- **PASS (follow-up configuration):** SSH `/32` now matches the user's current
+  workstation public IP after their manual edit; previous source warning resolved.
+  Agent performed no AWS mutation; live access/human review are still separate.
 - **DEFERRED:** all live checks for 22/80/443/3000/5432/8080 and current host
   binding. [Future test matrix and evidence requirements](../../evidence/AWS-04/live-test-plan.md).
 - **Human review pending:** [20 teach-back answers](../../evidence/AWS-04/teach-back.md)
@@ -87,7 +91,8 @@ historical runtime evidence, not a claim of availability during this audit.
 
 Network facts can feed #34's separate ALB work; this diagram has no deployed ALB.
 Lab 8080 and alerts belong to #36/#41. No AWS mutation, SSH, scan, deploy, EC2
-start/stop/reboot or notification was performed. No issue closure or agent merge.
+start/stop/reboot or notification was performed by the agent. The user's SSH
+source edit is documented separately. No issue closure or agent merge.
 
 AWS sources: [SG behavior](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html),
 [NACL order/return traffic](https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html),
