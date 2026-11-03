@@ -1,0 +1,17 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: python -m unittest discover -s scripts/ci/tests -v
+Working directory: .
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+test_content_signatures (test_policy.PolicyTests.test_content_signatures) ... ok
+test_dangerous_paths (test_policy.PolicyTests.test_dangerous_paths) ... ok
+test_git_index_is_checked_even_if_worktree_is_cleaned (test_policy.PolicyTests.test_git_index_is_checked_even_if_worktree_is_cleaned) ... ok
+test_log_redaction_and_command_escape (test_policy.PolicyTests.test_log_redaction_and_command_escape) ... ok
+test_source_and_sanitized_evidence_allowed (test_policy.PolicyTests.test_source_and_sanitized_evidence_allowed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.281s
+
+OK

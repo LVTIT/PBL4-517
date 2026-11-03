@@ -1,0 +1,335 @@
+{
+  "tested_commit": "cda5a620dc3efe898a3fb482a4f4c77879f54e53",
+  "node": "v24.11.0",
+  "platform": "Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false",
+  "started_utc": "2026-11-03T08:15:22.415087+00:00",
+  "order_service_sha256": "d6ae05f87fa748374ec4f84682c9f6ca2161e242c57df82faa39ce73d1231ff4",
+  "test_sha256": "db79293aa73cba2eaa5bc2343a431a53193f23511ac2637ff25cb487a0ef54ef",
+  "results": [
+    {
+      "label": "backend-install",
+      "command": [
+        "npm.cmd",
+        "ci"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "frontend-install",
+      "command": [
+        "npm.cmd",
+        "ci"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "database-version",
+      "command": [
+        "docker",
+        "exec",
+        "pbl517-bug61-20261103",
+        "psql",
+        "-U",
+        "pbl517_app",
+        "-d",
+        "pbl517_lab_test",
+        "-c",
+        "SELECT version(); SHOW default_transaction_isolation;"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "migrate",
+      "command": [
+        "npm.cmd",
+        "run",
+        "prisma:migrate"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "seed",
+      "command": [
+        "npm.cmd",
+        "run",
+        "prisma:seed"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "negative-control-a-build",
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "variant": "negative-control-a",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "negative-control-a",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=inventory #61 checkout race",
+        "tests/api.integration.test.mjs"
+      ],
+      "variant": "negative-control-a",
+      "exit_code": 1,
+      "expected": 1
+    },
+    {
+      "label": "negative-control-a-other-fix",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=inventory #61 concurrent cancel",
+        "tests/api.integration.test.mjs"
+      ],
+      "variant": "negative-control-a",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "negative-control-b-build",
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "variant": "negative-control-b",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "negative-control-b",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=inventory #61 concurrent cancel",
+        "tests/api.integration.test.mjs"
+      ],
+      "variant": "negative-control-b",
+      "exit_code": 1,
+      "expected": 1
+    },
+    {
+      "label": "negative-control-b-other-fix",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=inventory #61 checkout race",
+        "tests/api.integration.test.mjs"
+      ],
+      "variant": "negative-control-b",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "frontend-build",
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "config",
+      "command": [
+        "npm.cmd",
+        "run",
+        "test:config"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "backend-audit",
+      "command": [
+        "npm.cmd",
+        "audit",
+        "--audit-level=high"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "frontend-audit",
+      "command": [
+        "npm.cmd",
+        "audit",
+        "--audit-level=high"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "final-regression",
+      "command": [
+        "npm.cmd",
+        "run",
+        "test:integration"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "e2e",
+      "command": [
+        "npm.cmd",
+        "run",
+        "test:e2e"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "security-lifecycle",
+      "command": [
+        "npm.cmd",
+        "run",
+        "test:security"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "policy-tests",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/ci/tests",
+        "-v"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "python-syntax",
+      "command": [
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "scanner",
+        "alerts",
+        "scripts/attacker",
+        "scripts/ci"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "scanner-tests",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scanner/tests",
+        "-v"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "demo-tests",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/attacker/tests",
+        "-v"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "skill-syntax",
+      "command": [
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        ".agents/skills/ui-ux-pro-max/scripts"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "skill-data",
+      "command": [
+        "python",
+        ".agents/skills/ui-ux-pro-max/scripts/validate_data.py"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "label": "skill-core",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".agents/skills/ui-ux-pro-max/scripts/tests",
+        "-p",
+        "test_core.py",
+        "-v"
+      ],
+      "variant": "fixed",
+      "exit_code": 0,
+      "expected": 0
+    }
+  ],
+  "source_restored": true,
+  "ended_utc": "2026-11-03T08:17:22.935760+00:00"
+}

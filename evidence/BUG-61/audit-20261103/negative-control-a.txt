@@ -1,0 +1,43 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: negative-control-a
+Command: node --test --test-reporter=tap "--test-name-pattern=inventory #61 checkout race" tests/api.integration.test.mjs
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 1 (expected 1)
+
+TAP version 13
+# Subtest: inventory \#61 checkout race
+not ok 1 - inventory \#61 checkout race
+  ---
+  duration_ms: 378.0213
+  type: 'test'
+  location: 'D:\\PBL4-517\\website\\backend\\tests\\api.integration.test.mjs:85:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    loser must be OUT_OF_STOCK, not infrastructure 503
+
+    503 !== 400
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 400
+  actual: 503
+  operator: 'strictEqual'
+  stack: |-
+    file:///D:/PBL4-517/website/backend/tests/api.integration.test.mjs:141:12
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/api.integration.test.mjs:114:7)
+    async Test.run (node:internal/test_runner/test:1113:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# overlapping checkout writes=5; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" - $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt"
+# {"http":[201,201,503,201,503],"errors":["OK","OK","DATABASE_UNAVAILABLE","OK","DATABASE_UNAVAILABLE"],"finalStock":0,"orders":3,"items":3}
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 530.3618

@@ -1,0 +1,29 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: npm.cmd run test:security
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+
+> pbl517-backend@0.1.0 test:security
+> node --test tests/security-lifecycle.test.mjs
+
+▶ isolated local exploit -> defense lifecycle
+  ✔ production refuses each vulnerable flag before serving requests (560.1557ms)
+  ✔ lab with production runtime retains Secure cookies through trusted HTTPS proxy (1157.4602ms)
+  ✔ IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (597.8781ms)
+  ✔ SQLi: identical tautology and UNION disclose fixture data only in vulnerable mode (48.6861ms)
+  ✔ stored XSS: same persisted review executes in lab; React escapes it in secure mode (2935.2823ms)
+  ✔ unavailable API remains an HTTP failure, including checkout (372.911ms)
+  ✔ deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest (26961.412ms)
+  ✔ authentication: bounded guessing reaches 429 only with rate-limit defense (10788.2753ms)
+✔ isolated local exploit -> defense lifecycle (46461.5123ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46614.9975

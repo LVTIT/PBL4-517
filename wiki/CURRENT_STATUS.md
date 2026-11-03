@@ -1,5 +1,23 @@
 # Current Project Status
 
+**2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
+human review pending, not deployed.** Source atomic stock/cancel claims from
+`d8c3fa3` retained after audit. The original sequential cancel test and combined
+negative-control claim did not prove the double-cancel race. Four independent
+regressions (`cda5a62`) now observe overlapping SQL writes with real PostgreSQL
+row-lock barriers: checkout, three fresh concurrent-cancel rounds, duplicate
+quantities/pricing/OrderItems and rollback after the first product was claimed.
+Independent old-create-only control fails with 503; old-cancel-only control fails
+with two successes and stock=12. The other fixed function passes in each control;
+fixed source restored before final API 22/22 and security lifecycle 9/9 PASS.
+Both builds/audits, config 2/2 and browser 54/54 PASS locally; exact commands,
+remaining check results and final hosted CI are linked in the
+[audit evidence](../evidence/BUG-61/README.md). Existing main rejected duplicate
+IDs as INVALID_PRODUCT; valid duplicate support now guards the aggregated total.
+No schema, migration, `.env`, lab architecture, admin transition (#65), global
+error mapping (#63) or AWS changes. Issue stays open; no merge or human
+understanding/demo acceptance inferred. [Teach-back](../evidence/BUG-61/teach-back.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
