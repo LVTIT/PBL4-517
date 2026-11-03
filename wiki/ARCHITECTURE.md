@@ -36,6 +36,24 @@ flowchart LR
 
 Nginx phục vụ static frontend và reverse proxy API; SPA fallback chỉ áp dụng cho frontend. Backend chạy JavaScript đã compile bằng Node, không dùng `tsx` trong production. Database và backend bind loopback; frontend không cần thay URL API. Cookie Secure yêu cầu HTTPS; `trust proxy` phải khớp proxy thật sự kiểm soát. Chi tiết cấu hình triển khai thuộc các issue EC2/Linux tiếp theo.
 
+## AWS network — control plane verified 2026-11-03 (Refs #33)
+
+EC2 `i-0ccfb2772f854e78b` is **Stopped** in the current AWS Console snapshot.
+EIP `52.221.157.206` maps to primary ENI/private IPv4 `172.31.11.224` in the
+default VPC `172.31.0.0/16`, subnet `172.31.0.0/20` (`ap-southeast-1c`). The
+subnet implicitly uses the main route table with an active IGW default route;
+the IGW is attached to the same VPC, proving public IPv4 routing. The attached
+SG allows SSH from `117.3.54.230/32`, web 80/443 public and no public
+3000/5432/8080. The default NACL allows all IPv4 in both directions; SG supplies
+the service restriction. No IPv6 configuration/rules were observed. SSH source
+ownership/current use still needs confirmation. Runtime and host binding checks
+are deferred; previous service evidence above remains historical.
+
+[Actual resource diagram, SG/NACL comparison and boundaries](../docs/aws/network-control-plane.md),
+[current evidence and future live test plan](../evidence/AWS-04/README.md).
+No AWS resources/configuration changed. ALB remains outside this implemented
+path and belongs to the planned expansion below.
+
 ## PBL4 tổng thể
 
 **Status: Planned.** Sơ đồ dưới đây biểu diễn phạm vi mạng và trách nhiệm, không coi VPC/Security Group/NACL là các server nối tiếp.
