@@ -81,8 +81,8 @@ async function withBlockedProduct(database, productId, requestFactories, inspect
   }
 }
 
-function inventoryTest(name, run) {
-  test(`inventory #61 ${name}`, async context => {
+function inventoryTest(name, run, issue = 61) {
+  test(`inventory #${issue} ${name}`, async context => {
     assert.notEqual(process.env.NODE_ENV, 'production');
     const connection = new URL(process.env.DATABASE_URL);
     assert.ok(['localhost', '127.0.0.1', '[::1]'].includes(connection.hostname));
@@ -234,6 +234,147 @@ inventoryTest('multi-product rollback', async ({ context, database, productIds: 
     if (pending) await Promise.allSettled([pending]);
     blocker.release();
   }
+});
+
+// Independent #65 cases use only disposable product/order/user fixtures. A failed
+// restoration assertion must not prevent the terminal-state or race tests running.
+function adminInventoryTest(name, run) {
+  inventoryTest(name, async fixture => {
+    const { database, userIds, address } = fixture;
+    const login = async (email, password) => {
+      const client = new BrowserSession();
+      const result = await client.request('/auth/login', { method: 'POST', csrfToken: await client.csrf(),
+        body: { email, password } });
+      assert.equal(result.status, 200);
+      return { client, csrfToken: await client.csrf() };
+    };
+    const adminA = await login('admin@example.com', 'AdminOnly517!');
+    const adminB = await login('admin@example.com', 'AdminOnly517!');
+    const owner = new BrowserSession();
+    const registered = await owner.request('/auth/register', { method: 'POST', csrfToken: await owner.csrf(),
+      body: { name: 'Order state owner', email: `state-${randomUUID()}@example.com`, password: 'LocalLabOnly517!' } });
+    assert.equal(registered.status, 201);
+    userIds.push(registered.body.data.user.id);
+    const ownerCsrf = await owner.csrf();
+    const create = async items => {
+      const result = await owner.request('/orders', { method: 'POST', csrfToken: ownerCsrf,
+        body: { items, shippingAddress: address } });
+      assert.equal(result.status, 201);
+      return result.body.data.id;
+    };
+    const change = (id, status, admin = adminA) => admin.client.request(`/admin/orders/${id}/status`, {
+      method: 'PATCH', csrfToken: admin.csrfToken, body: { status },
+    });
+    const cancel = id => owner.request(`/orders/${id}/cancel`, { method: 'POST', csrfToken: ownerCsrf });
+    const snapshot = async id => ({
+      order: (await database.query('SELECT * FROM "Order" WHERE id=$1', [id])).rows,
+      items: (await database.query('SELECT * FROM "OrderItem" WHERE "orderId"=$1 ORDER BY id', [id])).rows,
+      products: (await database.query('SELECT * FROM "Product" WHERE id=ANY($1::uuid[]) ORDER BY id', [fixture.productIds])).rows,
+    });
+    await run({ ...fixture, create, change, cancel, snapshot, adminA, adminB });
+  }, 65);
+}
+
+adminInventoryTest('admin cancellation restores every duplicate line', async ({ context, productIds: [a, b], stock, create, change, snapshot }) => {
+  for (const source of ['PENDING', 'CONFIRMED']) {
+    const id = await create([{ productId: a, quantity: 2 }, { productId: a, quantity: 3 }, { productId: b, quantity: 1 }]);
+    assert.equal(await stock(a), 5);
+    assert.equal(await stock(b), 9);
+    if (source === 'CONFIRMED') assert.equal((await change(id, source)).status, 200);
+    const before = await snapshot(id);
+    const result = await change(id, 'CANCELLED');
+    assert.equal(result.status, 200);
+    assert.equal(result.body.data.status, 'CANCELLED');
+    assert.equal(await stock(a), 10, 'admin cancel restores duplicate quantities 2+3 exactly once');
+    assert.equal(await stock(b), 10, 'all products are restored');
+    assert.deepEqual((await snapshot(id)).items, before.items, 'cancellation preserves original lines');
+    context.diagnostic(JSON.stringify({ source, finalStatus: result.body.data.status, stockA: [10, 5, await stock(a)], stockB: [10, 9, await stock(b)], quantities: [2, 3, 1] }));
+  }
+});
+
+adminInventoryTest('invalid transition matrix has no mutations', async ({ context, productIds: [productId], create, change, cancel, snapshot }) => {
+  const policy = { PENDING: ['CONFIRMED', 'CANCELLED'], CONFIRMED: ['SHIPPED', 'CANCELLED'], SHIPPED: ['DELIVERED'], DELIVERED: [], CANCELLED: [] };
+  let rejected = 0;
+  for (const source of Object.keys(policy)) {
+    const id = await create([{ productId, quantity: 1 }]);
+    const path = source === 'CANCELLED' ? ['CANCELLED'] : ['CONFIRMED', 'SHIPPED', 'DELIVERED'].slice(0, ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].indexOf(source));
+    for (const status of path) assert.equal((await change(id, status)).status, 200);
+    const before = await snapshot(id);
+    for (const target of Object.keys(policy).filter(target => !policy[source].includes(target))) {
+      const response = await change(id, target);
+      assert.equal(response.status, 409, `${source} -> ${target} must conflict`);
+      assert.equal(response.body.error.code, 'INVALID_STATUS_TRANSITION');
+      assert.deepEqual(await snapshot(id), before, `${source} -> ${target} must not mutate any row`);
+      rejected++;
+    }
+    if (source === 'PENDING') assert.equal((await cancel(id)).status, 200);
+  }
+  const missing = await change(randomUUID(), 'CANCELLED');
+  assert.equal(missing.status, 404);
+  assert.equal(missing.body.error.code, 'NOT_FOUND');
+  context.diagnostic(`invalid transitions=${rejected}/20 rejected with 409 and unchanged Order/OrderItems/Products; missing UUID=404 NOT_FOUND`);
+});
+
+adminInventoryTest('forward transitions do not restore stock', async ({ context, productIds: [productId], create, change, stock }) => {
+  const id = await create([{ productId, quantity: 2 }]);
+  for (const status of ['CONFIRMED', 'SHIPPED', 'DELIVERED']) {
+    const response = await change(id, status);
+    assert.equal(response.status, 200);
+    assert.equal(response.body.data.status, status);
+    assert.equal(await stock(productId), 8, `${status} must keep reserved units deducted`);
+  }
+  context.diagnostic('PENDING -> CONFIRMED -> SHIPPED -> DELIVERED: stock 10 -> 8 -> 8 -> 8 -> 8');
+});
+
+adminInventoryTest('phantom inventory loop stays closed', async ({ context, productIds: [productId], create, change, cancel, stock }) => {
+  const id = await create([{ productId, quantity: 2 }]);
+  assert.equal((await cancel(id)).status, 200);
+  const reopen = await change(id, 'PENDING');
+  // Observe the replay even on the negative guard control; report final stock
+  // before asserting so the failed control proves the complete phantom loop.
+  const replay = await cancel(id);
+  context.diagnostic(JSON.stringify({ reopen: reopen.status, replay: replay.status, stockBefore: 10, finalStock: await stock(productId) }));
+  assert.equal(reopen.status, 409, 'CANCELLED cannot reopen');
+  assert.equal(reopen.body.error.code, 'INVALID_STATUS_TRANSITION');
+  assert.equal(replay.status, 400);
+  assert.equal(replay.body.error.code, 'CANNOT_CANCEL');
+  assert.equal(await stock(productId), 10, 'final stock must equal original, never original + quantity');
+});
+
+for (const mixed of [false, true]) {
+  adminInventoryTest(mixed ? 'customer vs admin concurrent cancel' : 'admin vs admin concurrent cancel', async ({ context, database, productIds: [productId], create, change, cancel, adminB, stock }) => {
+    for (let round = 1; round <= 3; round++) {
+      const id = await create([{ productId, quantity: 2 }]);
+      assert.equal(await stock(productId), 8);
+      const outcomes = await withBlockedProduct(database, productId, [
+        () => change(id, 'CANCELLED'),
+        mixed ? () => cancel(id) : () => change(id, 'CANCELLED', adminB),
+      ], async waiters => context.diagnostic(`round=${round}; overlapping writes=${waiters.length}; SQL=${waiters.map(w => w.query).join(' | ')}`));
+      const status = (await database.query('SELECT status FROM "Order" WHERE id=$1', [id])).rows[0].status;
+      context.diagnostic(JSON.stringify({ round, mixed, http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), winners: outcomes.filter(r => r.status === 200).length, stockBefore: 10, heldStock: 8, finalStock: await stock(productId), status }));
+      assert.equal(outcomes.filter(r => r.status === 200).length, 1, 'exactly one cancellation path wins');
+      for (const [index, result] of outcomes.entries()) {
+        if (result.status === 200) continue;
+        assert.equal(result.status, mixed && index === 1 ? 400 : 409);
+        assert.equal(result.body.error.code, mixed && index === 1 ? 'CANNOT_CANCEL' : 'INVALID_STATUS_TRANSITION');
+      }
+      assert.equal(status, 'CANCELLED');
+      assert.equal(await stock(productId), 10, 'restore once across competing paths');
+    }
+  });
+}
+
+adminInventoryTest('restoration failure rolls back order claim', async ({ context, database, productIds: [a, b], create, change, snapshot }) => {
+  const id = await create([{ productId: a, quantity: 2 }, { productId: b, quantity: 1 }]);
+  // Force a real PostgreSQL integer overflow on restoration without schema or
+  // production hooks. Neither the state claim nor another restock may persist.
+  await database.query('UPDATE "Product" SET stock=2147483647 WHERE id=$1', [b]);
+  const before = await snapshot(id);
+  const response = await change(id, 'CANCELLED');
+  assert.equal(response.status, 503); // Existing mapping, outside #63 scope.
+  assert.equal(response.body.error.code, 'DATABASE_UNAVAILABLE');
+  assert.deepEqual(await snapshot(id), before, 'all writes roll back with failed inventory restoration');
+  context.diagnostic('forced restoration overflow=503; Order remains PENDING, all OrderItems and Product rows unchanged');
 });
 
 test('real PostgreSQL API and session authentication', async (suite) => {
@@ -563,135 +704,6 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       });
       assert.equal(cancelOwnOrder.status, 200);
       assert.equal(cancelOwnOrder.body.data.status, 'CANCELLED');
-    });
-
-    // Regression for #65: the admin status endpoint updated the row blindly.
-    // Cancelling there never returned stock (the units vanished), and a
-    // CANCELLED order could be reopened, so cancel -> reopen -> cancel released
-    // the same units again. Both are data corruption on the secure baseline.
-    await suite.test('admin status changes keep inventory honest', async () => {
-      const stockOf = async (session, productId) =>
-        (await session.request(`/products/${productId}`)).body.data.stock;
-
-      const admin = new BrowserSession();
-      const adminCsrf = await admin.csrf();
-      const adminLogin = await admin.request('/auth/login', {
-        method: 'POST', csrfToken: adminCsrf,
-        body: { email: 'admin@example.com', password: 'AdminOnly517!' },
-      });
-      assert.equal(adminLogin.status, 200, 'admin seed account is required for this check');
-
-      const customer = new BrowserSession();
-      const customerCsrf = await customer.csrf();
-      const customerLogin = await customer.request('/auth/login', {
-        method: 'POST', csrfToken: customerCsrf,
-        body: { email: 'demo@example.com', password: 'DemoOnly517!' },
-      });
-      assert.equal(customerLogin.status, 200, 'demo seed account is required for this check');
-
-      const catalogue = await customer.request('/products');
-      const product = catalogue.body.data.find((p) => p.stock >= 4);
-      assert.ok(product, 'At least one product with stock >= 4 is required.');
-
-      const before = await stockOf(customer, product.id);
-      const order = await customer.request('/orders', {
-        method: 'POST',
-        csrfToken: await customer.csrf(),
-        body: {
-          items: [{ productId: product.id, quantity: 2 }],
-          shippingAddress: '123 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
-        },
-      });
-      assert.equal(order.status, 201);
-      const orderId = order.body.data.id;
-      assert.equal(await stockOf(customer, product.id), before - 2, 'creating the order holds the units');
-
-      // 1. An admin cancellation must put the units back, exactly like the
-      //    customer cancellation path does.
-      const adminCancel = await admin.request(`/admin/orders/${orderId}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
-      });
-      assert.equal(adminCancel.status, 200);
-      assert.equal(adminCancel.body.data.status, 'CANCELLED');
-      assert.equal(await stockOf(customer, product.id), before, 'admin cancel must restock the order');
-
-      // 2. CANCELLED is terminal. Reopening it would let the same units be
-      //    released again by a second cancellation.
-      for (const status of ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED']) {
-        const reopen = await admin.request(`/admin/orders/${orderId}/status`, {
-          method: 'PATCH', csrfToken: await admin.csrf(), body: { status },
-        });
-        assert.equal(reopen.status, 409, `a cancelled order must not move to ${status}`);
-        assert.equal(reopen.body.error.code, 'INVALID_STATUS_TRANSITION');
-      }
-      assert.equal(await stockOf(customer, product.id), before, 'rejected transitions must not touch stock');
-
-      // 3. Cancelling the already cancelled order again is a conflict, not a
-      //    second restock.
-      const secondCancel = await admin.request(`/admin/orders/${orderId}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
-      });
-      assert.equal(secondCancel.status, 409);
-      assert.equal(secondCancel.body.error.code, 'INVALID_STATUS_TRANSITION');
-      assert.equal(await stockOf(customer, product.id), before, 'no phantom stock after a repeated cancel');
-
-      // 4. The customer path is unaffected: a live PENDING order still cancels
-      //    once, and the loop that produced phantom stock cannot be replayed.
-      const second = await customer.request('/orders', {
-        method: 'POST',
-        csrfToken: await customer.csrf(),
-        body: {
-          items: [{ productId: product.id, quantity: 2 }],
-          shippingAddress: '456 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
-        },
-      });
-      assert.equal(second.status, 201);
-      const customerCancel = await customer.request(`/orders/${second.body.data.id}/cancel`, {
-        method: 'POST', csrfToken: await customer.csrf(),
-      });
-      assert.equal(customerCancel.status, 200);
-      assert.equal(await stockOf(customer, product.id), before, 'customer cancel still restocks');
-
-      const reopenAfterCustomerCancel = await admin.request(`/admin/orders/${second.body.data.id}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'PENDING' },
-      });
-      assert.equal(reopenAfterCustomerCancel.status, 409, 'the cancel loop must be closed');
-
-      const replayCancel = await customer.request(`/orders/${second.body.data.id}/cancel`, {
-        method: 'POST', csrfToken: await customer.csrf(),
-      });
-      assert.equal(replayCancel.status, 400);
-      assert.equal(replayCancel.body.error.code, 'CANNOT_CANCEL');
-      assert.equal(await stockOf(customer, product.id), before, 'no phantom stock from the replay attempt');
-
-      // 5. An order that is still PENDING follows the forward path and does not
-      //    move stock when it is merely confirmed.
-      const third = await customer.request('/orders', {
-        method: 'POST',
-        csrfToken: await customer.csrf(),
-        body: {
-          items: [{ productId: product.id, quantity: 1 }],
-          shippingAddress: '789 Đường Kiểm Thử Trạng Thái, Đà Nẵng',
-        },
-      });
-      assert.equal(third.status, 201);
-      const held = await stockOf(customer, product.id);
-      const confirm = await admin.request(`/admin/orders/${third.body.data.id}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CONFIRMED' },
-      });
-      assert.equal(confirm.status, 200);
-      assert.equal(await stockOf(customer, product.id), held, 'confirming an order must not move stock');
-
-      const backwards = await admin.request(`/admin/orders/${third.body.data.id}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'PENDING' },
-      });
-      assert.equal(backwards.status, 409, 'CONFIRMED must not go back to PENDING');
-
-      // Leave the fixture database as we found it.
-      await admin.request(`/admin/orders/${third.body.data.id}/status`, {
-        method: 'PATCH', csrfToken: await admin.csrf(), body: { status: 'CANCELLED' },
-      });
-      assert.equal(await stockOf(customer, product.id), before, 'final stock matches the starting level');
     });
 
     await suite.test('admin authorization guard', async () => {

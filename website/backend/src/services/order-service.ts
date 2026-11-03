@@ -502,7 +502,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
         data: { status },
       });
 
-      if (claim.count === 0) {
+      if (claim.count !== 1) {
         throw new AppError(
           409,
           'INVALID_STATUS_TRANSITION',

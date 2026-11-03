@@ -2,7 +2,12 @@
 
 Refs #65. Related to #44, #61.
 
-**Trạng thái: đã sửa trong source; chưa merge, chưa triển khai.**
+**Historical verification on old base `43bebb1` (2026-11-01).**
+
+The counts and combined control below belong to the old base, not final PR #66
+verification. See the [2026-11-03 integration audit](audit-20261103/README.md) for
+latest-main results, independent negative controls, true concurrency and review
+gates. No merge or deployment is performed by the agent.
 
 Đo trên `main` tại `43bebb1`, sửa trên `feature/65-admin-status-inventory`.
 

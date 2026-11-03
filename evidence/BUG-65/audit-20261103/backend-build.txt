@@ -1,0 +1,17 @@
+
+> pbl517-backend@0.1.0 build
+> prisma generate && tsc -p tsconfig.json && node ../../scripts/release/stamp.mjs backend
+
+node.exe : Loaded Prisma config from prisma.config.ts.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.10.0) to .\src\generated\prisma in 79ms
+
+backend: e241cb49c4e8d128cdf8c349c6b58764845b85f7 (dirty: not deployable)

@@ -554,9 +554,10 @@ export function AdminPage() {
                             background: 'var(--color-surface)',
                             fontWeight: 500,
                             fontSize: '0.8125rem',
+                            cursor: ORDER_STATUS_TRANSITIONS[order.status].length === 0 ? 'not-allowed' : undefined,
                           }}
                         >
-                          <option value={order.status}>{ORDER_STATUS_LABELS[order.status]}</option>
+                          <option value={order.status} disabled>{ORDER_STATUS_LABELS[order.status]}</option>
                           {ORDER_STATUS_TRANSITIONS[order.status].map((next) => (
                             <option key={next} value={next}>
                               {ORDER_STATUS_LABELS[next]}

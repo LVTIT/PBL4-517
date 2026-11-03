@@ -281,7 +281,8 @@ Các tài khoản này có mật khẩu công khai, chỉ dùng development/test
 
 Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
 
-Admin chỉ được chuyển đơn theo các bước tiến hợp lệ; `CANCELLED` là trạng thái cuối:
+Admin chỉ được chuyển đơn theo bảng dưới; `CANCELLED` và `DELIVERED` là trạng thái cuối.
+Backend kiểm tra độc lập với giao diện; tự chuyển sang cùng trạng thái cũng bị từ chối:
 
 | Từ | Được phép sang |
 | --- | --- |
@@ -293,7 +294,7 @@ Admin chỉ được chuyển đơn theo các bước tiến hợp lệ; `CANCEL
 
 Chuyển sang `CANCELLED` sẽ hoàn kho đúng một lần trong cùng transaction, giống luồng
 khách tự hủy đơn. Mọi chuyển trạng thái khác trả `409 INVALID_STATUS_TRANSITION` và
-không thay đổi tồn kho. Đơn không tồn tại trả `404 NOT_FOUND`.
+không thay đổi Order, OrderItems hoặc Product. Đơn không tồn tại trả `404 NOT_FOUND`.
 
 Checkout hiển thị ô **Số điện thoại người nhận (tùy chọn)** riêng với địa chỉ cho cả
 khách đã đăng nhập và khách vãng lai. Với khách đã đăng nhập, `POST /api/orders`
