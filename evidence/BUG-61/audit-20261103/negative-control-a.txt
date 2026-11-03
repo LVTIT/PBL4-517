@@ -15,9 +15,9 @@ not ok 1 - inventory \#61 checkout race
   failureType: 'testCodeFailure'
   error: |-
     loser must be OUT_OF_STOCK, not infrastructure 503
-    
+
     503 !== 400
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 400

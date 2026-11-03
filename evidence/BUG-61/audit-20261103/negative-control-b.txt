@@ -15,9 +15,9 @@ not ok 1 - inventory \#61 concurrent cancel
   failureType: 'testCodeFailure'
   error: |-
     exactly one cancellation may win
-    
+
     2 !== 1
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 1

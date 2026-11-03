@@ -18,6 +18,7 @@ default isolation **read committed**; container `pbl517-bug61-20261103`, dedicat
 DB `pbl517_lab_test`, published only at `127.0.0.1:55461`, compiled API port 3061.
 [DB observation](audit-20261103/database-version.txt). Random ephemeral secrets
 were supplied through process environment, never copied to evidence or `.env`.
+Local build stamps show dirty state while evidence was being written; they are not deployment artifacts.
 Baseline: APP_PROFILE=production, NODE_ENV=development, TRUST_PROXY=0, all four
 VULN flags=false. Lifecycle separately starts acknowledged synthetic lab children
 on loopback. Setup follows [website README](../../website/README.md).
@@ -36,7 +37,7 @@ Historical 2026-11-01 results remain in [reproduction.txt](reproduction.txt),
 [API 19/19](api-integration.txt) and [lifecycle 9/9](security-lifecycle.txt). The old
 combined negative-control failure was at checkout, so it did **not** establish
 that sequential cancel assertions caught the race. CP437/UTF-8 mojibake in the
-two historical test logs was reversed mechanically and BOM removed; new logs also normalize CRLF to LF. No counts,
+two historical test logs was reversed mechanically and BOM removed; new logs also normalize line endings and trailing whitespace. No counts,
 timings or results were edited. New independent controls below supersede the
 unsupported test claims.
 
@@ -161,3 +162,7 @@ migration, `.env`, dependency, lab architecture, UI or AWS change. No deployment
 [Teach-back](teach-back.md) prepares eight answers and a team demo. Tests/CI do not
 confirm human understanding, review or issue completion. Team Leader retains final
 merge authority after human review and latest-revision CI; Issue #61 stays open.
+
+Cleanup after local verification: temporary API stopped, container removed with its
+disposable database volume, and private runtime/runner files removed.
+[Cleanup output](audit-20261103/cleanup.txt). Docker Desktop remains available.
