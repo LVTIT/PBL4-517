@@ -1,0 +1,18 @@
+Repository policy: 478 index entries, 0 violation(s).
+python : test_content_signatures (test_policy.PolicyTests.test_content_signatures) ... ok
+At line:15 char:1
++ python -m unittest discover -s scripts/ci/tests -v *>> evidence/BUG-6 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_content_si...natures) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+test_dangerous_paths (test_policy.PolicyTests.test_dangerous_paths) ... ok
+test_git_index_is_checked_even_if_worktree_is_cleaned
+(test_policy.PolicyTests.test_git_index_is_checked_even_if_worktree_is_cleaned) ... ok
+test_log_redaction_and_command_escape (test_policy.PolicyTests.test_log_redaction_and_command_escape) ... ok
+test_source_and_sanitized_evidence_allowed (test_policy.PolicyTests.test_source_and_sanitized_evidence_allowed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.295s
+
+OK
