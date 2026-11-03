@@ -1,0 +1,51 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: python -m unittest discover -s .agents/skills/ui-ux-pro-max/scripts/tests -p test_core.py -v
+Working directory: .
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+test_bm25_cache_rebuilds_after_file_mtime_changes (test_core.TestBm25CoreBehavior.test_bm25_cache_rebuilds_after_file_mtime_changes) ... ok
+test_empty_documents_produce_no_scores_or_vocab (test_core.TestBm25CoreBehavior.test_empty_documents_produce_no_scores_or_vocab) ... ok
+test_search_uses_one_verified_rows_and_index_snapshot (test_core.TestBm25CoreBehavior.test_search_uses_one_verified_rows_and_index_snapshot) ... ok
+test_diagnostics_opt_in_is_additive_for_domain_search (test_core.TestDiagnosticsContracts.test_diagnostics_opt_in_is_additive_for_domain_search) ... ok
+test_diagnostics_opt_in_is_additive_for_stack_search (test_core.TestDiagnosticsContracts.test_diagnostics_opt_in_is_additive_for_stack_search) ... ok
+test_accessibility_keywords_route_to_ux (test_core.TestDomainDetection.test_accessibility_keywords_route_to_ux) ... ok
+test_ambiguous_query_returns_runner_up (test_core.TestDomainDetection.test_ambiguous_query_returns_runner_up) ... ok
+test_empty_query_falls_back_to_style (test_core.TestDomainDetection.test_empty_query_falls_back_to_style) ... ok
+test_every_router_term_is_searchable_or_has_a_corpus_rewrite (test_core.TestDomainDetection.test_every_router_term_is_searchable_or_has_a_corpus_rewrite) ... ok
+test_hash_only_routes_color_for_a_valid_hex_literal (test_core.TestDomainDetection.test_hash_only_routes_color_for_a_valid_hex_literal) ... ok
+test_native_drag_intent_beats_generic_react_token (test_core.TestDomainDetection.test_native_drag_intent_beats_generic_react_token) ... ok
+test_product_router_keeps_high_signal_service_aliases (test_core.TestDomainDetection.test_product_router_keeps_high_signal_service_aliases) ... ok
+test_router_prioritizes_chart_queries_over_generic_product_keywords (test_core.TestDomainDetection.test_router_prioritizes_chart_queries_over_generic_product_keywords) ... ok
+test_router_prioritizes_color_intent_over_generic_product_terms (test_core.TestDomainDetection.test_router_prioritizes_color_intent_over_generic_product_terms) ... ok
+test_router_prioritizes_icons_when_icon_library_and_icon_intent_present (test_core.TestDomainDetection.test_router_prioritizes_icons_when_icon_library_and_icon_intent_present) ... ok
+test_router_prioritizes_typography_for_font_pairing_queries (test_core.TestDomainDetection.test_router_prioritizes_typography_for_font_pairing_queries) ... ok
+test_style_keywords_route_to_style (test_core.TestDomainDetection.test_style_keywords_route_to_style) ... ok
+test_concurrent_non_force_persist_has_one_writer (test_core.TestPersistence.test_concurrent_non_force_persist_has_one_writer) ... ok
+test_persist_then_skip_then_force (test_core.TestPersistence.test_persist_then_skip_then_force) ... ok
+test_persist_writes_only_under_output_dir (test_core.TestPersistence.test_persist_writes_only_under_output_dir) ... ok
+test_known_category_matches_exactly (test_core.TestReasoningMatch.test_known_category_matches_exactly) ... ok
+test_unknown_category_falls_back_gracefully (test_core.TestReasoningMatch.test_unknown_category_falls_back_gracefully) ... ok
+test_accessibility_query_hits_ux (test_core.TestSearchDomains.test_accessibility_query_hits_ux) ... ok
+test_chart_output_keeps_legacy_grade_during_risk_migration (test_core.TestSearchDomains.test_chart_output_keeps_legacy_grade_during_risk_migration) ... ok
+test_every_configured_domain_file_exists_and_is_searchable (test_core.TestSearchDomains.test_every_configured_domain_file_exists_and_is_searchable) ... ok
+test_every_stack_file_exists_and_is_searchable (test_core.TestSearchDomains.test_every_stack_file_exists_and_is_searchable) ... ok
+test_hard_negative_query_abstains_across_registered_domains_and_stacks (test_core.TestSearchDomains.test_hard_negative_query_abstains_across_registered_domains_and_stacks) ... ok
+test_read_failure_is_not_reported_as_a_search_result (test_core.TestSearchDomains.test_read_failure_is_not_reported_as_a_search_result) ... ok
+test_suggestions_never_repeat_the_input_or_offer_a_dead_first_retry (test_core.TestSearchDomains.test_suggestions_never_repeat_the_input_or_offer_a_dead_first_retry) ... ok
+test_typo_suggestions_are_deterministic_and_retryable (test_core.TestSearchDomains.test_typo_suggestions_are_deterministic_and_retryable) ... ok
+test_ui_is_searchable_in_style_domain (test_core.TestSearchDomains.test_ui_is_searchable_in_style_domain) ... ok
+test_unknown_programmatic_domain_keeps_legacy_style_fallback (test_core.TestSearchDomains.test_unknown_programmatic_domain_keeps_legacy_style_fallback) ... ok
+test_unsupported_icon_library_abstains_instead_of_returning_other_library (test_core.TestSearchDomains.test_unsupported_icon_library_abstains_instead_of_returning_other_library) ... ok
+test_zero_result_query_reports_suggestions_not_error (test_core.TestSearchDomains.test_zero_result_query_reports_suggestions_not_error) ... ok
+test_boundary_safe_nav_normalization_preserves_existing_words (test_core.TestTokenizer.test_boundary_safe_nav_normalization_preserves_existing_words) ... ok
+test_punctuation_and_uk_variants_normalize_to_canonical_tokens (test_core.TestTokenizer.test_punctuation_and_uk_variants_normalize_to_canonical_tokens) ... ok
+test_short_domain_terms_are_kept (test_core.TestTokenizer.test_short_domain_terms_are_kept) ... ok
+test_stopwords_removed (test_core.TestTokenizer.test_stopwords_removed) ... ok
+test_synonym_normalization (test_core.TestTokenizer.test_synonym_normalization) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 2.384s
+
+OK

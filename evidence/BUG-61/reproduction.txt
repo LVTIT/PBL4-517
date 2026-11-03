@@ -1,0 +1,33 @@
+﻿Bug #61 reproduction - measured on main 43bebb1 BEFORE the fix
+Environment: PostgreSQL 16 container, loopback 127.0.0.1:55441, compiled backend, Secure Baseline (all VULN_* false)
+
+=== A. oversell with stock=3 and five concurrent quantity-1 orders (BEFORE) ===
+HTTP:  [201, 201, 201, 503, 503]
+errors: ['DATABASE_UNAVAILABLE', 'DATABASE_UNAVAILABLE', 'OK', 'OK', 'OK']
+orders_created: 3   stock_after: 0
+expected: 3x201 + 2x400 OUT_OF_STOCK
+
+=== A. same scenario AFTER the fix ===
+HTTP:  [201, 201, 201, 400, 400]
+errors: ['OK', 'OK', 'OK', 'OUT_OF_STOCK', 'OUT_OF_STOCK']
+orders_created: 3   stock_after: 0
+
+=== B. double cancel, order of 2 units, stock 10 -> 8 (BEFORE) ===
+double-cancel HTTP: [200, 200]
+double-cancel errors: ['OK', 'OK']
+stock after double cancel: 12   (expected 10)
+>>> phantom stock: +2 units
+
+=== B. same scenario AFTER the fix ===
+double-cancel HTTP: [200, 400]
+double-cancel errors: ['OK', 'CANNOT_CANCEL']
+stock after double cancel: 10   (expected 10)
+>>> phantom stock: 0 units
+
+=== C. regression test against the OLD code (fix stashed) ===
+  x concurrent stock claim: no oversell and no phantom stock (112.3259ms)
+  tests 19 / pass 17 / fail 2
+
+=== C. regression test against the NEW code ===
+  + concurrent stock claim: no oversell and no phantom stock (1583.73ms)
+  tests 19 / pass 19 / fail 0

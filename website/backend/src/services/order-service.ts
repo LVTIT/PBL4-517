@@ -64,33 +64,57 @@ export async function createOrder(
     throw databaseUnavailable();
   });
 
-  if (products.length !== productIds.length) {
+  if (products.length !== new Set(productIds).size) {
     throw new AppError(400, 'INVALID_PRODUCT', 'Một số sản phẩm trong đơn hàng không tồn tại.');
   }
 
   const productMap = new Map(products.map((p) => [p.id, p]));
-  let totalPrice = 0;
 
+  // Collapse duplicate lines so a repeated product is compared against stock once,
+  // not once per line. Without this, two lines of the same product each pass the
+  // per-line check while their sum exceeds what is actually available.
+  const requestedByProduct = new Map<string, number>();
   for (const item of items) {
     const product = productMap.get(item.productId);
     if (!product) continue;
     if (item.quantity <= 0) {
       throw new AppError(400, 'INVALID_QUANTITY', `Số lượng sản phẩm ${product.name} không hợp lệ.`);
     }
-    if (product.stock < item.quantity) {
-      throw new AppError(400, 'OUT_OF_STOCK', `Sản phẩm "${product.name}" chỉ còn ${product.stock} trong kho.`);
-    }
-    totalPrice += Number(product.price) * item.quantity;
+    requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) ?? 0) + item.quantity);
+  }
+
+  let totalPrice = 0;
+  for (const [productId, quantity] of requestedByProduct) {
+    const product = productMap.get(productId)!;
+    totalPrice += Number(product.price) * quantity;
   }
 
   try {
     return await prisma.$transaction(async (tx) => {
-      // 1. Decrement stock
-      for (const item of items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
+      // 1. Decrement stock conditionally inside the transaction.
+      // The guard must live in the same statement that writes, otherwise two
+      // concurrent checkouts both read the pre-sale level, both pass, and the
+      // trailing CHECK ("stock" >= 0) turns the loser into a 503 instead of a
+      // 400 OUT_OF_STOCK.
+      for (const [productId, quantity] of requestedByProduct) {
+        const product = productMap.get(productId)!;
+        const claimed = await tx.product.updateMany({
+          where: { id: productId, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity } },
         });
+        if (claimed.count === 0) {
+          const current = await tx.product.findUnique({
+            where: { id: productId },
+            select: { stock: true, name: true },
+          });
+          throw new AppError(
+            400,
+            'OUT_OF_STOCK',
+            current && current.stock > 0
+              ? `Sản phẩm "${product.name}" chỉ còn ${current.stock} trong kho.`
+              : `Sản phẩm "${product.name}" đã hết hàng.`,
+          );
+        }
       }
 
       // 2. Create Order & OrderItems
@@ -322,6 +346,9 @@ export async function cancelOrder(
   try {
     let orderToCancel: { id: string; status: OrderStatus; items: { productId: string; quantity: number }[] } | null;
 
+    // Cancellation is guarded by a scoped read first so that an outsider gets
+    // 403 rather than a silent no-op. The authoritative ownership and state
+    // check still has to happen inside the writing transaction below.
     if (!isIdorVulnerable() && !isAdmin) {
       // Defense-in-depth: Database Query Scoping enforced at database level
       const scopedOrder = await prisma.order.findFirst({
@@ -329,6 +356,7 @@ export async function cancelOrder(
         select: {
           id: true,
           status: true,
+          userId: true,
           items: { select: { productId: true, quantity: true } },
         },
       });
@@ -351,6 +379,7 @@ export async function cancelOrder(
         select: {
           id: true,
           status: true,
+          userId: true,
           items: { select: { productId: true, quantity: true } },
         },
       });
@@ -365,8 +394,24 @@ export async function cancelOrder(
       throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
     }
 
-    // Prisma transaction: Update status to CANCELLED and restore stock
+    // Prisma transaction: claim the state transition first, then restore stock.
+    // Restoring stock before claiming the transition let two concurrent cancels
+    // both read PENDING, both increment stock, and both succeed: stock grew by
+    // twice the ordered quantity while only one order was ever cancelled.
     const cancelled = await prisma.$transaction(async (tx) => {
+      const claim = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          status: 'PENDING',
+          ...(!isIdorVulnerable() && !isAdmin ? { userId: requestingUserId } : {}),
+        },
+        data: { status: 'CANCELLED' },
+      });
+
+      if (claim.count === 0) {
+        throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+      }
+
       for (const item of orderToCancel!.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -374,9 +419,8 @@ export async function cancelOrder(
         });
       }
 
-      return tx.order.update({
+      return tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        data: { status: 'CANCELLED' },
         include: {
           items: {
             include: {

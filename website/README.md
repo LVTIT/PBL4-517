@@ -421,6 +421,11 @@ Khi triển khai production ở issue sau: cài dependency/build trên môi trư
 
 ### Production start (EC2 Linux)
 
+Origin hiện tại: **https://52.221.157.206/** trên EIP hiện có. Cấu hình TLS,
+renewal và rollback canonical ở [EIP HTTPS runbook](../docs/aws/ec2-eip-https.md).
+Lần sửa HTTPS 2026-11-03 không redeploy ứng dụng hoặc đổi database; các đoạn
+triển khai có ngày bên dưới được giữ làm lịch sử.
+
 Issue #14 deployment/configuration and temporary-process handoff are recorded in
 [EC2 deployment](../docs/aws/ec2-deployment-review.md), with [verified evidence](../evidence/WEB-04/README.md).
 Issue #15 now has an active/enabled systemd backend with verified stop/start/restart
@@ -445,7 +450,7 @@ service/Nginx đang dùng:
 sudo systemctl restart pbl4-backend
 systemctl is-active pbl4-backend
 systemctl is-enabled pbl4-backend
-curl --fail --silent --show-error https://13.251.128.130/api/health
+curl --fail --silent --show-error https://52.221.157.206/api/health
 ```
 
 Kiểm tra frontend/assets/API qua HTTPS, quyền đọc static files của Nginx,

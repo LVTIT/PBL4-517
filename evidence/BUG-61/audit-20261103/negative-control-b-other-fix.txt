@@ -1,0 +1,25 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: negative-control-b
+Command: node --test --test-reporter=tap "--test-name-pattern=inventory #61 checkout race" tests/api.integration.test.mjs
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+TAP version 13
+# Subtest: inventory \#61 checkout race
+ok 1 - inventory \#61 checkout race
+  ---
+  duration_ms: 197.4305
+  type: 'test'
+  ...
+# overlapping checkout writes=5; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" - $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND "public"."Product"."stock" >= $4)
+# {"http":[201,201,201,400,400],"errors":["OK","OK","OK","OUT_OF_STOCK","OUT_OF_STOCK"],"finalStock":0,"orders":3,"items":3}
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 329.6905

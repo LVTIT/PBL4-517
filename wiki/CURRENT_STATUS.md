@@ -13,6 +13,43 @@ lifecycle 9/9 PASS, both builds PASS, repository policy 0 violations. No schema,
 migration, lab flag, `.env` or AWS change. Related to #61 and #63, which touch
 the same service; [reproduction and limits](../evidence/BUG-65/README.md).
 
+**2026-11-03 existing EIP HTTPS repair (Refs #14): verified; READY TO STOP EC2
+for the owner, with EC2 left running.** Instance
+`i-0ccfb2772f854e78b` serves `https://52.221.157.206/` with a matching Let's
+Encrypt IP certificate (`pbl4-517-eip`), using existing Snap Certbot 5.9.0.
+External HTTP-01, staging dry-run, one production issuance, trusted HTTPS/health,
+Nginx validation/reload and unfiltered renewal dry-run with deploy hook PASS.
+Nginx/backend remain active/enabled, backend PID unchanged, API/DB loopback-only,
+and `.env` checksum unchanged. Old certificates retained; obsolete old-IP renewal
+configs archived privately. User's fresh incognito homepage screenshot has no
+red certificate warning; the owner confirmed its products list displayed
+normally. DevTools on normal Chrome verified a trusted certificate and TLS 1.3,
+but recorded prior permission to run content with certificate errors. After
+browser-session troubleshooting, the owner explicitly confirmed normal Chrome
+was safe too. Documentation PR #70 / latest CI and required human review are
+tracked separately from operational readiness; no review or merge is inferred.
+No application redeploy, database mutation, AWS resource/network change or EC2
+stop/reboot. [Evidence and limits](../evidence/WEB-04/eip-20261103/README.md),
+[current TLS/renewal/rollback runbook](../docs/aws/ec2-eip-https.md).
+
+**2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
+human review pending, not deployed.** Source atomic stock/cancel claims from
+`d8c3fa3` retained after audit. The original sequential cancel test and combined
+negative-control claim did not prove the double-cancel race. Four independent
+regressions (`cda5a62`) now observe overlapping SQL writes with real PostgreSQL
+row-lock barriers: checkout, three fresh concurrent-cancel rounds, duplicate
+quantities/pricing/OrderItems and rollback after the first product was claimed.
+Independent old-create-only control fails with 503; old-cancel-only control fails
+with two successes and stock=12. The other fixed function passes in each control;
+fixed source restored before final API 22/22 and security lifecycle 9/9 PASS.
+Both builds/audits, config 2/2 and browser 54/54 PASS locally; exact commands,
+remaining check results and final hosted CI are linked in the
+[audit evidence](../evidence/BUG-61/README.md). Existing main rejected duplicate
+IDs as INVALID_PRODUCT; valid duplicate support now guards the aggregated total.
+No schema, migration, `.env`, lab architecture, admin transition (#65), global
+error mapping (#63) or AWS changes. Issue stays open; no merge or human
+understanding/demo acceptance inferred. [Teach-back](../evidence/BUG-61/teach-back.md).
+
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
 acknowledged lab profile; default production profile still refuses all lab flags.
