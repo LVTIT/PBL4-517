@@ -1,0 +1,173 @@
+▶ data errors #63 PostgreSQL HTTP regression
+  ✖ malformed product/order IDs reject before DB with safe 400 (16.2332ms)
+  ✖ missing product update/delete and resource reads retain safe 404 (41.3275ms)
+  ✖ real FK delete returns safe 409 and preserves all rows (24.823ms)
+  ✖ current Prisma 7.10/PostgreSQL codes and structured context are measured (147.7871ms)
+  ℹ malformed UUID (not globally mapped): P2007; model=Product
+  ℹ missing update: P2025; model=Product
+  ℹ missing delete: P2025; model=Product
+  ℹ referenced delete: P2003; model=Product
+  ℹ duplicate email: P2002; model=User; target=email
+  ✖ registration DB uniqueness race returns EMAIL_EXISTS after a stale pre-check (323.3903ms)
+  ✖ AppError HTTP contracts survive service catches (#61/#65/IDOR) (37.4611ms)
+  ✖ unique service failure has safe HTTP envelope (751.3223ms)
+  ✔ unknown service failure has safe HTTP envelope (452.6306ms)
+  ✔ unmapped service failure has safe HTTP envelope (455.236ms)
+  ✔ isolated unreachable DB preserves products/health 503 (710.8322ms)
+✖ data errors #63 PostgreSQL HTTP regression (4869.6827ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 3
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5105.1467
+
+✖ failing tests:
+
+test at tests\data-errors.integration.test.mjs:93:17
+✖ malformed product/order IDs reject before DB with safe 400 (16.2332ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 400
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:99:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:93:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:102:17
+✖ missing product update/delete and resource reads retain safe 404 (41.3275ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 404
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:106:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:102:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 404,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:116:17
+✖ real FK delete returns safe 409 and preserves all rows (24.823ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 409
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:118:7)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:116:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 409,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:123:17
+✖ current Prisma 7.10/PostgreSQL codes and structured context are measured (147.7871ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 409
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:150:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:123:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 409,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:155:17
+✖ registration DB uniqueness race returns EMAIL_EXISTS after a stale pre-check (323.3903ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 409
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:174:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:155:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 409,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:186:17
+✖ AppError HTTP contracts survive service catches (#61/#65/IDOR) (37.4611ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 400
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:187:7)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:186:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:199:20
+✖ unique service failure has safe HTTP envelope (751.3223ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 409
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:201:13)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:199:8)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 409,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

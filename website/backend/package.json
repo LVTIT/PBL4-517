@@ -17,8 +17,9 @@
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
     "catalog:import": "tsx src/scripts/import-catalog.ts",
-    "test:integration": "node --test tests/api.integration.test.mjs",
+    "test:integration": "node --test tests/api.integration.test.mjs tests/data-errors.integration.test.mjs",
     "test:security": "node --test tests/security-lifecycle.test.mjs",
+    "test:data-errors": "node --test tests/data-errors.test.mjs",
     "lab:fixtures": "node dist/scripts/lab-fixtures.js",
     "test:config": "node --test tests/config.test.mjs"
   },

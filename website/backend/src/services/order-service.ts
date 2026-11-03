@@ -1,6 +1,7 @@
 import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
 import { AppError, databaseUnavailable } from '../lib/errors.js';
+import { rethrowDataError } from '../lib/data-errors.js';
 import type { OrderStatus } from '../generated/prisma/client.js';
 
 function isIdorVulnerable(): boolean {
@@ -153,8 +154,7 @@ export async function createOrder(
       };
     });
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    rethrowDataError(error);
   }
 }
 
@@ -176,8 +176,8 @@ export async function getUserOrders(userId: string) {
       totalPrice: o.totalPrice.toFixed(2),
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    rethrowDataError(error);
   }
 }
 
@@ -199,8 +199,8 @@ export async function getAllOrders() {
       totalPrice: o.totalPrice.toFixed(2),
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
-  } catch {
-    throw databaseUnavailable();
+  } catch (error) {
+    rethrowDataError(error);
   }
 }
 
@@ -263,8 +263,7 @@ export async function getOrderById(orderId: string, requestingUserId: string, is
       items: order.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    rethrowDataError(error);
   }
 }
 
@@ -333,8 +332,7 @@ export async function updateOrderDetails(
       items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    rethrowDataError(error);
   }
 }
 
@@ -437,8 +435,7 @@ export async function cancelOrder(
       items: cancelled.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    rethrowDataError(error);
   }
 }
 
@@ -538,7 +535,6 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
       items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw databaseUnavailable();
+    rethrowDataError(error);
   }
 }

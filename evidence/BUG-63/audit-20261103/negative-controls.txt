@@ -1,0 +1,4 @@
+A: nonzero exit; malformed/missing/FK/registration HTTP contracts fail with 503. Controller validation deliberately restored to old shape checks for malformed-ID control.
+B: passthrough-only removal fails #61 HTTP 400 contracts and #65 HTTP 409 contracts; all five AppError identity tests fail.
+C: unsafe fallback to 400 fails unknown non-Prisma, unmapped Prisma and unreachable DB HTTP tests; unit fallback tests fail.
+All compiled modules restored byte-for-byte. No source mutation.

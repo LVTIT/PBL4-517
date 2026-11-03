@@ -1,5 +1,41 @@
 # Current Project Status
 
+**2026-11-03 data error re-audit (#63 / PR #64): implemented / locally verified;
+final-head hosted CI and human review tracked on PR, not deployed.** Integrated
+main `b0bedc71` with merge `16333eb`, resolving order-service admin conflict by
+retaining #65's state/claim/restock logic and changing only error catches.
+Machine comparison confirms #61/#65 service equality after import/catch
+normalization; latest-main API suite remains identical. Controllers reject
+malformed product/order UUIDs with 400. Only contextual Product P2025/P2003 and
+known unique P2002 map to 404/409; broad format/check/relation/unknown failures
+stay 503. Registration keeps pre-check and re-reads email after P2002 to prove
+EMAIL_EXISTS; PostgreSQL lock test proves the stale-precheck uniqueness path.
+All AppErrors pass through by identity. Independent controls A/B/C fail for
+blanket 503, swallowed AppError and unsafe unknown->400 respectively; compiled
+files restored byte-for-byte. Final local mapper 26/26, API 40/40, lifecycle 9/9,
+config 2/2 and E2E 58/58 PASS; builds/installs/audits PASS, zero vulnerabilities.
+Required backend-integration now explicitly executes mapper unit tests and the
+new HTTP suite. Exact final head, five hosted checks and readiness are recorded
+on [PR #64](https://github.com/LVTIT/PBL4-517/pull/64).
+[Audit/commands/controls/limits](../evidence/BUG-63/audit-20261103/README.md),
+[implementer teach-back](../evidence/BUG-63/teach-back.md). No schema, dependency,
+middleware, lab flag, frontend or AWS change; no human acceptance or merge inferred.
+
+**Historical 2026-11-01 data error implementation (#63), on base 43bebb1; superseded mapping and test counts, not final acceptance.**
+Services ended every path with `catch { throw databaseUnavailable(); }`, so all
+Prisma failures became `503 DATABASE_UNAVAILABLE`. A malformed UUID, a missing
+record and a delete blocked by an order all told the client the service was down
+and invited a retry that could never succeed. A shared `translatePrismaError()`
+now maps `P2007`/`P2023` to `400 INVALID_ID`, `P2025` and friends to `404 NOT_FOUND`,
+`P2003` to `409 CONFLICT`, `P2002` to `409` (and `409 EMAIL_EXISTS` on the raced
+registration path), `P2000`/`P2004` to `400 INVALID_INPUT`, and leaves genuine
+infrastructure failures and unknown codes at `503` so real outages are not masked.
+Product routes also reject a non-UUID id before touching the database. The new
+HTTP subtest fails on the old code (17/19) and passes on the new code (19/19); the
+unit mapping test is 3/3, API integration 19/19 and security lifecycle 9/9 PASS.
+No schema, migration, lab flag, `.env` or AWS change.
+[Reproduction, code table and limits](../evidence/BUG-63/README.md).
+
 **2026-11-03 admin order state/inventory audit (#65 / PR #66): implemented / locally
 verified; human review pending, not deployed.** Merged latest main `96ece57` into
 `feature/65-admin-status-inventory` without rewriting history. Only status wiki

@@ -1,0 +1,153 @@
+✖ AppError passthrough preserves object identity: OUT_OF_STOCK (7.7391ms)
+✖ AppError passthrough preserves object identity: CANNOT_CANCEL (0.6541ms)
+✖ AppError passthrough preserves object identity: FORBIDDEN (0.5233ms)
+✖ AppError passthrough preserves object identity: NOT_FOUND (0.6301ms)
+✖ AppError passthrough preserves object identity: INVALID_STATUS_TRANSITION (0.4946ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 259.2734
+
+✖ failing tests:
+
+test at tests\data-errors.test.mjs:57:3
+✖ AppError passthrough preserves object identity: OUT_OF_STOCK (7.7391ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+  + [AppError: Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.] {
+  +   code: 'DATABASE_UNAVAILABLE',
+  +   status: 503
+  - [AppError: safe domain message] {
+  -   code: 'OUT_OF_STOCK',
+  -   status: 400
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:60:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 503, code: 'DATABASE_UNAVAILABLE', name: 'AppError' },
+    expected: { status: 400, code: 'OUT_OF_STOCK', name: 'AppError' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:57:3
+✖ AppError passthrough preserves object identity: CANNOT_CANCEL (0.6541ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+  + [AppError: Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.] {
+  +   code: 'DATABASE_UNAVAILABLE',
+  +   status: 503
+  - [AppError: safe domain message] {
+  -   code: 'CANNOT_CANCEL',
+  -   status: 400
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:60:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 503, code: 'DATABASE_UNAVAILABLE', name: 'AppError' },
+    expected: { status: 400, code: 'CANNOT_CANCEL', name: 'AppError' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:57:3
+✖ AppError passthrough preserves object identity: FORBIDDEN (0.5233ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+  + [AppError: Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.] {
+  +   code: 'DATABASE_UNAVAILABLE',
+  +   status: 503
+  - [AppError: safe domain message] {
+  -   code: 'FORBIDDEN',
+  -   status: 403
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:60:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 503, code: 'DATABASE_UNAVAILABLE', name: 'AppError' },
+    expected: { status: 403, code: 'FORBIDDEN', name: 'AppError' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:57:3
+✖ AppError passthrough preserves object identity: NOT_FOUND (0.6301ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+  + [AppError: Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.] {
+  +   code: 'DATABASE_UNAVAILABLE',
+  +   status: 503
+  - [AppError: safe domain message] {
+  -   code: 'NOT_FOUND',
+  -   status: 404
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:60:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 503, code: 'DATABASE_UNAVAILABLE', name: 'AppError' },
+    expected: { status: 404, code: 'NOT_FOUND', name: 'AppError' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:57:3
+✖ AppError passthrough preserves object identity: INVALID_STATUS_TRANSITION (0.4946ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+  + [AppError: Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.] {
+  +   code: 'DATABASE_UNAVAILABLE',
+  +   status: 503
+  - [AppError: safe domain message] {
+  -   code: 'INVALID_STATUS_TRANSITION',
+  -   status: 409
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:60:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 503, code: 'DATABASE_UNAVAILABLE', name: 'AppError' },
+    expected: { status: 409, code: 'INVALID_STATUS_TRANSITION', name: 'AppError' },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,413 @@
+✔ mapping P2002 default {} (2.2527ms)
+✔ mapping P2002 register-email-conflict {"modelName":"User","target":["email"]} (0.1714ms)
+✔ mapping P2002 default {"modelName":"User","target":["id"]} (0.1412ms)
+✔ mapping P2002 register-email-conflict {"modelName":"Other","target":["email"]} (0.1264ms)
+✔ mapping P2002 default {"modelName":"User","target":"User_email_key"} (0.1544ms)
+✔ mapping P2025 update-product {"modelName":"Product"} (0.2517ms)
+✔ mapping P2025 delete-product {"modelName":"Product"} (0.1474ms)
+✔ mapping P2003 delete-product {"modelName":"Product"} (0.123ms)
+✖ unsafe/unmapped P2000 stays 503 in every unrelated context (1.821ms)
+✖ unsafe/unmapped P2001 stays 503 in every unrelated context (0.5912ms)
+✖ unsafe/unmapped P2004 stays 503 in every unrelated context (0.3459ms)
+✖ unsafe/unmapped P2007 stays 503 in every unrelated context (0.3462ms)
+✖ unsafe/unmapped P2015 stays 503 in every unrelated context (0.3758ms)
+✖ unsafe/unmapped P2018 stays 503 in every unrelated context (0.2541ms)
+✖ unsafe/unmapped P2023 stays 503 in every unrelated context (0.2848ms)
+✖ unsafe/unmapped P2025 stays 503 in every unrelated context (0.2323ms)
+✖ unsafe/unmapped P2003 stays 503 in every unrelated context (0.2655ms)
+✖ unsafe/unmapped P2034 stays 503 in every unrelated context (0.2381ms)
+✖ unsafe/unmapped P9999 stays 503 in every unrelated context (0.2277ms)
+✖ Product P2025/P2003 require the specific operation, not just the model (0.255ms)
+✖ unknown non-Prisma failures and forged code objects stay 503 (1.0128ms)
+✔ AppError passthrough preserves object identity: OUT_OF_STOCK (0.2995ms)
+✔ AppError passthrough preserves object identity: CANNOT_CANCEL (0.1095ms)
+✔ AppError passthrough preserves object identity: FORBIDDEN (0.1337ms)
+✔ AppError passthrough preserves object identity: NOT_FOUND (0.168ms)
+✔ AppError passthrough preserves object identity: INVALID_STATUS_TRANSITION (0.096ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 13
+ℹ fail 13
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 188.0124
+
+✖ failing tests:
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2000 stays 503 in every unrelated context (1.821ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2001 stays 503 in every unrelated context (0.5912ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2004 stays 503 in every unrelated context (0.3459ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2007 stays 503 in every unrelated context (0.3462ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2015 stays 503 in every unrelated context (0.3758ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2018 stays 503 in every unrelated context (0.2541ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2023 stays 503 in every unrelated context (0.2848ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2025 stays 503 in every unrelated context (0.2323ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2003 stays 503 in every unrelated context (0.2655ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P2034 stays 503 in every unrelated context (0.2381ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:35:3
+✖ unsafe/unmapped P9999 stays 503 in every unrelated context (0.2277ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:37:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:42:1
+✖ Product P2025/P2003 require the specific operation, not just the model (0.255ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:44:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.test.mjs:49:1
+✖ unknown non-Prisma failures and forged code objects stay 503 (1.0128ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   code: 'INVALID_INPUT',
+  +   message: 'unsafe control',
+  +   status: 400
+  -   code: 'DATABASE_UNAVAILABLE',
+  -   message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.',
+  -   status: 503
+    }
+
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.test.mjs:52:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { status: 400, code: 'INVALID_INPUT', message: 'unsafe control' },
+    expected: { status: 503, code: 'DATABASE_UNAVAILABLE', message: 'Dịch vụ dữ liệu tạm thời không khả dụng. Vui lòng thử lại.' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,35 @@
+﻿Backend: compiled dist/server.js on 127.0.0.1:3075, Secure Baseline (all VULN_* false)
+
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+Γû╢ real PostgreSQL API and session authentication
+  Γ£ö health and security headers (30.9538ms)
+  Γ£ö products match database rows with exact decimal money (55.0024ms)
+  Γ£ö public catalog excludes deployment verification items (74.7475ms)
+  Γ£ö anonymous user and rejected missing CSRF token (39.432ms)
+  Γ£ö wrong password and unknown email have same error (1183.6971ms)
+  Γ£ö strict input validation, malformed JSON and body size limit (77.1222ms)
+  Γ£ö correct login rotates session and stores only password hash (795.696ms)
+  Γ£ö new client with existing cookie restores the session (13.7813ms)
+  Γ£ö logout invalidates session including replayed cookie (59.8068ms)
+  Γ£ö unknown API paths keep JSON error format (9.6599ms)
+  Γ£ö user registration and duplicate detection (567.7888ms)
+  Γ£ö product search and detail with reviews (29.664ms)
+  Γ£ö data errors keep their 4xx status instead of 503 (515.803ms)
+  Γ£ö product search rejects SQL injection payloads (43.3518ms)
+  Γ£ö orders, server-side pricing, and IDOR protection (1726.6269ms)
+  Γ£ö admin authorization guard (554.9076ms)
+  Γ£ö guest checkout without authentication (68.9511ms)
+  Γ£ö role boundaries: admin cannot place orders or post reviews (629.1214ms)
+Γ£ö real PostgreSQL API and session authentication (6481.7296ms)
+Γä╣ tests 19
+Γä╣ suites 0
+Γä╣ pass 19
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 6616.3005
+
