@@ -1,0 +1,31 @@
+{
+  "product": "10000000-0000-4000-8000-000000000001",
+  "stockBefore": 14,
+  "stockAfterOrder": 12,
+  "rounds": [
+    {
+      "round": 1,
+      "cancelStatus": 200,
+      "afterCancel": 14,
+      "reopenStatus": 409,
+      "afterReopen": 14
+    },
+    {
+      "round": 2,
+      "cancelStatus": 400,
+      "afterCancel": 14,
+      "reopenStatus": 409,
+      "afterReopen": 14
+    },
+    {
+      "round": 3,
+      "cancelStatus": 400,
+      "afterCancel": 14,
+      "reopenStatus": 409,
+      "afterReopen": 14
+    }
+  ],
+  "finalStock": 14,
+  "phantomUnits": 0,
+  "expectedFinalStock": 14
+}

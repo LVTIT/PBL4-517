@@ -1,0 +1,110 @@
+{
+  "observed_at_utc": "2026-11-03T09:18:52.977520+00:00",
+  "origin": "https://52.221.157.206",
+  "tls_validation_disabled": false,
+  "http_redirect": {
+    "status": 308,
+    "location": "https://52.221.157.206/"
+  },
+  "/": {
+    "status": 200,
+    "content_type": "text/html",
+    "bytes": 789,
+    "sha256": "3cda55ceaf3412493e738b1231c18c21dde0c8fb07e70518d3e59fb0d78ca6a8"
+  },
+  "/products": {
+    "status": 200,
+    "content_type": "text/html",
+    "bytes": 789
+  },
+  "/api/health": {
+    "status": 200,
+    "content_type": "application/json; charset=utf-8",
+    "bytes": 47,
+    "body": {
+      "data": {
+        "status": "ok",
+        "database": "connected"
+      }
+    }
+  },
+  "/api/products": {
+    "status": 200,
+    "content_type": "application/json; charset=utf-8",
+    "bytes": 3602,
+    "data_keys": [],
+    "product_count": 10
+  },
+  "assets": [
+    {
+      "path": "/assets/index-Bz4bs9lI.js",
+      "status": 200,
+      "bytes": 322765,
+      "sha256": "a018c44834071fe316679e0c7aa0fddb0108d766bcb5bf0ad21adaa85347e802"
+    },
+    {
+      "path": "/assets/index-CAi3WJtA.css",
+      "status": 200,
+      "bytes": 33223,
+      "sha256": "57a0697a67eab71c5bb501e3f56b5d3adde078ec3bebf7da75db3b2284403df1"
+    }
+  ],
+  "certificate": {
+    "issuer": [
+      [
+        [
+          "countryName",
+          "US"
+        ]
+      ],
+      [
+        [
+          "organizationName",
+          "Let's Encrypt"
+        ]
+      ],
+      [
+        [
+          "commonName",
+          "YE2"
+        ]
+      ]
+    ],
+    "serialNumber": "06805B9A725C5A07A7DBC5CA499EAB208BAE",
+    "notBefore": "Nov  3 08:12:41 2026 GMT",
+    "notAfter": "Nov 10 00:12:40 2026 GMT",
+    "subjectAltName": [
+      [
+        "IP Address",
+        "52.221.157.206"
+      ]
+    ]
+  },
+  "tls": "TLSv1.3",
+  "ports": [
+    {
+      "port": 22,
+      "result": "TimeoutError"
+    },
+    {
+      "port": 80,
+      "result": "OPEN"
+    },
+    {
+      "port": 443,
+      "result": "OPEN"
+    },
+    {
+      "port": 3000,
+      "result": "TimeoutError"
+    },
+    {
+      "port": 5432,
+      "result": "TimeoutError"
+    }
+  ],
+  "openssl": {
+    "exit_code": 0,
+    "output": "Connecting to 52.221.157.206\nCONNECTION ESTABLISHED\nProtocol version: TLSv1.3\nCiphersuite: TLS_AES_256_GCM_SHA384\nPeer certificate: \nHash used: SHA256\nSignature type: ECDSA\nVerification: OK\nServer Temp Key: X25519, 253 bits\nDONE\n"
+  }
+}

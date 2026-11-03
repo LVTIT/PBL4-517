@@ -1,0 +1,21 @@
+
+> pbl4-517-frontend@0.1.0 build
+> tsc --noEmit && vite build && node ../../scripts/release/stamp.mjs frontend
+
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 99 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.80 kB │ gzip:  0.45 kB
+dist/assets/index-CAi3WJtA.css            33.22 kB │ gzip:  6.18 kB
+dist/assets/ConfirmDialog-D54xaLVk.js      2.12 kB │ gzip:  0.97 kB
+dist/assets/RegisterPage-C3xEeJCd.js       5.48 kB │ gzip:  1.89 kB
+dist/assets/OrdersPage-DIx2PIKb.js         6.60 kB │ gzip:  2.40 kB
+dist/assets/ProfilePage-BPYR6A0m.js        7.29 kB │ gzip:  2.22 kB
+dist/assets/OrderDetailPage-Bvys5_3z.js   10.84 kB │ gzip:  3.41 kB
+dist/assets/AdminPage-C3wv-mfm.js         16.42 kB │ gzip:  4.67 kB
+dist/assets/index-CK7LbvA3.js            324.09 kB │ gzip: 97.99 kB
+
+✓ built in 278ms
+frontend: e241cb49c4e8d128cdf8c349c6b58764845b85f7 (dirty: not deployable)

@@ -1,0 +1,16 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: docker exec pbl517-bug61-20261103 psql -U pbl517_app -d pbl517_lab_test -c "SELECT version(); SHOW default_transaction_isolation;"
+Working directory: .
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+                                                       version
+----------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+(1 row)
+
+ default_transaction_isolation
+-------------------------------
+ read committed
+(1 row)

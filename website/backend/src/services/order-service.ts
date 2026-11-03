@@ -1,7 +1,7 @@
 import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
-import { rethrowDataError } from '../lib/data-errors.js';
 import { AppError } from '../lib/errors.js';
+import { rethrowDataError } from '../lib/data-errors.js';
 import type { OrderStatus } from '../generated/prisma/client.js';
 
 function isIdorVulnerable(): boolean {
@@ -35,7 +35,9 @@ export async function createOrder(
   const customerPhone = recipientPhone?.trim() || guestInfo?.phone?.trim() || null;
 
   if (userId) {
-    const user = await prisma.user.findUnique({ where: { id: userId } }).catch(rethrowDataError);
+    const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => {
+      throw databaseUnavailable();
+    });
     if (!user) {
       throw new AppError(404, 'USER_NOT_FOUND', 'Tài khoản người dùng không tồn tại.');
     }
@@ -59,35 +61,61 @@ export async function createOrder(
   const productIds = items.map((item) => item.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-  }).catch(rethrowDataError);
+  }).catch(() => {
+    throw databaseUnavailable();
+  });
 
-  if (products.length !== productIds.length) {
+  if (products.length !== new Set(productIds).size) {
     throw new AppError(400, 'INVALID_PRODUCT', 'Một số sản phẩm trong đơn hàng không tồn tại.');
   }
 
   const productMap = new Map(products.map((p) => [p.id, p]));
-  let totalPrice = 0;
 
+  // Collapse duplicate lines so a repeated product is compared against stock once,
+  // not once per line. Without this, two lines of the same product each pass the
+  // per-line check while their sum exceeds what is actually available.
+  const requestedByProduct = new Map<string, number>();
   for (const item of items) {
     const product = productMap.get(item.productId);
     if (!product) continue;
     if (item.quantity <= 0) {
       throw new AppError(400, 'INVALID_QUANTITY', `Số lượng sản phẩm ${product.name} không hợp lệ.`);
     }
-    if (product.stock < item.quantity) {
-      throw new AppError(400, 'OUT_OF_STOCK', `Sản phẩm "${product.name}" chỉ còn ${product.stock} trong kho.`);
-    }
-    totalPrice += Number(product.price) * item.quantity;
+    requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) ?? 0) + item.quantity);
+  }
+
+  let totalPrice = 0;
+  for (const [productId, quantity] of requestedByProduct) {
+    const product = productMap.get(productId)!;
+    totalPrice += Number(product.price) * quantity;
   }
 
   try {
     return await prisma.$transaction(async (tx) => {
-      // 1. Decrement stock
-      for (const item of items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
+      // 1. Decrement stock conditionally inside the transaction.
+      // The guard must live in the same statement that writes, otherwise two
+      // concurrent checkouts both read the pre-sale level, both pass, and the
+      // trailing CHECK ("stock" >= 0) turns the loser into a 503 instead of a
+      // 400 OUT_OF_STOCK.
+      for (const [productId, quantity] of requestedByProduct) {
+        const product = productMap.get(productId)!;
+        const claimed = await tx.product.updateMany({
+          where: { id: productId, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity } },
         });
+        if (claimed.count === 0) {
+          const current = await tx.product.findUnique({
+            where: { id: productId },
+            select: { stock: true, name: true },
+          });
+          throw new AppError(
+            400,
+            'OUT_OF_STOCK',
+            current && current.stock > 0
+              ? `Sản phẩm "${product.name}" chỉ còn ${current.stock} trong kho.`
+              : `Sản phẩm "${product.name}" đã hết hàng.`,
+          );
+        }
       }
 
       // 2. Create Order & OrderItems
@@ -126,8 +154,7 @@ export async function createOrder(
       };
     });
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -150,7 +177,7 @@ export async function getUserOrders(userId: string) {
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -173,7 +200,7 @@ export async function getAllOrders() {
       items: o.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     }));
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -236,8 +263,7 @@ export async function getOrderById(orderId: string, requestingUserId: string, is
       items: order.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -306,8 +332,7 @@ export async function updateOrderDetails(
       items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -319,6 +344,9 @@ export async function cancelOrder(
   try {
     let orderToCancel: { id: string; status: OrderStatus; items: { productId: string; quantity: number }[] } | null;
 
+    // Cancellation is guarded by a scoped read first so that an outsider gets
+    // 403 rather than a silent no-op. The authoritative ownership and state
+    // check still has to happen inside the writing transaction below.
     if (!isIdorVulnerable() && !isAdmin) {
       // Defense-in-depth: Database Query Scoping enforced at database level
       const scopedOrder = await prisma.order.findFirst({
@@ -326,6 +354,7 @@ export async function cancelOrder(
         select: {
           id: true,
           status: true,
+          userId: true,
           items: { select: { productId: true, quantity: true } },
         },
       });
@@ -348,6 +377,7 @@ export async function cancelOrder(
         select: {
           id: true,
           status: true,
+          userId: true,
           items: { select: { productId: true, quantity: true } },
         },
       });
@@ -362,8 +392,24 @@ export async function cancelOrder(
       throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
     }
 
-    // Prisma transaction: Update status to CANCELLED and restore stock
+    // Prisma transaction: claim the state transition first, then restore stock.
+    // Restoring stock before claiming the transition let two concurrent cancels
+    // both read PENDING, both increment stock, and both succeed: stock grew by
+    // twice the ordered quantity while only one order was ever cancelled.
     const cancelled = await prisma.$transaction(async (tx) => {
+      const claim = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          status: 'PENDING',
+          ...(!isIdorVulnerable() && !isAdmin ? { userId: requestingUserId } : {}),
+        },
+        data: { status: 'CANCELLED' },
+      });
+
+      if (claim.count === 0) {
+        throw new AppError(400, 'CANNOT_CANCEL', 'Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý (PENDING).');
+      }
+
       for (const item of orderToCancel!.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -371,9 +417,8 @@ export async function cancelOrder(
         });
       }
 
-      return tx.order.update({
+      return tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        data: { status: 'CANCELLED' },
         include: {
           items: {
             include: {
@@ -390,19 +435,106 @@ export async function cancelOrder(
       items: cancelled.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
     };
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
+// Allowed forward transitions. CANCELLED is terminal: once stock has been
+// returned an order must not be reopened, otherwise the same units can be
+// released again by cancelling a second time.
+const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['DELIVERED'],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   try {
-    const order = await prisma.order.update({
+    // Read first: the transition decision and the stock bookkeeping depend on
+    // the current state, so a blind update is not enough.
+    const current = await prisma.order.findUnique({
       where: { id: orderId },
-      data: { status },
+      select: {
+        id: true,
+        status: true,
+        items: { select: { productId: true, quantity: true } },
+      },
     });
-    return { ...order, totalPrice: order.totalPrice.toFixed(2) };
+
+    if (!current) {
+      throw new AppError(404, 'NOT_FOUND', 'Đơn hàng không tồn tại.');
+    }
+
+    if (current.status === status) {
+      throw new AppError(
+        409,
+        'INVALID_STATUS_TRANSITION',
+        `Đơn hàng đã ở trạng thái "${current.status}".`,
+      );
+    }
+
+    if (!ALLOWED_TRANSITIONS[current.status].includes(status)) {
+      throw new AppError(
+        409,
+        'INVALID_STATUS_TRANSITION',
+        `Không thể chuyển đơn hàng từ "${current.status}" sang "${status}".`,
+      );
+    }
+
+    // Collapse duplicate lines so a product listed twice is restocked once with
+    // its total quantity instead of once per line.
+    const restockByProduct = new Map<string, number>();
+    for (const item of current.items) {
+      restockByProduct.set(item.productId, (restockByProduct.get(item.productId) ?? 0) + item.quantity);
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      // Claim the transition inside the transaction. createOrder decrements
+      // stock, cancelOrder returns it, so an admin cancellation must return it
+      // too; two admins racing on the same order must only restock once.
+      const claim = await tx.order.updateMany({
+        where: { id: orderId, status: current.status },
+        data: { status },
+      });
+
+      if (claim.count !== 1) {
+        throw new AppError(
+          409,
+          'INVALID_STATUS_TRANSITION',
+          'Trạng thái đơn hàng vừa thay đổi. Vui lòng tải lại và thử lại.',
+        );
+      }
+
+      if (status === 'CANCELLED') {
+        for (const [productId, quantity] of restockByProduct) {
+          await tx.product.update({
+            where: { id: productId },
+            data: { stock: { increment: quantity } },
+          });
+        }
+      }
+
+      return tx.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          items: {
+            include: {
+              product: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+    });
+
+    return {
+      ...updated,
+      totalPrice: updated.totalPrice.toFixed(2),
+      items: updated.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toFixed(2) })),
+    };
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }

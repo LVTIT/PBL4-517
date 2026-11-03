@@ -1,0 +1,16 @@
+
+> pbl517-backend@0.1.0 prisma:seed
+> prisma db seed
+
+node.exe : Loaded Prisma config from prisma.config.ts.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Loaded Prisma c...isma.config.ts.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+Running seed command `tsx prisma/seed.ts` ...
+Seed complete: demo@example.com, admin@example.com, 6 products with categories, and reviews.
+
+The seed command has been executed.

@@ -1,6 +1,6 @@
 # Current Project Status
 
-**2026-11-01 data errors keep their 4xx status (#63): implemented and locally verified; not deployed.**
+**Historical 2026-11-01 data error implementation (#63), on base 43bebb1; superseded mapping and test counts, not final acceptance.**
 Services ended every path with `catch { throw databaseUnavailable(); }`, so all
 Prisma failures became `503 DATABASE_UNAVAILABLE`. A malformed UUID, a missing
 record and a delete blocked by an order all told the client the service was down
@@ -14,6 +14,62 @@ HTTP subtest fails on the old code (17/19) and passes on the new code (19/19); t
 unit mapping test is 3/3, API integration 19/19 and security lifecycle 9/9 PASS.
 No schema, migration, lab flag, `.env` or AWS change.
 [Reproduction, code table and limits](../evidence/BUG-63/README.md).
+
+**2026-11-03 admin order state/inventory audit (#65 / PR #66): implemented / locally
+verified; human review pending, not deployed.** Merged latest main `96ece57` into
+`feature/65-admin-status-inventory` without rewriting history. Only status wiki
+content conflicted; `createOrder` and `cancelOrder` remain identical to main's
+#61 implementation. Admin uses explicit forward transitions, terminal DELIVERED /
+CANCELLED and a conditional source-state claim before restoring stock in the same
+transaction. Independent PostgreSQL 16.15 regression covers 20 invalid edges with
+no row mutations, both cancel source states, duplicate quantities, all forward
+edges, missing order, rollback and phantom replay. Three rounds each of admin/admin
+and customer/admin overlap at real SQL row locks: one winner, CANCELLED, stock
+10 -> 8 -> 10. Independent compiled-service controls A/B/C fail for missing restore,
+missing guards and missing claim; final compiled output restored byte-for-byte.
+Local API 29/29, lifecycle 9/9, browser 58/58, config 2/2, installs/builds/audits and
+policy tests PASS. The initial new browser-test selector was corrected before the
+58/58 final run. Exact final head and hosted CI evidence are maintained on
+[PR #66](https://github.com/LVTIT/PBL4-517/pull/66); readiness requires five checks
+on that head with latest main included. No #63 mapping, schema/migration, lab flag,
+.env, dependency or AWS change. [Commands, controls and limits](../evidence/BUG-65/audit-20261103/README.md).
+
+**2026-11-03 existing EIP HTTPS repair (Refs #14): verified; READY TO STOP EC2
+for the owner, with EC2 left running.** Instance
+`i-0ccfb2772f854e78b` serves `https://52.221.157.206/` with a matching Let's
+Encrypt IP certificate (`pbl4-517-eip`), using existing Snap Certbot 5.9.0.
+External HTTP-01, staging dry-run, one production issuance, trusted HTTPS/health,
+Nginx validation/reload and unfiltered renewal dry-run with deploy hook PASS.
+Nginx/backend remain active/enabled, backend PID unchanged, API/DB loopback-only,
+and `.env` checksum unchanged. Old certificates retained; obsolete old-IP renewal
+configs archived privately. User's fresh incognito homepage screenshot has no
+red certificate warning; the owner confirmed its products list displayed
+normally. DevTools on normal Chrome verified a trusted certificate and TLS 1.3,
+but recorded prior permission to run content with certificate errors. After
+browser-session troubleshooting, the owner explicitly confirmed normal Chrome
+was safe too. Documentation PR #70 / latest CI and required human review are
+tracked separately from operational readiness; no review or merge is inferred.
+No application redeploy, database mutation, AWS resource/network change or EC2
+stop/reboot. [Evidence and limits](../evidence/WEB-04/eip-20261103/README.md),
+[current TLS/renewal/rollback runbook](../docs/aws/ec2-eip-https.md).
+
+**2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
+human review pending, not deployed.** Source atomic stock/cancel claims from
+`d8c3fa3` retained after audit. The original sequential cancel test and combined
+negative-control claim did not prove the double-cancel race. Four independent
+regressions (`cda5a62`) now observe overlapping SQL writes with real PostgreSQL
+row-lock barriers: checkout, three fresh concurrent-cancel rounds, duplicate
+quantities/pricing/OrderItems and rollback after the first product was claimed.
+Independent old-create-only control fails with 503; old-cancel-only control fails
+with two successes and stock=12. The other fixed function passes in each control;
+fixed source restored before final API 22/22 and security lifecycle 9/9 PASS.
+Both builds/audits, config 2/2 and browser 54/54 PASS locally; exact commands,
+remaining check results and final hosted CI are linked in the
+[audit evidence](../evidence/BUG-61/README.md). Existing main rejected duplicate
+IDs as INVALID_PRODUCT; valid duplicate support now guards the aggregated total.
+No schema, migration, `.env`, lab architecture, admin transition (#65), global
+error mapping (#63) or AWS changes. Issue stays open; no merge or human
+understanding/demo acceptance inferred. [Teach-back](../evidence/BUG-61/teach-back.md).
 
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
@@ -102,7 +158,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-26 (Asia/Saigon; PR #57 integration and monitoring handoff, no new AWS availability claim)
+**Last updated:** 2026-11-01 (Asia/Saigon; #65 admin status/inventory fix verified locally, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
@@ -125,7 +181,7 @@ full deployed real-data acceptance is not established by that merge. API contrac
   - **Tìm kiếm & Chi tiết sản phẩm:** Tìm kiếm theo từ khóa `search` và lọc theo `category` (`GET /api/products?search=...&category=...`), xem chi tiết sản phẩm (`GET /api/products/:id`).
   - **Đánh giá sản phẩm (Reviews):** Viết đánh giá 1–5 sao và bình luận (`POST /api/products/:id/reviews`), xem danh sách đánh giá từ khách hàng.
   - **Giỏ hàng & Đơn hàng:** Lưu trữ giỏ hàng client (`CartContext`), tạo đơn hàng với xác thực tồn kho và tính tổng tiền phía server chống gian lận giá (`POST /api/orders`), xem lịch sử đơn hàng (`GET /api/orders`), xem chi tiết đơn hàng (`GET /api/orders/:id`) có cơ chế kiểm tra quyền sở hữu chống **IDOR**.
-  - **Bảng điều khiển Quản trị (Admin Panel):** Quản lý kho hàng (thêm mới, xóa sản phẩm) và quản lý danh sách đơn hàng (cập nhật trạng thái `PENDING` → `CONFIRMED` → `SHIPPED` → `DELIVERED` → `CANCELLED`). Phân quyền chặt chẽ qua middleware `requireAdmin`.
+  - **Bảng điều khiển Quản trị (Admin Panel):** Quản lý kho hàng (thêm mới, xóa sản phẩm) và quản lý danh sách đơn hàng theo bảng transition trong [website README](../website/README.md#api-endpoints). Phân quyền chặt chẽ qua middleware `requireAdmin`.
   - **Tối ưu phân quyền (RBAC) & Đặt hàng Khách vãng lai (Guest Checkout) (2026-09-18):**
     - **Tách bạch vai trò Admin & Khách hàng:** Quản trị viên (`ADMIN`) chỉ thực hiện các tác vụ quản trị, không thể tham gia mua hàng/đặt đơn (`403 ADMIN_CANNOT_ORDER`) và không được tự viết review sản phẩm (`403 ADMIN_CANNOT_REVIEW`). Ẩn giỏ hàng trên thanh điều hướng đối với tài khoản Admin.
     - **Đặt hàng cho Khách vãng lai (Guest):** Cho phép đặt hàng mà không bắt buộc tạo tài khoản (`POST /api/orders` hỗ trợ `guestInfo: { name, email, phone }`), vẫn được bảo vệ CSRF và session đầy đủ.

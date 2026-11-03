@@ -2,6 +2,7 @@ import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import test from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 import { Pool } from 'pg';
 import { compare } from 'bcryptjs';
 
@@ -34,6 +35,347 @@ class BrowserSession {
     return result.body.data.csrfToken;
   }
 }
+
+// Real database barriers, confined to this suite's disposable fixtures. Holding a
+// product row lets every request finish its pre-read before any write can commit.
+// Inspect the blocking graph (including indirect waiters), rather than assuming
+// that Promise.all or a fixed delay guarantees overlap. No application test hook.
+async function withBlockedProduct(database, productId, requestFactories, inspect = async () => {}) {
+  const blocker = await database.connect();
+  let pending = [];
+  try {
+    await blocker.query('BEGIN');
+    await blocker.query('SELECT id FROM "Product" WHERE id = $1 FOR UPDATE', [productId]);
+    const blockerPid = (await blocker.query('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+    pending = requestFactories.map(request => request());
+    // Attach handlers immediately, also when a barrier assertion fails.
+    const settled = Promise.allSettled(pending);
+    const deadline = Date.now() + 3000; // Below Prisma's default 5s transaction timeout.
+    let waiters = [];
+    while (Date.now() < deadline) {
+      waiters = (await database.query(`
+        WITH RECURSIVE waiting(pid) AS (
+          SELECT pid FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid))
+          UNION
+          SELECT a.pid FROM pg_stat_activity a JOIN waiting w
+            ON w.pid = ANY(pg_blocking_pids(a.pid))
+        )
+        SELECT a.pid, a.query FROM waiting w JOIN pg_stat_activity a USING (pid)
+        WHERE a.datname = current_database() AND a.wait_event_type = 'Lock'
+          AND a.query LIKE 'UPDATE %'
+      `, [blockerPid])).rows;
+      if (waiters.length >= pending.length) break;
+      await delay(10);
+    }
+    assert.equal(waiters.length, pending.length, 'all API writes must overlap at the database barrier');
+    await inspect(waiters);
+    await blocker.query('ROLLBACK');
+    return (await settled).map(outcome => {
+      if (outcome.status === 'rejected') throw outcome.reason;
+      return outcome.value;
+    });
+  } finally {
+    await blocker.query('ROLLBACK');
+    await Promise.allSettled(pending);
+    blocker.release();
+  }
+}
+
+function inventoryTest(name, run, issue = 61) {
+  test(`inventory #${issue} ${name}`, async context => {
+    assert.notEqual(process.env.NODE_ENV, 'production');
+    const connection = new URL(process.env.DATABASE_URL);
+    assert.ok(['localhost', '127.0.0.1', '[::1]'].includes(connection.hostname));
+    assert.match(connection.pathname, /(?:test|lab)/i, 'Use a disposable test/lab database.');
+    const database = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 });
+    const productIds = [randomUUID(), randomUUID()];
+    const address = `Inventory fixture ${randomUUID()}`;
+    const userIds = [];
+    try {
+      for (const id of productIds) {
+        await database.query(
+          'INSERT INTO "Product" (id,name,description,price,stock,"updatedAt") VALUES ($1,$2,$3,1250.50,10,NOW())',
+          [id, 'Inventory regression fixture', 'Synthetic #61 product'],
+        );
+      }
+      const stock = async id => (await database.query('SELECT stock FROM "Product" WHERE id=$1', [id])).rows[0].stock;
+      const counts = async () => (await database.query(`
+        SELECT (SELECT count(*)::int FROM "Order" WHERE "shippingAddress"=$1) AS orders,
+          (SELECT count(*)::int FROM "OrderItem" WHERE "productId"=ANY($2::uuid[])) AS items
+      `, [address, productIds])).rows[0];
+      const guest = async () => {
+        const client = new BrowserSession();
+        const csrfToken = await client.csrf();
+        return items => client.request('/orders', { method: 'POST', csrfToken, body: {
+          items, shippingAddress: address,
+          guestInfo: { name: 'Inventory guest', email: 'inventory-fixture@example.com' },
+        } });
+      };
+      await run({ context, database, productIds, address, userIds, stock, counts, guest });
+    } finally {
+      // Exact fixture IDs, even on failed assertions/negative controls. Never
+      // reset seed stock or delete orders using broad email patterns.
+      await database.query('DELETE FROM "Order" WHERE "shippingAddress"=$1', [address]);
+      await database.query('DELETE FROM "Product" WHERE id=ANY($1::uuid[])', [productIds]);
+      await database.query("DELETE FROM session WHERE sess->>'userId'=ANY($1::text[])", [userIds]);
+      await database.query('DELETE FROM "User" WHERE id=ANY($1::uuid[])', [userIds]);
+      await database.end();
+    }
+  });
+}
+
+inventoryTest('checkout race', async ({ context, database, productIds: [productId], stock, counts, guest }) => {
+  // Prepare CSRF sessions before the burst; session setup must not stagger writes.
+  const buyers = await Promise.all(Array.from({ length: 5 }, () => guest()));
+  await database.query('UPDATE "Product" SET stock=3 WHERE id=$1', [productId]);
+  const outcomes = await withBlockedProduct(database, productId,
+    buyers.map(buy => () => buy([{ productId, quantity: 1 }])),
+    async waiters => context.diagnostic(`overlapping checkout writes=${waiters.length}; SQL=${waiters[0].query}`));
+  const finalStock = await stock(productId);
+  const rows = await counts();
+  context.diagnostic(JSON.stringify({ http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), finalStock, ...rows }));
+  assert.equal(outcomes.filter(r => r.status === 201).length, 3, 'exactly stock units may sell');
+  assert.equal(finalStock, 0, 'stock cannot be negative');
+  assert.deepEqual(rows, { orders: 3, items: 3 }, 'no extra order or order item');
+  for (const response of outcomes.filter(r => r.status !== 201)) {
+    assert.equal(response.status, 400, 'loser must be OUT_OF_STOCK, not infrastructure 503');
+    assert.equal(response.body.error.code, 'OUT_OF_STOCK');
+  }
+});
+
+inventoryTest('concurrent cancel', async ({ context, database, productIds: [productId], address, userIds, stock }) => {
+  const owner = new BrowserSession();
+  const registered = await owner.request('/auth/register', { method: 'POST', csrfToken: await owner.csrf(),
+    body: { name: 'Inventory owner', email: `inventory-${randomUUID()}@example.com`, password: 'LocalLabOnly517!' } });
+  assert.equal(registered.status, 201);
+  userIds.push(registered.body.data.user.id);
+  const csrfToken = await owner.csrf();
+  // Each fresh order has an independently synchronized pair; every round must
+  // pass. Repetition is extra coverage, not a retry that masks a failing round.
+  for (let round = 1; round <= 3; round++) {
+    const created = await owner.request('/orders', { method: 'POST', csrfToken,
+      body: { items: [{ productId, quantity: 2 }], shippingAddress: address } });
+    assert.equal(created.status, 201);
+    assert.equal(await stock(productId), 8);
+    const id = created.body.data.id;
+    const cancel = () => owner.request(`/orders/${id}/cancel`, { method: 'POST', csrfToken });
+    const outcomes = await withBlockedProduct(database, productId, [cancel, cancel],
+      async waiters => context.diagnostic(`round=${round}; overlapping cancel writes=${waiters.length}; SQL=${waiters.map(w => w.query).join(' | ')}`));
+    const finalStock = await stock(productId);
+    const status = (await database.query('SELECT status FROM "Order" WHERE id=$1', [id])).rows[0].status;
+    context.diagnostic(JSON.stringify({ round, http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), finalStock, status }));
+    assert.equal(outcomes.filter(r => r.status === 200).length, 1, 'exactly one cancellation may win');
+    const losers = outcomes.filter(r => r.status !== 200);
+    assert.equal(losers.length, 1);
+    assert.equal(losers[0].status, 400);
+    assert.equal(losers[0].body.error.code, 'CANNOT_CANCEL');
+    assert.equal(status, 'CANCELLED');
+    assert.equal(finalStock, 10, 'restore exactly once; no phantom stock');
+  }
+});
+
+inventoryTest('duplicate product lines', async ({ context, database, productIds: [productId], stock, counts, guest }) => {
+  const buy = await guest();
+  const items = [{ productId, quantity: 2 }, { productId, quantity: 2 }];
+  await database.query('UPDATE "Product" SET stock=3 WHERE id=$1', [productId]);
+  const rejected = await buy(items);
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.error.code, 'OUT_OF_STOCK');
+  assert.equal(await stock(productId), 3);
+  assert.deepEqual(await counts(), { orders: 0, items: 0 });
+
+  await database.query('UPDATE "Product" SET stock=5 WHERE id=$1', [productId]);
+  const accepted = await buy(items);
+  assert.equal(accepted.status, 201);
+  assert.equal(accepted.body.data.totalPrice, '5002.00');
+  assert.deepEqual(accepted.body.data.items.map(i => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice })),
+    items.map(i => ({ ...i, unitPrice: '1250.50' })));
+  const saved = await database.query('SELECT quantity,"unitPrice"::text FROM "OrderItem" WHERE "orderId"=$1', [accepted.body.data.id]);
+  assert.deepEqual(saved.rows, [{ quantity: 2, unitPrice: '1250.50' }, { quantity: 2, unitPrice: '1250.50' }]);
+  assert.equal(await stock(productId), 1);
+  assert.deepEqual(await counts(), { orders: 1, items: 2 });
+  context.diagnostic('stock=3 rejects total quantity 4 without writes; stock=5 accepts two original lines, total=5002.00, remaining=1');
+});
+
+inventoryTest('multi-product rollback', async ({ context, database, productIds: [a, b], stock, counts, guest }) => {
+  const buy = await guest();
+  // B has one unit but needs two. Its nonzero stock ensures the UPDATE attempts
+  // to lock B even with PostgreSQL's predicate recheck after a concurrent write.
+  await database.query('UPDATE "Product" SET stock=1 WHERE id=$1', [b]);
+  // Hold B, then let another transaction spend its last unit AFTER the service
+  // pre-read. This exercises failure after A was already decremented.
+  const blocker = await database.connect();
+  let pending;
+  try {
+    await blocker.query('BEGIN');
+    await blocker.query('UPDATE "Product" SET stock=0 WHERE id=$1', [b]);
+    const pid = (await blocker.query('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+    pending = buy([{ productId: a, quantity: 2 }, { productId: b, quantity: 1 }]);
+    const deadline = Date.now() + 3000;
+    let waiting = false;
+    while (Date.now() < deadline) {
+      waiting = (await database.query('SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1=ANY(pg_blocking_pids(pid))) AS waiting', [pid])).rows[0].waiting;
+      if (waiting) break;
+      await delay(10);
+    }
+    assert.equal(waiting, true, 'checkout reached B after its pre-read');
+    await assert.rejects(database.query('SELECT id FROM "Product" WHERE id=$1 FOR UPDATE NOWAIT', [a]),
+      { code: '55P03' }, 'A is already claimed inside the in-flight transaction');
+    await blocker.query('COMMIT');
+    const result = await pending;
+    assert.equal(result.status, 400);
+    assert.equal(result.body.error.code, 'OUT_OF_STOCK');
+    assert.equal(await stock(a), 10, 'earlier decrement of A must roll back');
+    assert.equal(await stock(b), 0, 'failed checkout cannot change B');
+    assert.deepEqual(await counts(), { orders: 0, items: 0 });
+    context.diagnostic('A write lock observed (55P03); B sold out after pre-read; HTTP=400 OUT_OF_STOCK; stocks A=10 B=0; orders=0 items=0');
+  } finally {
+    await blocker.query('ROLLBACK');
+    if (pending) await Promise.allSettled([pending]);
+    blocker.release();
+  }
+});
+
+// Independent #65 cases use only disposable product/order/user fixtures. A failed
+// restoration assertion must not prevent the terminal-state or race tests running.
+function adminInventoryTest(name, run) {
+  inventoryTest(name, async fixture => {
+    const { database, userIds, address } = fixture;
+    const login = async (email, password) => {
+      const client = new BrowserSession();
+      const result = await client.request('/auth/login', { method: 'POST', csrfToken: await client.csrf(),
+        body: { email, password } });
+      assert.equal(result.status, 200);
+      return { client, csrfToken: await client.csrf() };
+    };
+    const adminA = await login('admin@example.com', 'AdminOnly517!');
+    const adminB = await login('admin@example.com', 'AdminOnly517!');
+    const owner = new BrowserSession();
+    const registered = await owner.request('/auth/register', { method: 'POST', csrfToken: await owner.csrf(),
+      body: { name: 'Order state owner', email: `state-${randomUUID()}@example.com`, password: 'LocalLabOnly517!' } });
+    assert.equal(registered.status, 201);
+    userIds.push(registered.body.data.user.id);
+    const ownerCsrf = await owner.csrf();
+    const create = async items => {
+      const result = await owner.request('/orders', { method: 'POST', csrfToken: ownerCsrf,
+        body: { items, shippingAddress: address } });
+      assert.equal(result.status, 201);
+      return result.body.data.id;
+    };
+    const change = (id, status, admin = adminA) => admin.client.request(`/admin/orders/${id}/status`, {
+      method: 'PATCH', csrfToken: admin.csrfToken, body: { status },
+    });
+    const cancel = id => owner.request(`/orders/${id}/cancel`, { method: 'POST', csrfToken: ownerCsrf });
+    const snapshot = async id => ({
+      order: (await database.query('SELECT * FROM "Order" WHERE id=$1', [id])).rows,
+      items: (await database.query('SELECT * FROM "OrderItem" WHERE "orderId"=$1 ORDER BY id', [id])).rows,
+      products: (await database.query('SELECT * FROM "Product" WHERE id=ANY($1::uuid[]) ORDER BY id', [fixture.productIds])).rows,
+    });
+    await run({ ...fixture, create, change, cancel, snapshot, adminA, adminB });
+  }, 65);
+}
+
+adminInventoryTest('admin cancellation restores every duplicate line', async ({ context, productIds: [a, b], stock, create, change, snapshot }) => {
+  for (const source of ['PENDING', 'CONFIRMED']) {
+    const id = await create([{ productId: a, quantity: 2 }, { productId: a, quantity: 3 }, { productId: b, quantity: 1 }]);
+    assert.equal(await stock(a), 5);
+    assert.equal(await stock(b), 9);
+    if (source === 'CONFIRMED') assert.equal((await change(id, source)).status, 200);
+    const before = await snapshot(id);
+    const result = await change(id, 'CANCELLED');
+    assert.equal(result.status, 200);
+    assert.equal(result.body.data.status, 'CANCELLED');
+    assert.equal(await stock(a), 10, 'admin cancel restores duplicate quantities 2+3 exactly once');
+    assert.equal(await stock(b), 10, 'all products are restored');
+    assert.deepEqual((await snapshot(id)).items, before.items, 'cancellation preserves original lines');
+    context.diagnostic(JSON.stringify({ source, finalStatus: result.body.data.status, stockA: [10, 5, await stock(a)], stockB: [10, 9, await stock(b)], quantities: [2, 3, 1] }));
+  }
+});
+
+adminInventoryTest('invalid transition matrix has no mutations', async ({ context, productIds: [productId], create, change, cancel, snapshot }) => {
+  const policy = { PENDING: ['CONFIRMED', 'CANCELLED'], CONFIRMED: ['SHIPPED', 'CANCELLED'], SHIPPED: ['DELIVERED'], DELIVERED: [], CANCELLED: [] };
+  let rejected = 0;
+  for (const source of Object.keys(policy)) {
+    const id = await create([{ productId, quantity: 1 }]);
+    const path = source === 'CANCELLED' ? ['CANCELLED'] : ['CONFIRMED', 'SHIPPED', 'DELIVERED'].slice(0, ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].indexOf(source));
+    for (const status of path) assert.equal((await change(id, status)).status, 200);
+    const before = await snapshot(id);
+    for (const target of Object.keys(policy).filter(target => !policy[source].includes(target))) {
+      const response = await change(id, target);
+      assert.equal(response.status, 409, `${source} -> ${target} must conflict`);
+      assert.equal(response.body.error.code, 'INVALID_STATUS_TRANSITION');
+      assert.deepEqual(await snapshot(id), before, `${source} -> ${target} must not mutate any row`);
+      rejected++;
+    }
+    if (source === 'PENDING') assert.equal((await cancel(id)).status, 200);
+  }
+  const missing = await change(randomUUID(), 'CANCELLED');
+  assert.equal(missing.status, 404);
+  assert.equal(missing.body.error.code, 'NOT_FOUND');
+  context.diagnostic(`invalid transitions=${rejected}/20 rejected with 409 and unchanged Order/OrderItems/Products; missing UUID=404 NOT_FOUND`);
+});
+
+adminInventoryTest('forward transitions do not restore stock', async ({ context, productIds: [productId], create, change, stock }) => {
+  const id = await create([{ productId, quantity: 2 }]);
+  for (const status of ['CONFIRMED', 'SHIPPED', 'DELIVERED']) {
+    const response = await change(id, status);
+    assert.equal(response.status, 200);
+    assert.equal(response.body.data.status, status);
+    assert.equal(await stock(productId), 8, `${status} must keep reserved units deducted`);
+  }
+  context.diagnostic('PENDING -> CONFIRMED -> SHIPPED -> DELIVERED: stock 10 -> 8 -> 8 -> 8 -> 8');
+});
+
+adminInventoryTest('phantom inventory loop stays closed', async ({ context, productIds: [productId], create, change, cancel, stock }) => {
+  const id = await create([{ productId, quantity: 2 }]);
+  assert.equal((await cancel(id)).status, 200);
+  const reopen = await change(id, 'PENDING');
+  // Observe the replay even on the negative guard control; report final stock
+  // before asserting so the failed control proves the complete phantom loop.
+  const replay = await cancel(id);
+  context.diagnostic(JSON.stringify({ reopen: reopen.status, replay: replay.status, stockBefore: 10, finalStock: await stock(productId) }));
+  assert.equal(reopen.status, 409, 'CANCELLED cannot reopen');
+  assert.equal(reopen.body.error.code, 'INVALID_STATUS_TRANSITION');
+  assert.equal(replay.status, 400);
+  assert.equal(replay.body.error.code, 'CANNOT_CANCEL');
+  assert.equal(await stock(productId), 10, 'final stock must equal original, never original + quantity');
+});
+
+for (const mixed of [false, true]) {
+  adminInventoryTest(mixed ? 'customer vs admin concurrent cancel' : 'admin vs admin concurrent cancel', async ({ context, database, productIds: [productId], create, change, cancel, adminB, stock }) => {
+    for (let round = 1; round <= 3; round++) {
+      const id = await create([{ productId, quantity: 2 }]);
+      assert.equal(await stock(productId), 8);
+      const outcomes = await withBlockedProduct(database, productId, [
+        () => change(id, 'CANCELLED'),
+        mixed ? () => cancel(id) : () => change(id, 'CANCELLED', adminB),
+      ], async waiters => context.diagnostic(`round=${round}; overlapping writes=${waiters.length}; SQL=${waiters.map(w => w.query).join(' | ')}`));
+      const status = (await database.query('SELECT status FROM "Order" WHERE id=$1', [id])).rows[0].status;
+      context.diagnostic(JSON.stringify({ round, mixed, http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), winners: outcomes.filter(r => r.status === 200).length, stockBefore: 10, heldStock: 8, finalStock: await stock(productId), status }));
+      assert.equal(outcomes.filter(r => r.status === 200).length, 1, 'exactly one cancellation path wins');
+      for (const [index, result] of outcomes.entries()) {
+        if (result.status === 200) continue;
+        assert.equal(result.status, mixed && index === 1 ? 400 : 409);
+        assert.equal(result.body.error.code, mixed && index === 1 ? 'CANNOT_CANCEL' : 'INVALID_STATUS_TRANSITION');
+      }
+      assert.equal(status, 'CANCELLED');
+      assert.equal(await stock(productId), 10, 'restore once across competing paths');
+    }
+  });
+}
+
+adminInventoryTest('restoration failure rolls back order claim', async ({ context, database, productIds: [a, b], create, change, snapshot }) => {
+  const id = await create([{ productId: a, quantity: 2 }, { productId: b, quantity: 1 }]);
+  // Force a real PostgreSQL integer overflow on restoration without schema or
+  // production hooks. Neither the state claim nor another restock may persist.
+  await database.query('UPDATE "Product" SET stock=2147483647 WHERE id=$1', [b]);
+  const before = await snapshot(id);
+  const response = await change(id, 'CANCELLED');
+  assert.equal(response.status, 503); // Existing mapping, outside #63 scope.
+  assert.equal(response.body.error.code, 'DATABASE_UNAVAILABLE');
+  assert.deepEqual(await snapshot(id), before, 'all writes roll back with failed inventory restoration');
+  context.diagnostic('forced restoration overflow=503; Order remains PENDING, all OrderItems and Product rows unchanged');
+});
 
 test('real PostgreSQL API and session authentication', async (suite) => {
   assert.notEqual(process.env.NODE_ENV, 'production', 'Use a development database.');
