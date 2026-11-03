@@ -1,185 +1,163 @@
-# Bug #61 — Tồn kho bị kiểm tra ngoài transaction
+# Issue #61 — inventory concurrency audit of PR #62
 
-Refs #61. Related to #44.
+Refs #61. Branch `feature/61-inventory-race`. No merge, issue closure or deployment.
 
-**Trạng thái: đã sửa trong source; chưa merge, chưa triển khai.**
+## Provenance and environment
 
-Đo trên `main` tại `43bebb1` rồi sửa trên `feature/61-inventory-race`. Đây là lỗi
-ở **Secure Baseline** — không phải lỗ hổng lab có chủ đích — nên nó ảnh hưởng cả
-bản triển khai thật.
+Audit date: 2026-11-03. Read issue, PR/discussion (no comments), service, API tests,
+all four original evidence files, error handling, controller validation, schema,
+migrations and IDOR lifecycle. Fix `d8c3fa3` is retained **unchanged**. Missing work
+was independent regression coverage and accurate claims. Test commit: `cda5a62`.
+Exact full SHA, commands, exit codes and environment are in
+[results.json](audit-20261103/results.json) and every new log. Later evidence/docs
+commits do not change tested application/tests. Final hosted CI is tracked on
+[PR #62](https://github.com/LVTIT/PBL4-517/pull/62).
 
-## Tóm tắt
+Windows, Node v24.11.0, npm 11.6.1, Python 3.12; PostgreSQL **16.15** Docker,
+default isolation **read committed**; container `pbl517-bug61-20261103`, dedicated
+DB `pbl517_lab_test`, published only at `127.0.0.1:55461`, compiled API port 3061.
+[DB observation](audit-20261103/database-version.txt). Random ephemeral secrets
+were supplied through process environment, never copied to evidence or `.env`.
+Baseline: APP_PROFILE=production, NODE_ENV=development, TRUST_PROXY=0, all four
+VULN flags=false. Lifecycle separately starts acknowledged synthetic lab children
+on loopback. Setup follows [website README](../../website/README.md).
 
-| # | Lỗi | Trước | Sau |
-| --- | --- | --- | --- |
-| 1 | Bán vượt tồn kho trả sai mã | `503 DATABASE_UNAVAILABLE` | `400 OUT_OF_STOCK` |
-| 2 | Hủy đơn hai lần làm tồn kho tăng ảo | +2 đơn vị hàng không tồn tại | 0, hoàn kho đúng một lần |
+## BEFORE — timelines
 
-## Môi trường
+Checkout: A reads stock=1; B reads stock=1; both pass pre-check. A decrements to 0
+and commits. B unconditionally decrements to -1; CHECK aborts B. Service wraps the
+non-AppError as `503 DATABASE_UNAVAILABLE`, instead of `400 OUT_OF_STOCK`.
 
-Windows, Node 24.19.0, PostgreSQL 16 trong container dùng-một-lần
-(`pbl517-race-20261101`, loopback `127.0.0.1:55441`, database `pbl517_lab_test`),
-compiled backend `node dist/server.js`, Secure Baseline (mọi `VULN_*` = `false`),
-dữ liệu seed development. Container và mọi tiến trình đã được xoá/dừng sau khi đo.
+Cancel: A reads PENDING; B reads PENDING. A increments 8→10; B increments 10→12;
+both unconditionally write CANCELLED. One logical order restores twice. Separate
+transactions around writes do not make earlier reads authoritative.
 
-## Lỗi 1 — bán vượt tồn kho trả 503
+Historical 2026-11-01 results remain in [reproduction.txt](reproduction.txt),
+[API 19/19](api-integration.txt) and [lifecycle 9/9](security-lifecycle.txt). The old
+combined negative-control failure was at checkout, so it did **not** establish
+that sequential cancel assertions caught the race. CP437/UTF-8 mojibake in the
+two historical test logs was reversed mechanically and BOM removed; new logs also normalize CRLF to LF. No counts,
+timings or results were edited. New independent controls below supersede the
+unsupported test claims.
 
-Kịch bản: `stock = 3`, bắn **5 request đồng thời**, mỗi request mua 1.
+## Existing PR audit
 
-```text
-BEFORE  HTTP: [201, 201, 201, 503, 503]
-        errors: ['DATABASE_UNAVAILABLE', 'DATABASE_UNAVAILABLE', 'OK', 'OK', 'OK']
-        orders_created: 3   stock_after: 0
-
-AFTER   HTTP: [201, 201, 201, 400, 400]
-        errors: ['OK', 'OK', 'OK', 'OUT_OF_STOCK', 'OUT_OF_STOCK']
-        orders_created: 3   stock_after: 0
-```
-
-Kịch bản nhỏ, `stock = 1`, 2 request đồng thời, tái hiện **3/3 lần**:
-
-```text
-round 1: HTTP=[201, 503] errors=['DATABASE_UNAVAILABLE'] orders_created=1 stock_after=0
-round 2: HTTP=[201, 503] errors=['DATABASE_UNAVAILABLE'] orders_created=1 stock_after=0
-round 3: HTTP=[201, 503] errors=['DATABASE_UNAVAILABLE'] orders_created=1 stock_after=0
-```
-
-### Nguyên nhân
-
-`website/backend/src/services/order-service.ts`, `createOrder`:
-
-```ts
-// kiểm tra NGOÀI transaction
-if (product.stock < item.quantity) { throw new AppError(400, 'OUT_OF_STOCK', ...); }
-
-return await prisma.$transaction(async (tx) => {
-  // trừ kho TRONG transaction, không điều kiện
-  await tx.product.update({ data: { stock: { decrement: item.quantity } } });
-```
-
-Hai request cùng đọc giá trị `stock` trước khi bán, cùng thấy đủ hàng, rồi cùng trừ.
-Ràng buộc `CHECK ("stock" >= 0)` chặn được số âm — nên dữ liệu **không** hỏng — nhưng
-request thua bị ném lỗi database và bị bọc thành `DATABASE_UNAVAILABLE`.
-
-Sai mã lỗi này không phải chuyện nhỏ: người dùng thấy "dịch vụ không khả dụng" trong khi
-thực tế chỉ là hết hàng, còn người vận hành đi kiểm tra database/backend thay vì nhìn
-tồn kho.
-
-## Lỗi 2 — hủy hai lần làm tồn kho tăng ảo
-
-Kịch bản: `stock = 10`, tạo đơn mua 2 (còn 8), rồi gửi **2 request hủy đồng thời**.
-
-```text
-BEFORE  create order: 201, stock after order: 8   (đúng)
-        double-cancel HTTP: [200, 200]
-        double-cancel errors: ['OK', 'OK']
-        stock after double cancel: 12             (đúng phải là 10)
-        >>> tồn kho tăng ảo: 2 đơn vị
-
-AFTER   create order: 201, stock after order: 8
-        double-cancel HTTP: [200, 400]
-        double-cancel errors: ['OK', 'CANNOT_CANCEL']
-        stock after double cancel: 10
-        >>> tồn kho tăng ảo: 0
-```
-
-Lỗi này **nặng hơn** lỗi 1 vì nó tạo ra dữ liệu sai vĩnh viễn: 2 đơn vị hàng không có
-thật trở thành hàng bán được.
-
-### Nguyên nhân
-
-`cancelOrder`:
-
-```ts
-// đọc trạng thái NGOÀI transaction
-if (orderToCancel.status !== 'PENDING') { throw new AppError(400, 'CANNOT_CANCEL', ...); }
-
-const cancelled = await prisma.$transaction(async (tx) => {
-  // hoàn kho TRƯỚC
-  await tx.product.update({ data: { stock: { increment: item.quantity } } });
-  // đổi trạng thái SAU, không điều kiện
-  return tx.order.update({ data: { status: 'CANCELLED' } });
-```
-
-Hai request cùng thấy `PENDING`, cùng hoàn kho.
-
-## Cách sửa
-
-Hai nguyên tắc, áp dụng cho cả hai luồng:
-
-1. **Điều kiện phải nằm trong chính câu lệnh ghi**, không phải ở câu đọc phía trước.
-2. **Giành quyền chuyển trạng thái trước, thay đổi dữ liệu sau.**
-
-### `createOrder`
-
-```ts
-const claimed = await tx.product.updateMany({
-  where: { id: productId, stock: { gte: quantity } },
-  data: { stock: { decrement: quantity } },
-});
-if (claimed.count === 0) {
-  // đọc lại để báo đúng số còn lại
-  throw new AppError(400, 'OUT_OF_STOCK', ...);
-}
-```
-
-`updateMany` với `stock: { gte: quantity }` là một câu SQL duy nhất. PostgreSQL bảo đảm
-tính nguyên tử ở mức dòng, nên hai giao dịch đồng thời không thể cùng giành một đơn vị hàng.
-`count === 0` nghĩa là đã thua cuộc đua → trả `400`, không bao giờ để ràng buộc database
-biến thành `503`.
-
-Đồng thời gộp các dòng trùng `productId` trước khi kiểm tra. Nếu client gửi 2 dòng cùng
-sản phẩm, kiểm tra theo từng dòng sẽ cho qua trong khi tổng vượt tồn kho.
-
-### `cancelOrder`
-
-```ts
-const claim = await tx.order.updateMany({
-  where: { id: orderId, status: 'PENDING', ...(scoping) },
-  data: { status: 'CANCELLED' },
-});
-if (claim.count === 0) {
-  throw new AppError(400, 'CANNOT_CANCEL', ...);
-}
-// chỉ hoàn kho SAU khi đã giành được quyền chuyển trạng thái
-for (const item of orderToCancel.items) { await tx.product.update({ data: { stock: { increment: item.quantity } } }); }
-```
-
-Chỉ một request đổi được `PENDING → CANCELLED`. Request còn lại nhận `count === 0` và
-không chạm vào tồn kho.
-
-Điều kiện `userId` được đưa vào câu `updateMany` khi ở Secure Baseline, nên việc kiểm tra
-quyền sở hữu cũng nằm trong transaction thay vì chỉ dựa vào lần đọc phía trước.
-
-## Kiểm chứng bản vá
-
-| Kiểm tra | Kết quả |
+| Claim | Finding |
 | --- | --- |
-| Test hồi quy trên code **cũ** (bản vá được stash) | **FAIL** — `concurrent stock claim` đỏ, 17/19 pass |
-| Test hồi quy trên code **mới** | **PASS** — 19/19 |
-| `npm run test:integration` | 19/19 PASS (`api-integration.txt`) |
-| `LOCAL_SECURITY_LAB=1 npm run test:security` | 9/9 PASS (`security-lifecycle.txt`) |
-| `npm run build` | PASS |
+| Guard and decrement share one SQL write | Correct: captured UPDATE includes both `stock = stock - $1` and `stock >= $4`. |
+| Loser gets count=0 / OUT_OF_STOCK | Correct under observed read committed. PostgreSQL waits, rechecks WHERE against updated row, and no longer matches. Service preserves AppError on rollback. |
+| Claim before restore | Correct. Only count=1 may increment stock. SQL observed in cancel includes id, status and userId. |
+| Secure ownership and lab/admin exceptions | Baseline non-admin scopes both read and authoritative write by userId. Existing admin/IDOR exceptions retained. `updateOrderStatus` unchanged. |
+| Old test proves concurrent cancellation | Incorrect: its two awaited cancels were sequential. Replaced with an independent synchronized test. |
+| Old negative control proves both bugs | Unsupported: combined test could fail before cancel. Now each function is reverted/tested separately. |
+| Duplicate lines bypassed old main | Inaccurate: `products.length !== productIds.length` rejected duplicate IDs early as INVALID_PRODUCT. PR enables valid duplicates and guards aggregated quantity; the hypothetical per-line bypass was not reachable in old main. |
+| Deduplication changes OrderItems | No: Map aggregates stock/price quantities, nested create retains original lines and server unitPrice. Verified via HTTP and SQL. |
+| Error message stock is permanently current | No: follow-up SELECT reports a snapshot; later requests may change it. |
 
-Test hồi quy nằm trong `website/backend/tests/api.integration.test.mjs`, subtest
-`concurrent stock claim: no oversell and no phantom stock`. Nó kiểm tra cả bốn điều:
+SQL reasoning follows [PostgreSQL 16 Read Committed rules](https://www.postgresql.org/docs/16/transaction-iso.html#XACT-READ-COMMITTED).
+CHECK is defense in depth, not the primary fix. AppError carries 400/code through
+service catch and error middleware; unrelated database failures retain existing
+503 mapping. No changes for #63 or #65.
 
-- đúng số đơn được tạo bằng số hàng có thật;
-- request thua trả `400 OUT_OF_STOCK`, không phải `503`;
-- tồn kho không âm;
-- hủy hai lần chỉ hoàn kho một lần.
+## Actual overlap and fixture isolation
 
-## Không thay đổi
+Four independent top-level tests in
+[api.integration.test.mjs](../../website/backend/tests/api.integration.test.mjs)
+can be selected individually. Each uses private UUID products and exact cleanup
+in finally, including failed controls. No seed-stock resets or broad email delete.
+CSRF sessions are prepared before bursts; registration already signs cancel owner
+in, so no redundant login is used.
 
-- Không đổi schema, không tạo migration. Ràng buộc `CHECK ("stock" >= 0)` giữ nguyên làm
-  lớp bảo vệ cuối.
-- Không đổi `updateOrderStatus` (admin) hay luồng đọc đơn hàng.
-- Không đổi các lab OWASP, `config.ts`, hay `.env`.
-- Không tạo resource AWS, không deploy.
+A separate SQL connection holds a product row lock. Requests start concurrently;
+test polls the recursive `pg_blocking_pids` graph and releases only after all
+expected API UPDATEs are observed waiting. Fixed cancel winner waits at Product;
+loser waits at Order. Old cancel has both waiting at Product. This proves overlap
+before either request can complete. Observation is bounded to 3 seconds (below
+Prisma's 5-second transaction timeout); 10ms polling yields do not determine
+correctness. No application hook or production sleep.
 
-## Ghi chú
+## NEGATIVE CONTROL A — old createOrder only
 
-Chưa thấy cách khai thác để vượt ràng buộc `CHECK`, nên đây không phải lỗ hổng leo thang
-đặc quyền. Nhưng ở điều kiện tải thật (hai người cùng mua món cuối, hoặc người dùng bấm
-hủy hai lần do mạng chậm), hệ thống trả sai mã lỗi và có thể tạo hàng ảo. Cả hai đều là
-lỗi dữ liệu cần sửa trước khi demo.
+Temporarily replace exactly `createOrder` with its function text from `43bebb1`,
+keep fixed cancel text identical, rebuild and launch fresh compiled server.
+
+```text
+node --test --test-reporter=tap --test-name-pattern="inventory #61 checkout race" tests/api.integration.test.mjs
+Expected FAIL observed: 0/1 pass, exit 1; assertion 503 !== 400
+HTTP [201,201,503,201,503]
+errors [OK,OK,DATABASE_UNAVAILABLE,OK,DATABASE_UNAVAILABLE]
+stock=0; Orders=3; OrderItems=3; overlapping writes=5
+```
+
+[Raw A](audit-20261103/negative-control-a.txt),
+[build](audit-20261103/negative-control-a-build.txt),
+[fixed cancel independently PASS 1/1, three rounds](audit-20261103/negative-control-a-other-fix.txt).
+
+## NEGATIVE CONTROL B — old cancelOrder only
+
+Restore create fix, replace exactly `cancelOrder` from `43bebb1`, rebuild and start
+fresh server. This test fails on cancellation itself, independently of checkout.
+
+```text
+node --test --test-reporter=tap --test-name-pattern="inventory #61 concurrent cancel" tests/api.integration.test.mjs
+Expected FAIL observed: 0/1 pass, exit 1; assertion 2 successful cancels !== 1
+round 1: HTTP [200,200]; errors [OK,OK]; status CANCELLED
+stock 10 -> order quantity 2 -> 8 -> concurrent cancel -> 12
+overlapping writes=2; phantom units=2
+```
+
+[Raw B](audit-20261103/negative-control-b.txt),
+[build](audit-20261103/negative-control-b-build.txt),
+[fixed checkout independently PASS 1/1](audit-20261103/negative-control-b-other-fix.txt).
+
+Control harness asserted old-function equality and untouched-other-function
+equality before each build. Source restored byte-for-byte in finally, then fixed
+backend rebuilt; `source_restored: true` in results.json. No commits removed or
+history rewritten. To reproduce, extract function ranges using
+`git show 43bebb1:website/backend/src/services/order-service.ts`; swap only the
+named function, preserving other functions; use commands above against an isolated
+DB/server; stop each variant, restore original file and rebuild before final tests.
+
+## AFTER / FINAL REGRESSION
+
+[Final API](audit-20261103/final-regression.txt): **22/22 PASS**, no skips (17 existing
+subtests plus their parent, and 4 independent inventory tests).
+
+| Test | Observed |
+| --- | --- |
+| Checkout 3 units / 5 buyers | 3×201, 2×400 OUT_OF_STOCK; stock=0; 3 Orders, 3 OrderItems. SQL includes stock guard. |
+| Cancel, 3 fresh orders / 2 concurrent requests each | Each round exactly 1×200, 1×400 CANNOT_CANCEL, status CANCELLED, stock=10. |
+| Duplicate 2+2, stock=3 | 400 OUT_OF_STOCK; stock stays 3; no Order/OrderItem. |
+| Duplicate 2+2, stock=5 | 201; remaining=1; total=5002.00; two original quantity-2 OrderItems with unitPrice=1250.50, verified in SQL. |
+| Multi-product rollback | A=10/B=1 at pre-read; separate transaction spends B's last unit. A's write lock confirmed by NOWAIT SQLSTATE 55P03 before B fails. Result 400 OUT_OF_STOCK, A=10/B=0, no Order/OrderItem. Proves earlier claim of A rolled back. |
+| Ownership/lab | Baseline attacker cancel=403; lifecycle checks vulnerable=200 vs secure=403 and stock/status effects, plus SQLi/XSS/auth/profile/cookie controls. |
+
+## Verification commands
+
+Every linked log contains actual output, exact command/cwd/SHA/environment and
+exit code. Commands are from backend unless indicated; install/build test count
+is N/A. Canonical setup stays in website README.
+
+| Command | Result/evidence |
+| --- | --- |
+| `npm ci`, backend and frontend | PASS; [backend](audit-20261103/backend-install.txt), [frontend](audit-20261103/frontend-install.txt) |
+| `npm run prisma:migrate`; `npm run prisma:seed` | PASS; four committed migrations present; [migrate](audit-20261103/migrate.txt), [seed](audit-20261103/seed.txt) |
+| `npm run build`, both projects | PASS; [backend](audit-20261103/backend-build.txt), [frontend](audit-20261103/frontend-build.txt) |
+| `npm run test:config` | 2/2 PASS; [log](audit-20261103/config.txt) |
+| `npm audit --audit-level=high`, both | PASS, zero vulnerabilities; [backend](audit-20261103/backend-audit.txt), [frontend](audit-20261103/frontend-audit.txt) |
+| `npm run test:integration` | 22/22 PASS; [log](audit-20261103/final-regression.txt) |
+| `npm run test:e2e`, frontend | 54/54 PASS; [log](audit-20261103/e2e.txt) |
+| `LOCAL_SECURITY_LAB=1 npm run test:security` | 9/9 PASS; [log](audit-20261103/security-lifecycle.txt) |
+| Policy/Python checks | Policy tests 5/5, scanner 27/27, demo classification 8/8, skill core 39/39, skill data validation and compileall PASS; [exact commands/results](audit-20261103/results.json). [Index policy](audit-20261103/repo-policy.txt) checked after staging evidence. |
+
+## Limits / human handoff
+
+Bounded real-PostgreSQL regressions are not a production load/availability
+certification. Restore relies on existing immutable order items. Global error
+mapping (#63) and admin transition policy (#65) remain outside scope;
+`updateOrderStatus` is not changed into a stock-restoration path. No schema,
+migration, `.env`, dependency, lab architecture, UI or AWS change. No deployment.
+
+[Teach-back](teach-back.md) prepares eight answers and a team demo. Tests/CI do not
+confirm human understanding, review or issue completion. Team Leader retains final
+merge authority after human review and latest-revision CI; Issue #61 stays open.

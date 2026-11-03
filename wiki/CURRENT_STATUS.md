@@ -1,18 +1,22 @@
 # Current Project Status
 
-**2026-11-01 inventory race fixed (#61): implemented and locally verified; not deployed.**
-Order stock checks lived outside their write transactions. Two concurrent checkouts
-both read the pre-sale level, both passed, and the trailing `CHECK ("stock" >= 0)`
-turned the loser into `503 DATABASE_UNAVAILABLE` instead of `400 OUT_OF_STOCK`
-(measured 3/3 times). A double cancel restored stock twice, leaving +2 phantom
-units that could be sold again. Both write paths now claim first and mutate after:
-`createOrder` decrements through `updateMany` with `stock >= quantity`, deduplicates
-repeated product lines, and reports the real remaining quantity; `cancelOrder`
-claims `PENDING -> CANCELLED` inside the transaction before restoring stock, and
-carries the owner scope into that claim. A regression subtest fails on the old code
-(17/19) and passes on the new code (19/19). API integration 19/19 and security
-lifecycle 9/9 PASS. No schema, migration, lab flag, `.env` or AWS change.
-[Reproduction, before/after and limits](../evidence/BUG-61/README.md).
+**2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
+human review pending, not deployed.** Source atomic stock/cancel claims from
+`d8c3fa3` retained after audit. The original sequential cancel test and combined
+negative-control claim did not prove the double-cancel race. Four independent
+regressions (`cda5a62`) now observe overlapping SQL writes with real PostgreSQL
+row-lock barriers: checkout, three fresh concurrent-cancel rounds, duplicate
+quantities/pricing/OrderItems and rollback after the first product was claimed.
+Independent old-create-only control fails with 503; old-cancel-only control fails
+with two successes and stock=12. The other fixed function passes in each control;
+fixed source restored before final API 22/22 and security lifecycle 9/9 PASS.
+Both builds/audits, config 2/2 and browser 54/54 PASS locally; exact commands,
+remaining check results and final hosted CI are linked in the
+[audit evidence](../evidence/BUG-61/README.md). Existing main rejected duplicate
+IDs as INVALID_PRODUCT; valid duplicate support now guards the aggregated total.
+No schema, migration, `.env`, lab architecture, admin transition (#65), global
+error mapping (#63) or AWS changes. Issue stays open; no merge or human
+understanding/demo acceptance inferred. [Teach-back](../evidence/BUG-61/teach-back.md).
 
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit

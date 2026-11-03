@@ -1,0 +1,18 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: negative-control-b
+Command: npm.cmd run build
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+
+> pbl517-backend@0.1.0 build
+> prisma generate && tsc -p tsconfig.json && node ../../scripts/release/stamp.mjs backend
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.10.0) to .\src\generated\prisma in 108ms
+
+backend: cda5a620dc3efe898a3fb482a4f4c77879f54e53 (dirty: not deployable)

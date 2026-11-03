@@ -1,23 +1,23 @@
-﻿
+
 > pbl517-backend@0.1.0 test:security
 > node --test tests/security-lifecycle.test.mjs
 
-Γû╢ isolated local exploit -> defense lifecycle
-  Γ£ö production refuses each vulnerable flag before serving requests (1227.607ms)
-  Γ£ö lab with production runtime retains Secure cookies through trusted HTTPS proxy (1550.5023ms)
-  Γ£ö IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (876.013ms)
-  Γ£ö SQLi: identical tautology and UNION disclose fixture data only in vulnerable mode (92.9241ms)
-  Γ£ö stored XSS: same persisted review executes in lab; React escapes it in secure mode (6482.5432ms)
-  Γ£ö unavailable API remains an HTTP failure, including checkout (532.8849ms)
-  Γ£ö deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest (37854.2457ms)
-  Γ£ö authentication: bounded guessing reaches 429 only with rate-limit defense (12236.9829ms)
-Γ£ö isolated local exploit -> defense lifecycle (64482.0792ms)
-Γä╣ tests 9
-Γä╣ suites 0
-Γä╣ pass 9
-Γä╣ fail 0
-Γä╣ cancelled 0
-Γä╣ skipped 0
-Γä╣ todo 0
-Γä╣ duration_ms 64623.8125
+▶ isolated local exploit -> defense lifecycle
+  ✔ production refuses each vulnerable flag before serving requests (1227.607ms)
+  ✔ lab with production runtime retains Secure cookies through trusted HTTPS proxy (1550.5023ms)
+  ✔ IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (876.013ms)
+  ✔ SQLi: identical tautology and UNION disclose fixture data only in vulnerable mode (92.9241ms)
+  ✔ stored XSS: same persisted review executes in lab; React escapes it in secure mode (6482.5432ms)
+  ✔ unavailable API remains an HTTP failure, including checkout (532.8849ms)
+  ✔ deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest (37854.2457ms)
+  ✔ authentication: bounded guessing reaches 429 only with rate-limit defense (12236.9829ms)
+✔ isolated local exploit -> defense lifecycle (64482.0792ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 64623.8125
 
