@@ -2,6 +2,7 @@ import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import test from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 import { Pool } from 'pg';
 import { compare } from 'bcryptjs';
 
@@ -34,6 +35,206 @@ class BrowserSession {
     return result.body.data.csrfToken;
   }
 }
+
+// Real database barriers, confined to this suite's disposable fixtures. Holding a
+// product row lets every request finish its pre-read before any write can commit.
+// Inspect the blocking graph (including indirect waiters), rather than assuming
+// that Promise.all or a fixed delay guarantees overlap. No application test hook.
+async function withBlockedProduct(database, productId, requestFactories, inspect = async () => {}) {
+  const blocker = await database.connect();
+  let pending = [];
+  try {
+    await blocker.query('BEGIN');
+    await blocker.query('SELECT id FROM "Product" WHERE id = $1 FOR UPDATE', [productId]);
+    const blockerPid = (await blocker.query('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+    pending = requestFactories.map(request => request());
+    // Attach handlers immediately, also when a barrier assertion fails.
+    const settled = Promise.allSettled(pending);
+    const deadline = Date.now() + 3000; // Below Prisma's default 5s transaction timeout.
+    let waiters = [];
+    while (Date.now() < deadline) {
+      waiters = (await database.query(`
+        WITH RECURSIVE waiting(pid) AS (
+          SELECT pid FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid))
+          UNION
+          SELECT a.pid FROM pg_stat_activity a JOIN waiting w
+            ON w.pid = ANY(pg_blocking_pids(a.pid))
+        )
+        SELECT a.pid, a.query FROM waiting w JOIN pg_stat_activity a USING (pid)
+        WHERE a.datname = current_database() AND a.wait_event_type = 'Lock'
+          AND a.query LIKE 'UPDATE %'
+      `, [blockerPid])).rows;
+      if (waiters.length >= pending.length) break;
+      await delay(10);
+    }
+    assert.equal(waiters.length, pending.length, 'all API writes must overlap at the database barrier');
+    await inspect(waiters);
+    await blocker.query('ROLLBACK');
+    return (await settled).map(outcome => {
+      if (outcome.status === 'rejected') throw outcome.reason;
+      return outcome.value;
+    });
+  } finally {
+    await blocker.query('ROLLBACK');
+    await Promise.allSettled(pending);
+    blocker.release();
+  }
+}
+
+function inventoryTest(name, run) {
+  test(`inventory #61 ${name}`, async context => {
+    assert.notEqual(process.env.NODE_ENV, 'production');
+    const connection = new URL(process.env.DATABASE_URL);
+    assert.ok(['localhost', '127.0.0.1', '[::1]'].includes(connection.hostname));
+    assert.match(connection.pathname, /(?:test|lab)/i, 'Use a disposable test/lab database.');
+    const database = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 });
+    const productIds = [randomUUID(), randomUUID()];
+    const address = `Inventory fixture ${randomUUID()}`;
+    const userIds = [];
+    try {
+      for (const id of productIds) {
+        await database.query(
+          'INSERT INTO "Product" (id,name,description,price,stock,"updatedAt") VALUES ($1,$2,$3,1250.50,10,NOW())',
+          [id, 'Inventory regression fixture', 'Synthetic #61 product'],
+        );
+      }
+      const stock = async id => (await database.query('SELECT stock FROM "Product" WHERE id=$1', [id])).rows[0].stock;
+      const counts = async () => (await database.query(`
+        SELECT (SELECT count(*)::int FROM "Order" WHERE "shippingAddress"=$1) AS orders,
+          (SELECT count(*)::int FROM "OrderItem" WHERE "productId"=ANY($2::uuid[])) AS items
+      `, [address, productIds])).rows[0];
+      const guest = async () => {
+        const client = new BrowserSession();
+        const csrfToken = await client.csrf();
+        return items => client.request('/orders', { method: 'POST', csrfToken, body: {
+          items, shippingAddress: address,
+          guestInfo: { name: 'Inventory guest', email: 'inventory-fixture@example.com' },
+        } });
+      };
+      await run({ context, database, productIds, address, userIds, stock, counts, guest });
+    } finally {
+      // Exact fixture IDs, even on failed assertions/negative controls. Never
+      // reset seed stock or delete orders using broad email patterns.
+      await database.query('DELETE FROM "Order" WHERE "shippingAddress"=$1', [address]);
+      await database.query('DELETE FROM "Product" WHERE id=ANY($1::uuid[])', [productIds]);
+      await database.query("DELETE FROM session WHERE sess->>'userId'=ANY($1::text[])", [userIds]);
+      await database.query('DELETE FROM "User" WHERE id=ANY($1::uuid[])', [userIds]);
+      await database.end();
+    }
+  });
+}
+
+inventoryTest('checkout race', async ({ context, database, productIds: [productId], stock, counts, guest }) => {
+  // Prepare CSRF sessions before the burst; session setup must not stagger writes.
+  const buyers = await Promise.all(Array.from({ length: 5 }, () => guest()));
+  await database.query('UPDATE "Product" SET stock=3 WHERE id=$1', [productId]);
+  const outcomes = await withBlockedProduct(database, productId,
+    buyers.map(buy => () => buy([{ productId, quantity: 1 }])),
+    async waiters => context.diagnostic(`overlapping checkout writes=${waiters.length}; SQL=${waiters[0].query}`));
+  const finalStock = await stock(productId);
+  const rows = await counts();
+  context.diagnostic(JSON.stringify({ http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), finalStock, ...rows }));
+  assert.equal(outcomes.filter(r => r.status === 201).length, 3, 'exactly stock units may sell');
+  assert.equal(finalStock, 0, 'stock cannot be negative');
+  assert.deepEqual(rows, { orders: 3, items: 3 }, 'no extra order or order item');
+  for (const response of outcomes.filter(r => r.status !== 201)) {
+    assert.equal(response.status, 400, 'loser must be OUT_OF_STOCK, not infrastructure 503');
+    assert.equal(response.body.error.code, 'OUT_OF_STOCK');
+  }
+});
+
+inventoryTest('concurrent cancel', async ({ context, database, productIds: [productId], address, userIds, stock }) => {
+  const owner = new BrowserSession();
+  const registered = await owner.request('/auth/register', { method: 'POST', csrfToken: await owner.csrf(),
+    body: { name: 'Inventory owner', email: `inventory-${randomUUID()}@example.com`, password: 'LocalLabOnly517!' } });
+  assert.equal(registered.status, 201);
+  userIds.push(registered.body.data.user.id);
+  const csrfToken = await owner.csrf();
+  // Each fresh order has an independently synchronized pair; every round must
+  // pass. Repetition is extra coverage, not a retry that masks a failing round.
+  for (let round = 1; round <= 3; round++) {
+    const created = await owner.request('/orders', { method: 'POST', csrfToken,
+      body: { items: [{ productId, quantity: 2 }], shippingAddress: address } });
+    assert.equal(created.status, 201);
+    assert.equal(await stock(productId), 8);
+    const id = created.body.data.id;
+    const cancel = () => owner.request(`/orders/${id}/cancel`, { method: 'POST', csrfToken });
+    const outcomes = await withBlockedProduct(database, productId, [cancel, cancel],
+      async waiters => context.diagnostic(`round=${round}; overlapping cancel writes=${waiters.length}; SQL=${waiters.map(w => w.query).join(' | ')}`));
+    const finalStock = await stock(productId);
+    const status = (await database.query('SELECT status FROM "Order" WHERE id=$1', [id])).rows[0].status;
+    context.diagnostic(JSON.stringify({ round, http: outcomes.map(r => r.status), errors: outcomes.map(r => r.body.error?.code ?? 'OK'), finalStock, status }));
+    assert.equal(outcomes.filter(r => r.status === 200).length, 1, 'exactly one cancellation may win');
+    const losers = outcomes.filter(r => r.status !== 200);
+    assert.equal(losers.length, 1);
+    assert.equal(losers[0].status, 400);
+    assert.equal(losers[0].body.error.code, 'CANNOT_CANCEL');
+    assert.equal(status, 'CANCELLED');
+    assert.equal(finalStock, 10, 'restore exactly once; no phantom stock');
+  }
+});
+
+inventoryTest('duplicate product lines', async ({ context, database, productIds: [productId], stock, counts, guest }) => {
+  const buy = await guest();
+  const items = [{ productId, quantity: 2 }, { productId, quantity: 2 }];
+  await database.query('UPDATE "Product" SET stock=3 WHERE id=$1', [productId]);
+  const rejected = await buy(items);
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.error.code, 'OUT_OF_STOCK');
+  assert.equal(await stock(productId), 3);
+  assert.deepEqual(await counts(), { orders: 0, items: 0 });
+
+  await database.query('UPDATE "Product" SET stock=5 WHERE id=$1', [productId]);
+  const accepted = await buy(items);
+  assert.equal(accepted.status, 201);
+  assert.equal(accepted.body.data.totalPrice, '5002.00');
+  assert.deepEqual(accepted.body.data.items.map(i => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice })),
+    items.map(i => ({ ...i, unitPrice: '1250.50' })));
+  const saved = await database.query('SELECT quantity,"unitPrice"::text FROM "OrderItem" WHERE "orderId"=$1', [accepted.body.data.id]);
+  assert.deepEqual(saved.rows, [{ quantity: 2, unitPrice: '1250.50' }, { quantity: 2, unitPrice: '1250.50' }]);
+  assert.equal(await stock(productId), 1);
+  assert.deepEqual(await counts(), { orders: 1, items: 2 });
+  context.diagnostic('stock=3 rejects total quantity 4 without writes; stock=5 accepts two original lines, total=5002.00, remaining=1');
+});
+
+inventoryTest('multi-product rollback', async ({ context, database, productIds: [a, b], stock, counts, guest }) => {
+  const buy = await guest();
+  // B has one unit but needs two. Its nonzero stock ensures the UPDATE attempts
+  // to lock B even with PostgreSQL's predicate recheck after a concurrent write.
+  await database.query('UPDATE "Product" SET stock=1 WHERE id=$1', [b]);
+  // Hold B, then let another transaction spend its last unit AFTER the service
+  // pre-read. This exercises failure after A was already decremented.
+  const blocker = await database.connect();
+  let pending;
+  try {
+    await blocker.query('BEGIN');
+    await blocker.query('UPDATE "Product" SET stock=0 WHERE id=$1', [b]);
+    const pid = (await blocker.query('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+    pending = buy([{ productId: a, quantity: 2 }, { productId: b, quantity: 1 }]);
+    const deadline = Date.now() + 3000;
+    let waiting = false;
+    while (Date.now() < deadline) {
+      waiting = (await database.query('SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1=ANY(pg_blocking_pids(pid))) AS waiting', [pid])).rows[0].waiting;
+      if (waiting) break;
+      await delay(10);
+    }
+    assert.equal(waiting, true, 'checkout reached B after its pre-read');
+    await assert.rejects(database.query('SELECT id FROM "Product" WHERE id=$1 FOR UPDATE NOWAIT', [a]),
+      { code: '55P03' }, 'A is already claimed inside the in-flight transaction');
+    await blocker.query('COMMIT');
+    const result = await pending;
+    assert.equal(result.status, 400);
+    assert.equal(result.body.error.code, 'OUT_OF_STOCK');
+    assert.equal(await stock(a), 10, 'earlier decrement of A must roll back');
+    assert.equal(await stock(b), 0, 'failed checkout cannot change B');
+    assert.deepEqual(await counts(), { orders: 0, items: 0 });
+    context.diagnostic('A write lock observed (55P03); B sold out after pre-read; HTTP=400 OUT_OF_STOCK; stocks A=10 B=0; orders=0 items=0');
+  } finally {
+    await blocker.query('ROLLBACK');
+    if (pending) await Promise.allSettled([pending]);
+    blocker.release();
+  }
+});
 
 test('real PostgreSQL API and session authentication', async (suite) => {
   assert.notEqual(process.env.NODE_ENV, 'production', 'Use a development database.');
@@ -362,111 +563,6 @@ test('real PostgreSQL API and session authentication', async (suite) => {
       });
       assert.equal(cancelOwnOrder.status, 200);
       assert.equal(cancelOwnOrder.body.data.status, 'CANCELLED');
-    });
-
-    // Regression for #61: the stock guard and the stock write used to live in
-    // different places. Two concurrent checkouts both read the pre-sale level,
-    // both passed, and the trailing CHECK constraint turned the loser into a 503
-    // instead of a 400. The same shape let a double cancel restore stock twice.
-    await suite.test('concurrent stock claim: no oversell and no phantom stock', async () => {
-      const product = await database.query(
-        'SELECT id, price::text, stock FROM "Product" WHERE stock >= 0 ORDER BY "createdAt", id LIMIT 1',
-      );
-      const { id: productId, stock: originalStock } = product.rows[0];
-      if (!productId) return;
-
-      try {
-        await database.query('UPDATE "Product" SET stock = 3 WHERE id = $1', [productId]);
-
-        const placeOrder = async (email) => {
-          const client = new BrowserSession();
-          const token = await client.csrf();
-          const result = await client.request('/orders', {
-            method: 'POST',
-            csrfToken: token,
-            body: {
-              items: [{ productId, quantity: 1 }],
-              shippingAddress: '789 Đường Tranh Chấp, Huế',
-              guestInfo: { name: 'Race Guest', email },
-            },
-          });
-          return { client, token, result };
-        };
-
-        const emails = Array.from({ length: 5 }, (_, index) => `race_${Date.now()}_${index}@example.com`);
-        const outcomes = await Promise.all(emails.map(placeOrder));
-        const statuses = outcomes.map((entry) => entry.result.status);
-
-        assert.equal(statuses.filter((status) => status === 201).length, 3, 'exactly the available units may sell');
-        for (const entry of outcomes) {
-          if (entry.result.status === 201) continue;
-          assert.equal(entry.result.status, 400, 'a sold-out checkout is a client error, not 503');
-          assert.equal(entry.result.body.error.code, 'OUT_OF_STOCK');
-        }
-
-        const afterSale = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
-        assert.equal(afterSale.rows[0].stock, 0, 'stock must not fall below zero');
-        const created = await database.query(
-          'SELECT count(*)::int AS count FROM "Order" WHERE "customerEmail" = ANY($1::text[])',
-          [emails],
-        );
-        assert.equal(created.rows[0].count, 3, 'order count must match units sold');
-
-        // Double cancel must restore stock exactly once. Cancelling requires an
-        // authenticated owner, so this part uses a registered account rather than
-        // the guest sessions used above.
-        const owner = new BrowserSession();
-        const ownerCsrf = await owner.csrf();
-        const ownerEmail = `race_owner_${Date.now()}@example.com`;
-        await owner.request('/auth/register', {
-          method: 'POST',
-          csrfToken: ownerCsrf,
-          body: { name: 'Race Owner', email: ownerEmail, password: 'LocalLabOnly517!' },
-        });
-        const ownerLoginCsrf = await owner.csrf();
-        const ownerLogin = await owner.request('/auth/login', {
-          method: 'POST',
-          csrfToken: ownerLoginCsrf,
-          body: { email: ownerEmail, password: 'LocalLabOnly517!' },
-        });
-        assert.equal(ownerLogin.status, 200, 'race-test owner must be able to log in');
-
-        await database.query('UPDATE "Product" SET stock = 5 WHERE id = $1', [productId]);
-        const orderCsrf = await owner.csrf();
-        const ownerOrder = await owner.request('/orders', {
-          method: 'POST',
-          csrfToken: orderCsrf,
-          body: {
-            items: [{ productId, quantity: 2 }],
-            shippingAddress: '321 Đường Hoàn Kho, Huế',
-          },
-        });
-        assert.equal(ownerOrder.status, 201);
-        const orderId = ownerOrder.body.data.id;
-
-        const beforeCancel = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
-        assert.equal(beforeCancel.rows[0].stock, 3, 'two units were taken from stock');
-
-        const cancelCsrf = await owner.csrf();
-        const firstCancel = await owner.request(`/orders/${orderId}/cancel`, {
-          method: 'POST', csrfToken: cancelCsrf,
-        });
-        assert.equal(firstCancel.status, 200);
-        const secondCancel = await owner.request(`/orders/${orderId}/cancel`, {
-          method: 'POST', csrfToken: cancelCsrf,
-        });
-        assert.equal(secondCancel.status, 400, 'cancelling twice is a client error');
-        assert.equal(secondCancel.body.error.code, 'CANNOT_CANCEL');
-
-        const afterCancel = await database.query('SELECT stock FROM "Product" WHERE id = $1', [productId]);
-        assert.equal(afterCancel.rows[0].stock, 5, 'only the cancelled units may be restored, once');
-
-        await database.query('DELETE FROM "Order" WHERE "userId" = (SELECT id FROM "User" WHERE email = $1)', [ownerEmail]);
-        await database.query('DELETE FROM "User" WHERE email = $1', [ownerEmail]);
-      } finally {
-        await database.query('DELETE FROM "Order" WHERE "customerEmail" LIKE $1', [`race\\_%@example.com`]);
-        await database.query('UPDATE "Product" SET stock = $2 WHERE id = $1', [productId, originalStock]);
-      }
     });
 
     await suite.test('admin authorization guard', async () => {
