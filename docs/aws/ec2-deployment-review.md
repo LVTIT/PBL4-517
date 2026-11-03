@@ -1,5 +1,9 @@
 # Issue #14 — approved deployment and handoff
 
+This is the historical 2026-09-27 deployment. For the existing EIP origin and
+current certificate/renewal/rollback paths, use the
+[2026-11-03 EIP HTTPS runbook](ec2-eip-https.md).
+
 **Approved and executed 2026-09-27.** Human explicitly approved checkpoints A/B (deployment, IP TLS and renewal without contact email). Verification results are in the linked evidence. Backend was stopped after its controlled verification run; static HTTPS remains available, API returns 502 until restarted. Persistent backend service belongs to #15.
 Baseline: `e0f783b619def8c7123ec417239e32866ff72ee7`.
 [Live preflight/CI](../../evidence/WEB-04/README.md).

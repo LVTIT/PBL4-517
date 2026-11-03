@@ -1,5 +1,22 @@
 # Current Project Status
 
+**2026-11-03 existing EIP HTTPS repair (Refs #14): operational HTTPS and renewal
+verified; NOT READY because normal Chrome still warns.** Instance
+`i-0ccfb2772f854e78b` serves `https://52.221.157.206/` with a matching Let's
+Encrypt IP certificate (`pbl4-517-eip`), using existing Snap Certbot 5.9.0.
+External HTTP-01, staging dry-run, one production issuance, trusted HTTPS/health,
+Nginx validation/reload and unfiltered renewal dry-run with deploy hook PASS.
+Nginx/backend remain active/enabled, backend PID unchanged, API/DB loopback-only,
+and `.env` checksum unchanged. Old certificates retained; obsolete old-IP renewal
+configs archived privately. User's fresh incognito homepage screenshot has no
+red certificate warning; the owner confirmed its products list displayed
+normally. The owner confirms normal Chrome still shows "Không bảo mật" after
+reopening/reloading the HTTPS URL; its cause and final browser acceptance remain
+unresolved. Documentation review also remains pending.
+No application redeploy, database mutation, AWS resource/network change or EC2
+stop/reboot. [Evidence and limits](../evidence/WEB-04/eip-20261103/README.md),
+[current TLS/renewal/rollback runbook](../docs/aws/ec2-eip-https.md).
+
 **2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
 human review pending, not deployed.** Source atomic stock/cancel claims from
 `d8c3fa3` retained after audit. The original sequential cancel test and combined
