@@ -1,5 +1,11 @@
 # AWS-04 — read-only control-plane audit
 
+**Latest: human-started Running window, 2026-11-03 16:56 UTC.**
+[Live TCP/HTTP/TLS observations](live-20261103/README.md): admin-source 22/80/443
+reachable; HTTP 308, HTTPS/health 200; 3000/5432/8080 time out (not proven closed).
+Non-admin SSH negative control, host bindings and exact deployed revision remain
+unverified. Earlier Stopped snapshots below are retained as historical evidence.
+
 Refs #33. Collection started **2026-11-03 16:02 UTC / 23:02 Asia/Bangkok**.
 Collection completed by **16:13 UTC / 23:13 Asia/Bangkok**, with EC2 still Stopped.
 SSH-source follow-up started **16:40 UTC / 23:40 Asia/Bangkok** the same day,
@@ -38,7 +44,7 @@ Observed pages: EC2 Instance details (summary and Networking), and Elastic IP
 details for `52.221.157.206`. EIP details independently confirms allocation,
 association and instance/ENI/private-IP mapping while the instance is stopped.
 
-## Collection boundaries
+## Initial collection boundaries
 
 No agent AWS mutations, EC2 start/stop/reboot, SSH, application deployment, resource
 creation, lab listener, scanner, external port probe or alert send. Runtime
@@ -47,6 +53,9 @@ inferred from network configuration or historical service checks.
 The user separately edited the SSH source between snapshots. This is explicitly
 attributed to the human, not omitted from the change history or claimed as an
 agent remediation. Follow-up reads do not authorize further AWS changes.
+The user later explicitly authorized real external network tests and started
+EC2. Those bounded probes are recorded separately in the live evidence; the
+initial no-probe boundary is not presented as the scope of that later phase.
 
 ## Evidence index
 
@@ -55,6 +64,7 @@ agent remediation. Follow-up reads do not authorize further AWS changes.
 - [Complete NACL matrices, association and ephemeral ports](nacl.md)
 - [Architecture diagram and SG vs NACL comparison](../../docs/aws/network-control-plane.md)
 - [Deferred live matrix](live-test-plan.md)
+- [Executed live probes, sanitized results and remaining gaps](live-20261103/README.md)
 - [Twenty teach-back answers](teach-back.md) — agent reference, human acceptance pending
 - [Local verification](verification.md)
 
@@ -73,7 +83,10 @@ records are transcriptions, not raw AWS API responses or immutable audit logs.
 | PASS | Effective NACL association and every inbound/outbound rule reviewed; IPv6 absence checked across layers | [NACL](nacl.md) |
 | INFO | Default VPC/NACL, IPv4 allow-all NACL and unrestricted SG egress | Configuration permits intended response traffic; does not add selective subnet hardening |
 | PASS | User's SSH-source update independently verified: `171.225.185.44/32` matches workstation public IPv4; old source absent | Same SSH rule ID; [current matrix and historical warning](security-group.md); actual access remains deferred |
-| DEFERRED | Runtime reachability, current host bindings, HTTP redirect/TLS/application health | [Future test plan](live-test-plan.md); EC2 intentionally stopped |
+| PASS | In the authorized Running window, admin-source 22/80/443 reached; HTTP 308, verified HTTPS and health 200 | [Live results](live-20261103/README.md) |
+| INFO | 3000/5432/8080 timed out 2/2; no connection established from this source | Consistent with SG policy, not proof of CLOSED/binding/cause |
+| WARNING | Deployed revision unknown: API version 404; frontend release path returns HTML | No deployment/profile acceptance inferred |
+| DEFERRED | Non-admin SSH negative control, host binding/profile inspection and human acceptance | [Remaining coverage](live-test-plan.md) |
 
 No observed configuration FAIL requiring remediation in this phase. The initial
 SSH-source warning is resolved for the current configuration after the human edit;
@@ -81,7 +94,8 @@ successful SSH access is still not claimed. Agent inspection remains read-only.
 PR #60 is OPEN/unmerged at initial audit time; no ALB is represented in the
 current path and no ALB resource was created. This phase did not inventory ALBs.
 
-**CONTROL-PLANE REVIEW COMPLETE / LIVE VERIFICATION DEFERRED / ISSUE REMAINS OPEN.**
+**CONTROL-PLANE REVIEW COMPLETE / EXTERNAL LIVE OBSERVATIONS RECORDED /
+REMAINING VERIFICATION PENDING / ISSUE REMAINS OPEN.**
 All requested network relationships/rule directions were reviewed. Human review,
 team understanding/demo and the issue's live DoD remain
 pending. Required CI must pass on the latest PR head before reporting

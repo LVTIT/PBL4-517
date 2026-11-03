@@ -38,7 +38,8 @@ Nginx phục vụ static frontend và reverse proxy API; SPA fallback chỉ áp 
 
 ## AWS network — control plane verified 2026-11-03 (Refs #33)
 
-EC2 `i-0ccfb2772f854e78b` is **Stopped** in the current AWS Console snapshot.
+EC2 `i-0ccfb2772f854e78b` was Stopped in the initial snapshot; the user later
+started it and AWS Console confirmed **Running** for the 16:56 UTC live window.
 EIP `52.221.157.206` maps to primary ENI/private IPv4 `172.31.11.224` in the
 default VPC `172.31.0.0/16`, subnet `172.31.0.0/20` (`ap-southeast-1c`). The
 subnet implicitly uses the main route table with an active IGW default route;
@@ -47,12 +48,16 @@ SG allows SSH from `171.225.185.44/32`, web 80/443 public and no public
 3000/5432/8080. The default NACL allows all IPv4 in both directions; SG supplies
 the service restriction. No IPv6 configuration/rules were observed. After the
 user's manual SSH-source edit, the reloaded SG and workstation public IP match
-at the follow-up observation; the original source warning is resolved. Runtime
-and host binding checks are deferred; previous service evidence above remains historical.
+at the follow-up observation; the original source warning is resolved. Later
+external probes establish admin-source 22/80/443 connectivity, HTTP 308 and
+verified HTTPS/health 200; 3000/5432/8080 time out 2/2 (not proven CLOSED).
+Non-admin SSH negative control and host bindings remain unverified. Public
+release metadata is unavailable, so deployed SHA/profile are not established.
+[Live evidence and limits](../evidence/AWS-04/live-20261103/README.md).
 
 [Actual resource diagram, SG/NACL comparison and boundaries](../docs/aws/network-control-plane.md),
 [current evidence and future live test plan](../evidence/AWS-04/README.md).
-Agent made no AWS changes; the user's SSH-source edit is separately recorded.
+Agent made no AWS changes; the user's SSH-source edit and EC2 start are separately recorded.
 ALB remains outside this implemented path and belongs to the planned expansion below.
 
 ## PBL4 tổng thể

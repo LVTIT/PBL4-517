@@ -49,3 +49,11 @@ context before designing a restrictive ACL. Do not copy a single example range
 and assume all clients will work.
 
 Source: [AWS custom NACL rule order and ephemeral ports](https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html).
+
+## Live-window recheck
+
+After the user-started 2026-11-03 16:56 UTC live window, both complete rule tabs
+were re-read in Console: still two rules each, 100 IPv4 allow-all then `*` deny,
+same NACL/default/VPC. [External observations and limitations](live-20261103/README.md).
+This permissive NACL does not independently explain the timeouts at 3000/5432/8080;
+the attached SG lacks ingress permissions for them. No ACL change was performed.

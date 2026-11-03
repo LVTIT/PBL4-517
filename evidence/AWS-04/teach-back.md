@@ -47,9 +47,10 @@ understood, demonstrated or approved it**. Actual IDs: [audit](README.md),
     effective SG/NACL and IPv6 absence. ALB design/resources are outside #33.
 19. **Lab 8080:** #36 MON-02 / #41 SEC-05 require their own controlled window,
     source restrictions and rollback. This audit neither opens it nor runs a listener.
-20. **Why #33 stays OPEN:** control-plane configuration does not fulfill deferred
-    live testing or required human review/understanding. A documentation merge
-    does not establish issue completion.
+20. **Why #33 stays OPEN:** control-plane configuration and the later admin-source
+    live observations do not fulfill the remaining non-admin SSH negative control,
+    unverified host/deployment facts or human review/understanding. A documentation
+    merge does not establish issue completion.
 
 AWS sources: [SG stateful behavior](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html),
 [NACL order and ephemeral ports](https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html),

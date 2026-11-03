@@ -8,9 +8,12 @@ instructions remain in [the initial runbook](ec2-deployment-review.md).
 ## Current configuration
 
 This section records the 2026-11-03 HTTPS operating window. The later
-[#33 control-plane audit](network-control-plane.md) observes EC2 **Stopped**;
-the EIP remains associated, but runtime availability/renewal is not rechecked
-while stopped. Retained configuration below is not a continuous-uptime claim.
+[#33 control-plane audit](network-control-plane.md) initially observed EC2 Stopped;
+the EIP remained associated. A subsequent user-started
+[23:56 Asia/Bangkok live window](../../evidence/AWS-04/live-20261103/README.md)
+verified Running, HTTP 308, trusted HTTPS and health 200. Renewal configuration
+was not re-inspected in that phase. These dated observations are not a
+continuous-uptime claim.
 
 | Item | Value |
 | --- | --- |

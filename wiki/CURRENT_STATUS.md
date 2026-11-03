@@ -1,7 +1,22 @@
 # Current Project Status
 
-**2026-11-03 AWS-04 (#33): control-plane review complete; live verification
-DEFERRED; Issue OPEN.** Read-only AWS Console audit confirms the expected EC2
+**2026-11-03 23:56 Asia/Bangkok AWS-04 live window (#33 / PR #71): external
+observations recorded; Issue OPEN.** User authorized live network tests and
+started EC2; Console confirms Running with the expected instance/EIP/private IP.
+From admin public IP `171.225.185.44`, TCP 22/80/443 reachable 2/2; HTTP 308 to
+HTTPS, trusted IP certificate, frontend and `/api/health` 200/database connected.
+3000/5432/8080 time out 2/2; consistent with SG denial, not proven CLOSED or
+proof of host binding. Non-admin SSH negative control and current host
+binding/profile remain unverified. `/api/version` 404 and frontend release path
+returns HTML, so exact deployed revision is unknown; no current-main deployment
+claim. [Sanitized live results](../evidence/AWS-04/live-20261103/README.md),
+[updated coverage matrix](../evidence/AWS-04/live-test-plan.md). No agent AWS
+mutation, SSH login, deploy, lab listener or alert. User explicitly deferred
+the non-admin SSH test to later. Hosted CI/latest-head review
+remain tracked on PR #71; no issue closure or human acceptance inferred.
+
+**Earlier 2026-11-03 AWS-04 (#33) control-plane snapshot: review complete;
+live tests were DEFERRED at that time.** Read-only AWS Console audit confirms the expected EC2
 is **Stopped**, EIP `52.221.157.206` → primary ENI/private `172.31.11.224`, default
 VPC `172.31.0.0/16`, subnet `172.31.0.0/20` in `ap-southeast-1c`, implicit main
 route table with active IGW default route and matching VPC attachment. Actual

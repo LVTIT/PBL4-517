@@ -50,8 +50,11 @@ no filters applied, one page. All rule descriptions and Name fields are `–`.
   This checks the source configuration at observation time, not successful SSH,
   a permanent address assignment or human review. If the public egress IP changes,
   recheck the source; do not broaden it to Anywhere to avoid that maintenance.
-- **DEFERRED:** external reachability and actual Linux binding. Loopback binding
-  in prior deployment evidence does not excuse a broad SG or prove current runtime.
+- **LIVE FOLLOW-UP:** [Running-window results](live-20261103/README.md) now
+  establish admin-source TCP 22/80/443 connectivity and HTTP/TLS/health behavior.
+  3000/5432/8080 timed out 2/2, consistent with the SG. Non-admin SSH negative
+  control and Linux binding inspection remain unverified. Earlier loopback
+  evidence does not excuse broad SG rules or prove current host bindings.
 
 ## Initial warning and conditional proposal — historical
 
@@ -72,6 +75,7 @@ change procedure or proof that live tests/rollback were performed:
 | Change | Team Leader reviews the exact replacement IP and access/recovery plan; in a separately authorized window, add verified `/32`, test it, then remove obsolete source |
 | Rollback | Retain exact prior rule evidence and authorized recovery access; restore the previous rule only if needed and approved for recovery, then investigate |
 
-No rule changes, connectivity tests to EC2 or SSH were performed by the agent.
+No agent rule changes or SSH login were performed. The initial audit/follow-up
+had no EC2 probes; later user-authorized external tests are linked above.
 The human SSH-source edit is reported and independently observed; its exact
 mutation time is not established by this Console snapshot. No CloudTrail claim.

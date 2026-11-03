@@ -1,9 +1,12 @@
-# Deferred live verification — no probes executed
+# Live verification plan and current coverage
 
-Refs #33. **DEFERRED — EC2 intentionally stopped** during the control-plane audit.
-Configuration evidence is not runtime acceptance. Do not start EC2 for this phase.
+Refs #33. Initially **DEFERRED — EC2 intentionally stopped** during the
+control-plane audit. The user subsequently authorized external tests and started
+EC2. [Executed 2026-11-03 live observations](live-20261103/README.md) replace the
+blanket deferral for this tested source/window. Agent never starts/stops EC2.
+Configuration evidence is not runtime acceptance; remaining coverage is below.
 
-## Future operating window
+## Authorized operating-window procedure
 
 Team Leader schedules/authorizes the running window and confirms the instance,
 EIP, exact deployed revision and secure application profile. Re-read control-plane
@@ -15,12 +18,12 @@ required by this plan. Do not open 8080 or run a listener to make a test pass.
 
 | Port | Service | Expected SG | Expected runtime / evidence to collect | Live verified now |
 | --- | --- | --- | --- | --- |
-| 22/TCP | SSH | Admin `/32`; follow-up observed `171.225.185.44/32`, matching workstation public IP | TCP reachable from confirmed admin source; no reachability from a separately authorized non-admin source; record both source IPs | NO — DEFERRED |
-| 80/TCP | Nginx HTTP | IPv4 public | HTTP request returns expected redirect to EIP HTTPS; ACME webroot is an intentional exception to general redirect | NO — DEFERRED |
-| 443/TCP | Nginx HTTPS | IPv4 public | Trusted certificate matches current origin, website and `/api/health` respond as expected; no certificate bypass | NO — DEFERRED |
-| 3000/TCP | Express | No public rule | External TCP connection not established; separately authorized host inspection confirms `127.0.0.1:3000` binding and service health | NO — DEFERRED |
-| 5432/TCP | PostgreSQL | No public rule | External TCP connection not established; separately authorized host inspection confirms loopback binding | NO — DEFERRED |
-| 8080/TCP | Controlled lab | No public rule | External TCP connection not established; no lab listener expected | NO — DEFERRED |
+| 22/TCP | SSH | Admin `/32`; observed `171.225.185.44/32`, matching workstation public IP | TCP reachable from admin; no reachability from separately authorized non-admin source | Admin source PASS 2/2; non-admin source DEFERRED by user, will test later |
+| 80/TCP | Nginx HTTP | IPv4 public | HTTP redirects to EIP HTTPS; ACME webroot is an intentional exception | PASS: TCP 2/2, HTTP 308 |
+| 443/TCP | Nginx HTTPS | IPv4 public | Trusted certificate matches origin; website and `/api/health` respond | PASS: TCP 2/2, verified TLS, website/health 200 |
+| 3000/TCP | Express | No public rule | No external connection; separately authorized host inspection for loopback binding | Timeout 2/2 observed; binding NOT VERIFIED |
+| 5432/TCP | PostgreSQL | No public rule | No external connection; separately authorized host inspection for loopback binding | Timeout 2/2 observed; binding NOT VERIFIED |
+| 8080/TCP | Controlled lab | No public rule | No external connection; no lab listener expected | Timeout 2/2 observed; no listener created |
 
 Use bounded connection attempts only during that future window. Record timeout
 as **inconclusive/filtered**, refusal as **refused**, and successful handshake as
