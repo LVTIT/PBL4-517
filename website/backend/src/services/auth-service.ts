@@ -1,6 +1,7 @@
 import { compare, hash } from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import { prisma } from '../lib/database.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { rethrowDataError, translatePrismaError } from '../lib/data-errors.js';
 import { AppError } from '../lib/errors.js';
 import type { PublicUser } from '../types/auth.js';
@@ -34,13 +35,15 @@ export async function registerUser(name: string, email: string, password: string
       select: publicFields,
     });
   } catch (error) {
-    // The lookup above can be raced by a concurrent registration, so a unique
-    // violation here means a duplicate account, not an outage.
-    const translated = translatePrismaError(error);
-    if (translated.code === 'CONFLICT') {
-      throw new AppError(409, 'EMAIL_EXISTS', 'Email này đã được sử dụng. Vui lòng chọn email khác.');
+    // Prisma 7 pg may omit meta.target. Prove the email conflict with a fresh
+    // lookup after the failed insert, rather than guessing from driver text or
+    // turning every unique/foreign-key failure into EMAIL_EXISTS.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' &&
+        error.meta?.modelName === 'User' &&
+        await prisma.user.findUnique({ where: { email }, select: { id: true } }).catch(rethrowDataError)) {
+      throw translatePrismaError(error, 'register-email-conflict');
     }
-    throw translated;
+    rethrowDataError(error);
   }
 }
 

@@ -1,0 +1,18 @@
+▶ isolated local exploit -> defense lifecycle
+  ✔ production refuses each vulnerable flag before serving requests (534.742ms)
+  ✔ lab with production runtime retains Secure cookies through trusted HTTPS proxy (1025.0866ms)
+  ✔ IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (519.8064ms)
+  ✔ SQLi: identical tautology and UNION disclose fixture data only in vulnerable mode (42.4981ms)
+  ✔ stored XSS: same persisted review executes in lab; React escapes it in secure mode (2839.2727ms)
+  ✔ unavailable API remains an HTTP failure, including checkout (363.4115ms)
+  ✔ deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest (26331.1991ms)
+  ✔ authentication: bounded guessing reaches 429 only with rate-limit defense (11084.7328ms)
+✔ isolated local exploit -> defense lifecycle (45912.4355ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46053.5245

@@ -52,7 +52,7 @@ export async function listProducts(search?: string, category?: string, includeVe
     });
     return products.map((product) => ({ ...product, price: product.price.toFixed(2) }));
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -91,7 +91,7 @@ export async function getProductById(id: string, includeVerification = false) {
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -116,7 +116,7 @@ export async function createProduct(data: {
     });
     return { ...product, price: product.price.toFixed(2) };
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -146,7 +146,7 @@ export async function updateProduct(
     });
     return { ...product, price: product.price.toFixed(2) };
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error, 'update-product');
   }
 }
 
@@ -155,7 +155,7 @@ export async function deleteProduct(id: string) {
     await prisma.product.delete({ where: { id } });
     return { success: true };
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error, 'delete-product');
   }
 }
 
@@ -178,7 +178,7 @@ export async function addReview(productId: string, userId: string, rating: numbe
     });
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }
 
@@ -192,6 +192,6 @@ export async function listReviews(productId: string) {
       orderBy: { createdAt: 'desc' },
     });
   } catch (error) {
-    throw rethrowDataError(error);
+    rethrowDataError(error);
   }
 }

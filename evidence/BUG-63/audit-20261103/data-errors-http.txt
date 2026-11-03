@@ -1,0 +1,27 @@
+▶ data errors #63 PostgreSQL HTTP regression
+  ✔ malformed product/order IDs reject before DB with safe 400 (94.8283ms)
+  ✔ missing product update/delete and resource reads retain safe 404 (87.0401ms)
+  ✔ real FK delete returns safe 409 and preserves all rows (23.6401ms)
+  ✔ current Prisma 7.10/PostgreSQL codes and structured context are measured (147.9449ms)
+  ℹ malformed UUID (not globally mapped): P2007; model=Product
+  ℹ missing update: P2025; model=Product
+  ℹ missing delete: P2025; model=Product
+  ℹ referenced delete: P2003; model=Product
+  ℹ duplicate email: P2002; model=User; target=email
+  ℹ generic Product.id unique: P2002 -> 409 CONFLICT
+  ✔ registration DB uniqueness race returns EMAIL_EXISTS after a stale pre-check (328.2127ms)
+  ℹ uncommitted winner -> stale pre-check -> observed blocked INSERT -> COMMIT -> HTTP 409 EMAIL_EXISTS; one row
+  ✔ AppError HTTP contracts survive service catches (#61/#65/IDOR) (119.7036ms)
+  ✔ unique service failure has safe HTTP envelope (701.1545ms)
+  ✔ unknown service failure has safe HTTP envelope (441.2429ms)
+  ✔ unmapped service failure has safe HTTP envelope (446.5437ms)
+  ✔ isolated unreachable DB preserves products/health 503 (767.2488ms)
+✔ data errors #63 PostgreSQL HTTP regression (4990.5957ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5231.3618

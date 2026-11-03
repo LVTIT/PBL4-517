@@ -1,0 +1,34 @@
+✔ mapping P2002 default {} (1.864ms)
+✔ mapping P2002 register-email-conflict {"modelName":"User","target":["email"]} (0.132ms)
+✔ mapping P2002 default {"modelName":"User","target":["id"]} (0.1151ms)
+✔ mapping P2002 register-email-conflict {"modelName":"Other","target":["email"]} (0.1233ms)
+✔ mapping P2002 default {"modelName":"User","target":"User_email_key"} (0.1388ms)
+✔ mapping P2025 update-product {"modelName":"Product"} (0.1065ms)
+✔ mapping P2025 delete-product {"modelName":"Product"} (0.1137ms)
+✔ mapping P2003 delete-product {"modelName":"Product"} (0.103ms)
+✔ unsafe/unmapped P2000 stays 503 in every unrelated context (0.2527ms)
+✔ unsafe/unmapped P2001 stays 503 in every unrelated context (0.2365ms)
+✔ unsafe/unmapped P2004 stays 503 in every unrelated context (0.14ms)
+✔ unsafe/unmapped P2007 stays 503 in every unrelated context (0.1266ms)
+✔ unsafe/unmapped P2015 stays 503 in every unrelated context (0.175ms)
+✔ unsafe/unmapped P2018 stays 503 in every unrelated context (0.139ms)
+✔ unsafe/unmapped P2023 stays 503 in every unrelated context (0.1392ms)
+✔ unsafe/unmapped P2025 stays 503 in every unrelated context (0.1344ms)
+✔ unsafe/unmapped P2003 stays 503 in every unrelated context (0.1526ms)
+✔ unsafe/unmapped P2034 stays 503 in every unrelated context (0.1419ms)
+✔ unsafe/unmapped P9999 stays 503 in every unrelated context (0.1328ms)
+✔ Product P2025/P2003 require the specific operation, not just the model (0.1464ms)
+✔ unknown non-Prisma failures and forged code objects stay 503 (0.2577ms)
+✔ AppError passthrough preserves object identity: OUT_OF_STOCK (0.2193ms)
+✔ AppError passthrough preserves object identity: CANNOT_CANCEL (0.0815ms)
+✔ AppError passthrough preserves object identity: FORBIDDEN (0.9194ms)
+✔ AppError passthrough preserves object identity: NOT_FOUND (0.1018ms)
+✔ AppError passthrough preserves object identity: INVALID_STATUS_TRANSITION (0.0545ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 136.4108

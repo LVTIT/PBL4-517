@@ -1,5 +1,26 @@
 # Current Project Status
 
+**2026-11-03 data error re-audit (#63 / PR #64): implemented / locally verified;
+final-head hosted CI and human review tracked on PR, not deployed.** Integrated
+main `b0bedc71` with merge `16333eb`, resolving order-service admin conflict by
+retaining #65's state/claim/restock logic and changing only error catches.
+Machine comparison confirms #61/#65 service equality after import/catch
+normalization; latest-main API suite remains identical. Controllers reject
+malformed product/order UUIDs with 400. Only contextual Product P2025/P2003 and
+known unique P2002 map to 404/409; broad format/check/relation/unknown failures
+stay 503. Registration keeps pre-check and re-reads email after P2002 to prove
+EMAIL_EXISTS; PostgreSQL lock test proves the stale-precheck uniqueness path.
+All AppErrors pass through by identity. Independent controls A/B/C fail for
+blanket 503, swallowed AppError and unsafe unknown->400 respectively; compiled
+files restored byte-for-byte. Final local mapper 26/26, API 40/40, lifecycle 9/9,
+config 2/2 and E2E 58/58 PASS; builds/installs/audits PASS, zero vulnerabilities.
+Required backend-integration now explicitly executes mapper unit tests and the
+new HTTP suite. Exact final head, five hosted checks and readiness are recorded
+on [PR #64](https://github.com/LVTIT/PBL4-517/pull/64).
+[Audit/commands/controls/limits](../evidence/BUG-63/audit-20261103/README.md),
+[implementer teach-back](../evidence/BUG-63/teach-back.md). No schema, dependency,
+middleware, lab flag, frontend or AWS change; no human acceptance or merge inferred.
+
 **Historical 2026-11-01 data error implementation (#63), on base 43bebb1; superseded mapping and test counts, not final acceptance.**
 Services ended every path with `catch { throw databaseUnavailable(); }`, so all
 Prisma failures became `503 DATABASE_UNAVAILABLE`. A malformed UUID, a missing

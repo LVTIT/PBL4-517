@@ -1,0 +1,6 @@
+{
+  "base": "b0bedc71d7a7f8dc8311e2f55c270796feda6478",
+  "order_service_equal_after_only_import_and_catch_normalization": true,
+  "main_api_suite_byte_equal_after_newline_normalization": true,
+  "schema_middleware_lab_flags_frontend_changed_vs_main": []
+}

@@ -281,6 +281,22 @@ Các tài khoản này có mật khẩu công khai, chỉ dùng development/test
 
 Response thành công dùng `{ "data": ... }`; lỗi dùng `{ "error": { "code": "...", "message": "..." } }`. API không bao giờ trả password hash.
 
+Product/order route IDs được kiểm tra UUID trước khi truy vấn (`400 INVALID_ID`).
+Product update/delete thiếu bản ghi trả `404 NOT_FOUND`; xóa Product đang được
+OrderItem tham chiếu trả `409 CONFLICT`. Unique conflict trả `409 CONFLICT`;
+registration giữ email pre-check và xác nhận email bằng lần đọc mới sau P2002
+để trả `409 EMAIL_EXISTS` khi race. `AppError` nghiệp vụ được giữ nguyên.
+Các lỗi Prisma chưa có ngữ cảnh đủ chắc chắn, lỗi lạ và mất kết nối vẫn trả
+`503 DATABASE_UNAVAILABLE`; không dùng driver message làm client message.
+
+Sau backend build, `npm run test:data-errors` chạy unit tests của mapper, không
+cần DB. `npm run test:integration` chạy cả API hiện có và regression #63 trên
+PostgreSQL thật. Regression #63 cần database loopback có `test`, `lab` hoặc
+`security` trong tên và seed canonical; nó tự mở API tạm, dùng fixture riêng,
+kiểm tra registration race bằng DB lock và dọn fixture/process. Fault injection
+chỉ tồn tại trong child process của test. Required CI `backend-integration`
+chạy cả hai scripts. [Audit và giới hạn](../evidence/BUG-63/audit-20261103/README.md).
+
 Admin chỉ được chuyển đơn theo bảng dưới; `CANCELLED` và `DELIVERED` là trạng thái cuối.
 Backend kiểm tra độc lập với giao diện; tự chuyển sang cùng trạng thái cũng bị từ chối:
 

@@ -1,6 +1,6 @@
 import { config } from '../lib/config.js';
 import { prisma } from '../lib/database.js';
-import { AppError } from '../lib/errors.js';
+import { AppError, databaseUnavailable } from '../lib/errors.js';
 import { rethrowDataError } from '../lib/data-errors.js';
 import type { OrderStatus } from '../generated/prisma/client.js';
 

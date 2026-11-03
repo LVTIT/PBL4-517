@@ -2,6 +2,11 @@
 
 Refs #63. Related to #44.
 
+**Historical evidence below: base `43bebb1`, head `0a3a039`, old broad mapping
+and 19/19 counts. These do not establish final acceptance.** The
+[2026-11-03 latest-main audit](audit-20261103/README.md) supersedes its mapping
+policy and records new PostgreSQL/HTTP, negative-control and CI evidence.
+
 **Trạng thái: đã sửa trong source; chưa merge, chưa triển khai.**
 
 Đo trên `main` tại `43bebb1`, sửa trên `feature/63-prisma-error-mapping`.

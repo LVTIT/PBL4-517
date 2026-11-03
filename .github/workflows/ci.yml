@@ -135,6 +135,8 @@ jobs:
         run: npm run prisma:migrate
       - name: Seed disposable development database
         run: npm run prisma:seed
+      - name: Verify data error classification and AppError passthrough
+        run: npm run test:data-errors
       - name: Start compiled backend, wait for health, test and clean up
         run: bash ../../scripts/ci/backend-integration.sh
 

@@ -1,0 +1,10 @@
+test_content_signatures (test_policy.PolicyTests.test_content_signatures) ... ok
+test_dangerous_paths (test_policy.PolicyTests.test_dangerous_paths) ... ok
+test_git_index_is_checked_even_if_worktree_is_cleaned (test_policy.PolicyTests.test_git_index_is_checked_even_if_worktree_is_cleaned) ... ok
+test_log_redaction_and_command_escape (test_policy.PolicyTests.test_log_redaction_and_command_escape) ... ok
+test_source_and_sanitized_evidence_allowed (test_policy.PolicyTests.test_source_and_sanitized_evidence_allowed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.294s
+
+OK
