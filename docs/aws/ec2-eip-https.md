@@ -78,6 +78,13 @@ trusted HTTPS again. Do not repeatedly force production issuance. Browser state
 should be checked in a fresh session if an already-open session still shows the
 previous certificate warning.
 
+During this repair, ordinary Chrome's DevTools showed a trusted certificate and
+TLS 1.3, while its Resources warning recorded previously allowed content with
+certificate errors. Incognito was used as a diagnostic comparison. After being
+asked to close/reopen Chrome, the owner confirmed ordinary Chrome was safe too.
+Incognito is not required for normal use. Do not weaken certificate checks or
+reissue a valid production certificate merely to clear a browser-session warning.
+
 ## Issuance performed during the repair
 
 These are historical commands, not instructions to issue another certificate.

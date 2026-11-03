@@ -3,16 +3,16 @@
 Refs #14. Related to #16 / #17. Owner-authorized certificate/Nginx operation on
 the existing instance; no application release or AWS resource changes.
 
-**NOT READY: normal Chrome still warns; server TLS/renewal and fresh-browser
-homepage/products pass.**
+**READY TO STOP EC2: server HTTPS/renewal and browser acceptance verified;
+EC2 left running for the owner.**
 The owner's incognito screenshot shows the KEVILO homepage without the previous
 red security warning; the owner subsequently confirmed that the products list
 displayed normally in that session. The agent independently verified the served
-certificate's IP SAN and trust chain. The owner explicitly confirmed that normal
-Chrome still displays "Không bảo mật" after reopening/reloading the HTTPS URL.
-Its cause remains unknown; no browser certificate dialog was inspected.
-Do not infer broader deployment/security acceptance or human PR
-review from these checks.
+certificate's IP SAN and trust chain. Normal Chrome initially retained a warning;
+the agent inspected DevTools and the owner subsequently explicitly confirmed
+normal Chrome was safe too. The diagnostic sequence is recorded below. Do not
+infer broader deployment/security acceptance or human PR review from these
+checks.
 
 ## Environment and method
 
@@ -51,7 +51,7 @@ review from these checks.
 | External HTTP after reload | 308 to `https://52.221.157.206/` |
 | External HTTPS after reload | HEAD `/` 200; GET health 200, `{"data":{"status":"ok","database":"connected"}}`; normal Schannel validation, no `-k` |
 | External IP/chain validation | Python Windows trust store PASS; OpenSSL with existing Git CA bundle: Verification OK, verify return code 0 |
-| Normal browser session | Owner screenshot displayed red "Không bảo mật" despite external trusted-TLS PASS; owner confirmed it persisted after reopening/reloading the HTTPS URL. Cause unverified. |
+| Normal browser session | Initially warned despite a valid certificate. DevTools diagnosis and final owner confirmation of safe normal Chrome are recorded below. |
 | Fresh incognito session | Owner screenshot loaded KEVILO homepage at the EIP without that warning; owner explicitly confirmed products list displayed normally |
 
 For exact issuance, verification and rollback commands, use the
@@ -61,6 +61,38 @@ For exact issuance, verification and rollback commands, use the
 09:18:52 UTC, verify the redirect, trusted TLS/IP identity, homepage and products
 SPA responses, JavaScript/CSS assets, health/database status and 10 API products.
 These HTTP probes do not themselves prove browser rendering of the products page.
+Final external Schannel recheck at 09:40:49 UTC, after the owner's normal-Chrome
+confirmation: HTTPS `/` returned 200 and `/api/health` still reported
+`status: ok`, `database: connected`, with certificate validation enabled.
+
+## Normal Chrome diagnosis and final acceptance
+
+The owner's page-info screenshot showed a valid certificate while the page was
+still marked unsafe. The agent inspected that ordinary Chrome window on
+`https://52.221.157.206/` through Computer Use. DevTools Security reported:
+
+- Certificate valid/trusted, issued by YE2.
+- Connection encrypted/authenticated with TLS 1.3, X25519 and AES_256_GCM.
+- Resources marked as active content with certificate errors; the explanation
+  referred to content previously allowed to run despite certificate errors.
+
+The Network panel showed same-origin HTTPS requests for fonts, products, auth/me,
+favicon and product images with 200/304 responses in the visible rows. This is
+not a claim that every request was exhaustively exported/audited. The homepage
+rendered with four suggested products. An attempted certificate-viewer inspection
+was stopped by the Computer Use URL guard; no guard or certificate warning was
+bypassed and no browser security settings were changed.
+
+This distinguishes the browser's recorded unsafe-content state from the current
+trusted server certificate. It does not identify the exact earlier resource
+that first created that state. The owner was asked to close all Chrome windows
+and reopen the ordinary HTTPS session. The owner then explicitly confirmed
+ordinary Chrome was safe: **"ĐÃ AN TOÀN RỒI"**. Browser restart itself was not
+automated. Combined with the prior incognito homepage screenshot, explicit
+products confirmation, matching public SAN and successful trusted TLS probes,
+the task's browser acceptance is now verified. A separate certificate-dialog SAN
+inspection was not completed; the SAN was verified from the actual served
+certificate externally and from the server's certificate file.
 
 ## Renewal and preservation
 
@@ -119,11 +151,15 @@ that has not yet occurred. No forced production renewal was used.
 
 ## Handoff limits
 
-The normal-Chrome warning remains unresolved; browser acceptance and
-documentation PR review remain pending. Fresh-browser rendering evidence comes from the owner's screenshot and
-explicit products confirmation, not an agent browser automation run. Runtime
-state is separate from hosted CI/review for this documentation. Historical
-deployment was not upgraded to current source, lab
+Browser acceptance is complete with the evidence/owner confirmations above.
+Documentation [PR #70](https://github.com/LVTIT/PBL4-517/pull/70) still requires
+human review and the Team Leader's final merge. The initial documentation commit
+`956da30` passed all five checks in
+[run 41611136512](https://github.com/LVTIT/PBL4-517/actions/runs/41611136512);
+latest-revision CI is tracked on the PR and must be checked separately after this
+acceptance update. No human review/issue closure is inferred from CI.
+Runtime state is separate from hosted CI/review for this documentation.
+Historical deployment was not upgraded to current source, lab
 flags were not altered/audited, and this is not full secure-baseline acceptance.
 No account, order or production fixture was created.
 
