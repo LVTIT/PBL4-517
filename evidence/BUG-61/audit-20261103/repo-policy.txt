@@ -1,0 +1,5 @@
+Command: python scripts/ci/repo_policy.py
+Context: staged final evidence/tests on cda5a620dc3efe898a3fb482a4f4c77879f54e53; Windows Python 3.12
+Exit code: 0
+
+Repository policy: 444 index entries, 0 violation(s).

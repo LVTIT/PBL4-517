@@ -1,12 +1,27 @@
 # Current Project Status
 
-**2026-11-01 full security regression (#44): local scenarios verified; AWS/VM/monitoring blocked.**
+**2026-11-04 security regression integration (#44 / PR #59): merged main
+`359acee` into the feature branch; latest-head CI and human review tracked on PR.**
+Resolved the status-file conflict while preserving all existing main entries,
+including #61/#63/#65 audits and #33/#14 network/HTTPS evidence. The security
+lifecycle suite retains its 300 s Node parent budget; assertions and all other
+application/test behavior match main. The Linux CI wrapper still limits this
+suite to 120 s; this PR does not increase that outer deadline. The logs below
+remain historical results for `6d4f569`, not fresh tests of this integration.
+Current operational observations are in the dated #33/#14 entries and evidence;
+current-main deployment, A05 lifecycle, external VM/reboot, real chat receipts
+and required human acceptance are not established by this conflict resolution.
+[Historical matrix and integration scope](../evidence/TEST-02/local-regression-20261101/README.md),
+[PR #59](https://github.com/LVTIT/PBL4-517/pull/59).
+
+**Historical 2026-11-01 full security regression (#44), tested on `6d4f569`: local
+scenarios verified at that revision; operational gaps recorded at that time.**
 Re-ran the whole local gate on `6d4f569` (branch `feature/44-local-regression-20261101`,
 based on `main` `43bebb1`): lifecycle 9, API 18, UI 54, scanner 27, demo
 classification 8, CI helpers 5, config 2 and repository policy 0 violations all
 PASS; both build artifacts verify for the tested SHA. IDOR, SQLi, stored XSS and
-bounded auth guessing keep their vulnerable/secure contrast, and the live EC2
-still refuses a SQLi tautology and an unauthenticated order read. Two findings:
+bounded auth guessing kept their vulnerable/secure contrast. External EC2 probes
+in that window rejected a SQLi tautology and an unauthenticated order read. Two findings:
 PR #58 added a subtest that did not fit the suite's 120 s budget (raised to 300 s,
 assertions unchanged), and the deployed host is **stale** - it returns 404 for the
 `/api/version` metadata added in #58 with a frontend `Last-Modified` of
@@ -15,6 +30,130 @@ SG/NACL, service/reboot and real Telegram/Discord receipts remain blocked or
 unverified (#16, #17, #33, #35, #36, #41, #42, #43). No AWS/VM change, deployment,
 real alert, review or closure was performed.
 [Matrix, logs and limits](../evidence/TEST-02/local-regression-20261101/README.md).
+**2026-11-03 23:56 Asia/Bangkok AWS-04 live window (#33 / PR #71): external
+observations recorded; Issue OPEN.** User authorized live network tests and
+started EC2; Console confirms Running with the expected instance/EIP/private IP.
+From admin public IP `171.225.185.44`, TCP 22/80/443 reachable 2/2; HTTP 308 to
+HTTPS, trusted IP certificate, frontend and `/api/health` 200/database connected.
+3000/5432/8080 time out 2/2; consistent with SG denial, not proven CLOSED or
+proof of host binding. Non-admin SSH negative control and current host
+binding/profile remain unverified. `/api/version` 404 and frontend release path
+returns HTML, so exact deployed revision is unknown; no current-main deployment
+claim. [Sanitized live results](../evidence/AWS-04/live-20261103/README.md),
+[updated coverage matrix](../evidence/AWS-04/live-test-plan.md). No agent AWS
+mutation, SSH login, deploy, lab listener or alert. User explicitly deferred
+the non-admin SSH test to later. Hosted CI/latest-head review
+remain tracked on PR #71; no issue closure or human acceptance inferred.
+
+**Earlier 2026-11-03 AWS-04 (#33) control-plane snapshot: review complete;
+live tests were DEFERRED at that time.** Read-only AWS Console audit confirms the expected EC2
+is **Stopped**, EIP `52.221.157.206` → primary ENI/private `172.31.11.224`, default
+VPC `172.31.0.0/16`, subnet `172.31.0.0/20` in `ap-southeast-1c`, implicit main
+route table with active IGW default route and matching VPC attachment. Actual
+SG: SSH `171.225.185.44/32`, public 80/443, no ingress permission covering
+3000/5432/8080; all-IPv4 egress. Default NACL: rule 100 IPv4 allow-all then `*`
+deny, inbound and outbound. No IPv6 CIDR/route/address/rule observed. After the
+user's manual SSH-source update, read-only follow-up after 16:40 UTC confirms
+the new `/32` matches this workstation's public IP and the old source is absent;
+original source warning resolved. Broad egress/default ACL are INFO. No agent
+AWS mutation, EC2 start, SSH, scan, deploy, resource creation or alert.
+[Sanitized evidence/verification](../evidence/AWS-04/README.md),
+[network architecture](../docs/aws/network-control-plane.md),
+[deferred live matrix](../evidence/AWS-04/live-test-plan.md). Hosted CI and human
+review are tracked on the delivery PR; no team understanding, runtime acceptance,
+issue completion or ALB deployment inferred.
+
+**2026-11-03 data error re-audit (#63 / PR #64): implemented / locally verified;
+final-head hosted CI and human review tracked on PR, not deployed.** Integrated
+main `b0bedc71` with merge `16333eb`, resolving order-service admin conflict by
+retaining #65's state/claim/restock logic and changing only error catches.
+Machine comparison confirms #61/#65 service equality after import/catch
+normalization; latest-main API suite remains identical. Controllers reject
+malformed product/order UUIDs with 400. Only contextual Product P2025/P2003 and
+known unique P2002 map to 404/409; broad format/check/relation/unknown failures
+stay 503. Registration keeps pre-check and re-reads email after P2002 to prove
+EMAIL_EXISTS; PostgreSQL lock test proves the stale-precheck uniqueness path.
+All AppErrors pass through by identity. Independent controls A/B/C fail for
+blanket 503, swallowed AppError and unsafe unknown->400 respectively; compiled
+files restored byte-for-byte. Final local mapper 26/26, API 40/40, lifecycle 9/9,
+config 2/2 and E2E 58/58 PASS; builds/installs/audits PASS, zero vulnerabilities.
+Required backend-integration now explicitly executes mapper unit tests and the
+new HTTP suite. Exact final head, five hosted checks and readiness are recorded
+on [PR #64](https://github.com/LVTIT/PBL4-517/pull/64).
+[Audit/commands/controls/limits](../evidence/BUG-63/audit-20261103/README.md),
+[implementer teach-back](../evidence/BUG-63/teach-back.md). No schema, dependency,
+middleware, lab flag, frontend or AWS change; no human acceptance or merge inferred.
+
+**Historical 2026-11-01 data error implementation (#63), on base 43bebb1; superseded mapping and test counts, not final acceptance.**
+Services ended every path with `catch { throw databaseUnavailable(); }`, so all
+Prisma failures became `503 DATABASE_UNAVAILABLE`. A malformed UUID, a missing
+record and a delete blocked by an order all told the client the service was down
+and invited a retry that could never succeed. A shared `translatePrismaError()`
+now maps `P2007`/`P2023` to `400 INVALID_ID`, `P2025` and friends to `404 NOT_FOUND`,
+`P2003` to `409 CONFLICT`, `P2002` to `409` (and `409 EMAIL_EXISTS` on the raced
+registration path), `P2000`/`P2004` to `400 INVALID_INPUT`, and leaves genuine
+infrastructure failures and unknown codes at `503` so real outages are not masked.
+Product routes also reject a non-UUID id before touching the database. The new
+HTTP subtest fails on the old code (17/19) and passes on the new code (19/19); the
+unit mapping test is 3/3, API integration 19/19 and security lifecycle 9/9 PASS.
+No schema, migration, lab flag, `.env` or AWS change.
+[Reproduction, code table and limits](../evidence/BUG-63/README.md).
+
+**2026-11-03 admin order state/inventory audit (#65 / PR #66): implemented / locally
+verified; human review pending, not deployed.** Merged latest main `96ece57` into
+`feature/65-admin-status-inventory` without rewriting history. Only status wiki
+content conflicted; `createOrder` and `cancelOrder` remain identical to main's
+#61 implementation. Admin uses explicit forward transitions, terminal DELIVERED /
+CANCELLED and a conditional source-state claim before restoring stock in the same
+transaction. Independent PostgreSQL 16.15 regression covers 20 invalid edges with
+no row mutations, both cancel source states, duplicate quantities, all forward
+edges, missing order, rollback and phantom replay. Three rounds each of admin/admin
+and customer/admin overlap at real SQL row locks: one winner, CANCELLED, stock
+10 -> 8 -> 10. Independent compiled-service controls A/B/C fail for missing restore,
+missing guards and missing claim; final compiled output restored byte-for-byte.
+Local API 29/29, lifecycle 9/9, browser 58/58, config 2/2, installs/builds/audits and
+policy tests PASS. The initial new browser-test selector was corrected before the
+58/58 final run. Exact final head and hosted CI evidence are maintained on
+[PR #66](https://github.com/LVTIT/PBL4-517/pull/66); readiness requires five checks
+on that head with latest main included. No #63 mapping, schema/migration, lab flag,
+.env, dependency or AWS change. [Commands, controls and limits](../evidence/BUG-65/audit-20261103/README.md).
+
+**2026-11-03 existing EIP HTTPS repair (Refs #14): verified; READY TO STOP EC2
+for the owner, with EC2 left running.** Instance
+`i-0ccfb2772f854e78b` serves `https://52.221.157.206/` with a matching Let's
+Encrypt IP certificate (`pbl4-517-eip`), using existing Snap Certbot 5.9.0.
+External HTTP-01, staging dry-run, one production issuance, trusted HTTPS/health,
+Nginx validation/reload and unfiltered renewal dry-run with deploy hook PASS.
+Nginx/backend remain active/enabled, backend PID unchanged, API/DB loopback-only,
+and `.env` checksum unchanged. Old certificates retained; obsolete old-IP renewal
+configs archived privately. User's fresh incognito homepage screenshot has no
+red certificate warning; the owner confirmed its products list displayed
+normally. DevTools on normal Chrome verified a trusted certificate and TLS 1.3,
+but recorded prior permission to run content with certificate errors. After
+browser-session troubleshooting, the owner explicitly confirmed normal Chrome
+was safe too. Documentation PR #70 / latest CI and required human review are
+tracked separately from operational readiness; no review or merge is inferred.
+No application redeploy, database mutation, AWS resource/network change or EC2
+stop/reboot. [Evidence and limits](../evidence/WEB-04/eip-20261103/README.md),
+[current TLS/renewal/rollback runbook](../docs/aws/ec2-eip-https.md).
+
+**2026-11-03 inventory audit (#61 / PR #62): implemented / locally verified;
+human review pending, not deployed.** Source atomic stock/cancel claims from
+`d8c3fa3` retained after audit. The original sequential cancel test and combined
+negative-control claim did not prove the double-cancel race. Four independent
+regressions (`cda5a62`) now observe overlapping SQL writes with real PostgreSQL
+row-lock barriers: checkout, three fresh concurrent-cancel rounds, duplicate
+quantities/pricing/OrderItems and rollback after the first product was claimed.
+Independent old-create-only control fails with 503; old-cancel-only control fails
+with two successes and stock=12. The other fixed function passes in each control;
+fixed source restored before final API 22/22 and security lifecycle 9/9 PASS.
+Both builds/audits, config 2/2 and browser 54/54 PASS locally; exact commands,
+remaining check results and final hosted CI are linked in the
+[audit evidence](../evidence/BUG-61/README.md). Existing main rejected duplicate
+IDs as INVALID_PRODUCT; valid duplicate support now guards the aggregated total.
+No schema, migration, `.env`, lab architecture, admin transition (#65), global
+error mapping (#63) or AWS changes. Issue stays open; no merge or human
+understanding/demo acceptance inferred. [Teach-back](../evidence/BUG-61/teach-back.md).
 
 **2026-10-26 one-EC2 demo tooling (#44): Implemented / locally verified; not deployed.**
 On `feature/44-ec2-lab-demo`, runtime NODE_ENV is separated from an explicit
@@ -103,7 +242,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-10-26 (Asia/Saigon; PR #57 integration and monitoring handoff, no new AWS availability claim)
+**Last updated:** 2026-11-01 (Asia/Saigon; #65 admin status/inventory fix verified locally, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 
@@ -126,7 +265,7 @@ full deployed real-data acceptance is not established by that merge. API contrac
   - **Tìm kiếm & Chi tiết sản phẩm:** Tìm kiếm theo từ khóa `search` và lọc theo `category` (`GET /api/products?search=...&category=...`), xem chi tiết sản phẩm (`GET /api/products/:id`).
   - **Đánh giá sản phẩm (Reviews):** Viết đánh giá 1–5 sao và bình luận (`POST /api/products/:id/reviews`), xem danh sách đánh giá từ khách hàng.
   - **Giỏ hàng & Đơn hàng:** Lưu trữ giỏ hàng client (`CartContext`), tạo đơn hàng với xác thực tồn kho và tính tổng tiền phía server chống gian lận giá (`POST /api/orders`), xem lịch sử đơn hàng (`GET /api/orders`), xem chi tiết đơn hàng (`GET /api/orders/:id`) có cơ chế kiểm tra quyền sở hữu chống **IDOR**.
-  - **Bảng điều khiển Quản trị (Admin Panel):** Quản lý kho hàng (thêm mới, xóa sản phẩm) và quản lý danh sách đơn hàng (cập nhật trạng thái `PENDING` → `CONFIRMED` → `SHIPPED` → `DELIVERED` → `CANCELLED`). Phân quyền chặt chẽ qua middleware `requireAdmin`.
+  - **Bảng điều khiển Quản trị (Admin Panel):** Quản lý kho hàng (thêm mới, xóa sản phẩm) và quản lý danh sách đơn hàng theo bảng transition trong [website README](../website/README.md#api-endpoints). Phân quyền chặt chẽ qua middleware `requireAdmin`.
   - **Tối ưu phân quyền (RBAC) & Đặt hàng Khách vãng lai (Guest Checkout) (2026-09-18):**
     - **Tách bạch vai trò Admin & Khách hàng:** Quản trị viên (`ADMIN`) chỉ thực hiện các tác vụ quản trị, không thể tham gia mua hàng/đặt đơn (`403 ADMIN_CANNOT_ORDER`) và không được tự viết review sản phẩm (`403 ADMIN_CANNOT_REVIEW`). Ẩn giỏ hàng trên thanh điều hướng đối với tài khoản Admin.
     - **Đặt hàng cho Khách vãng lai (Guest):** Cho phép đặt hàng mà không bắt buộc tạo tài khoản (`POST /api/orders` hỗ trợ `guestInfo: { name, email, phone }`), vẫn được bảo vệ CSRF và session đầy đủ.

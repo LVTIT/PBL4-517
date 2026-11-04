@@ -1,0 +1,85 @@
+✔ inventory #61 checkout race (306.7336ms)
+ℹ overlapping checkout writes=5; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" - $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND "public"."Product"."stock" >= $4)
+ℹ {"http":[201,201,400,400,201],"errors":["OK","OK","OUT_OF_STOCK","OUT_OF_STOCK","OK"],"finalStock":0,"orders":3,"items":3}
+✔ inventory #61 concurrent cancel (596.23ms)
+ℹ round=1; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":1,"http":[200,400],"errors":["OK","CANNOT_CANCEL"],"finalStock":10,"status":"CANCELLED"}
+ℹ round=2; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":2,"http":[200,400],"errors":["OK","CANNOT_CANCEL"],"finalStock":10,"status":"CANCELLED"}
+ℹ round=3; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":3,"http":[400,200],"errors":["CANNOT_CANCEL","OK"],"finalStock":10,"status":"CANCELLED"}
+✔ inventory #61 duplicate product lines (86.8474ms)
+ℹ stock=3 rejects total quantity 4 without writes; stock=5 accepts two original lines, total=5002.00, remaining=1
+✔ inventory #61 multi-product rollback (78.5951ms)
+ℹ A write lock observed (55P03); B sold out after pre-read; HTTP=400 OUT_OF_STOCK; stocks A=10 B=0; orders=0 items=0
+✔ inventory #65 admin cancellation restores every duplicate line (1159.2268ms)
+ℹ {"source":"PENDING","finalStatus":"CANCELLED","stockA":[10,5,10],"stockB":[10,9,10],"quantities":[2,3,1]}
+ℹ {"source":"CONFIRMED","finalStatus":"CANCELLED","stockA":[10,5,10],"stockB":[10,9,10],"quantities":[2,3,1]}
+✔ inventory #65 invalid transition matrix has no mutations (2146.8874ms)
+ℹ invalid transitions=20/20 rejected with 409 and unchanged Order/OrderItems/Products; missing UUID=404 NOT_FOUND
+✔ inventory #65 forward transitions do not restore stock (1578.6263ms)
+ℹ PENDING -> CONFIRMED -> SHIPPED -> DELIVERED: stock 10 -> 8 -> 8 -> 8 -> 8
+✔ inventory #65 phantom inventory loop stays closed (1547.3357ms)
+ℹ {"reopen":409,"replay":400,"stockBefore":10,"finalStock":10}
+✔ inventory #65 admin vs admin concurrent cancel (1711.3045ms)
+ℹ round=1; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus"))
+ℹ {"round":1,"mixed":false,"http":[200,409],"errors":["OK","INVALID_STATUS_TRANSITION"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+ℹ round=2; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus"))
+ℹ {"round":2,"mixed":false,"http":[200,409],"errors":["OK","INVALID_STATUS_TRANSITION"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+ℹ round=3; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus"))
+ℹ {"round":3,"mixed":false,"http":[200,409],"errors":["OK","INVALID_STATUS_TRANSITION"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+✔ inventory #65 customer vs admin concurrent cancel (1733.3796ms)
+ℹ round=1; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":1,"mixed":true,"http":[200,400],"errors":["OK","CANNOT_CANCEL"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+ℹ round=2; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus"))
+ℹ {"round":2,"mixed":true,"http":[409,200],"errors":["INVALID_STATUS_TRANSITION","OK"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+ℹ round=3; overlapping writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus"))
+ℹ {"round":3,"mixed":true,"http":[409,200],"errors":["INVALID_STATUS_TRANSITION","OK"],"winners":1,"stockBefore":10,"heldStock":8,"finalStock":10,"status":"CANCELLED"}
+✔ inventory #65 restoration failure rolls back order claim (1585.6115ms)
+ℹ forced restoration overflow=503; Order remains PENDING, all OrderItems and Product rows unchanged
+▶ real PostgreSQL API and session authentication
+  ✔ health and security headers (4.3104ms)
+  ✔ products match database rows with exact decimal money (25.2276ms)
+  ✔ public catalog excludes deployment verification items (33.8788ms)
+  ✔ anonymous user and rejected missing CSRF token (4.2904ms)
+  ✔ wrong password and unknown email have same error (937.6483ms)
+  ✔ strict input validation, malformed JSON and body size limit (23.5565ms)
+  ✔ correct login rotates session and stores only password hash (1001.5289ms)
+  ✔ new client with existing cookie restores the session (9.2739ms)
+  ✔ logout invalidates session including replayed cookie (19.548ms)
+  ✔ unknown API paths keep JSON error format (1.5749ms)
+  ✔ user registration and duplicate detection (504.0122ms)
+  ✔ product search and detail with reviews (13.2646ms)
+  ✔ product search rejects SQL injection payloads (14.076ms)
+  ✔ orders, server-side pricing, and IDOR protection (1153.2018ms)
+  ✔ admin authorization guard (489.8716ms)
+  ✔ guest checkout without authentication (31.4299ms)
+  ✔ role boundaries: admin cannot place orders or post reviews (498.7652ms)
+✔ real PostgreSQL API and session authentication (4770.0582ms)
+▶ data errors #63 PostgreSQL HTTP regression
+  ✔ malformed product/order IDs reject before DB with safe 400 (90.7284ms)
+  ✔ missing product update/delete and resource reads retain safe 404 (82.9772ms)
+  ✔ real FK delete returns safe 409 and preserves all rows (24.1314ms)
+  ✔ current Prisma 7.10/PostgreSQL codes and structured context are measured (150.7756ms)
+  ℹ malformed UUID (not globally mapped): P2007; model=Product
+  ℹ missing update: P2025; model=Product
+  ℹ missing delete: P2025; model=Product
+  ℹ referenced delete: P2003; model=Product
+  ℹ duplicate email: P2002; model=User; target=email
+  ℹ generic Product.id unique: P2002 -> 409 CONFLICT
+  ✔ registration DB uniqueness race returns EMAIL_EXISTS after a stale pre-check (335.9216ms)
+  ℹ uncommitted winner -> stale pre-check -> observed blocked INSERT -> COMMIT -> HTTP 409 EMAIL_EXISTS; one row
+  ✔ AppError HTTP contracts survive service catches (#61/#65/IDOR) (125.3649ms)
+  ✔ unique service failure has safe HTTP envelope (720.9717ms)
+  ✔ unknown service failure has safe HTTP envelope (471.824ms)
+  ✔ unmapped service failure has safe HTTP envelope (469.7445ms)
+  ✔ isolated unreachable DB preserves products/health 503 (733.3627ms)
+✔ data errors #63 PostgreSQL HTTP regression (4962.0857ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17438.027

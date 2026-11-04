@@ -61,7 +61,7 @@ export const handleGetUserOrders: RequestHandler = async (req, res) => {
 };
 
 function getParamId(param: string | string[] | undefined): string {
-  if (typeof param !== 'string' || !param) {
+  if (typeof param !== 'string' || !z.uuid().safeParse(param).success) {
     throw new AppError(400, 'INVALID_ID', 'Mã không hợp lệ.');
   }
   return param;

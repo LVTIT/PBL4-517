@@ -2,15 +2,38 @@
 
 Refs #44. Related to #16, #17, #33, #35, #36, #41, #42, #43, #45.
 
-Status: local scenarios verified; AWS/VM/monitoring items remain blocked or
-unverified. This is a regression pass over the current `main` baseline, not an
-issue closure and not a claim that the application has no remaining weakness.
+Status of the **2026-11-01 run**: local scenarios verified; AWS/VM/monitoring items
+were blocked or unverified in that window. This is historical evidence for the
+tested revision below, not an issue closure or current deployed acceptance.
 
 Tested revision: **`6d4f569786b8045bddde8065900148bf1741e87b`** on
 `feature/44-local-regression-20261101`, created from `main` at `43bebb1`.
-The only source change in this branch is the test-suite time budget described in
+At that tested revision, the only source change was the test-suite time budget described in
 [Finding 1](#finding-1--security-suite-budget-was-smaller-than-its-own-workload);
-application, scanner and dependency source is identical to `43bebb1`.
+application, scanner and dependency source was identical to `43bebb1`.
+
+## Integration update — 2026-11-04
+
+`feature/44-local-regression-20261101` now integrates `main` at `359acee`, including
+the newer #61/#65 order fixes, #63 error classification and #33/#14 AWS evidence.
+The `wiki/CURRENT_STATUS.md` conflict was resolved by retaining both this dated
+regression entry and all newer main entries. The captured `.txt` logs remain
+unchanged and are **not** evidence that the integrated head was tested locally.
+Latest-head hosted verification is tracked on
+[PR #59](https://github.com/LVTIT/PBL4-517/pull/59).
+
+The test delta remains only the Node parent timeout, 120 s to 300 s, plus its
+comment. `scripts/ci/backend-integration.sh` still wraps the suite in
+`timeout 120s`; the increased Node budget does not increase that Linux deadline.
+
+The external observations below concern the old IP `13.251.128.130` on
+2026-11-01. Later evidence records EIP `52.221.157.206`, the network control-plane
+review and the authorized 2026-11-03 live window; use the
+[network baseline](../../../docs/aws/network-control-plane.md),
+[EIP/renewal runbook](../../../docs/aws/ec2-eip-https.md) and
+[live coverage](../../AWS-04/live-test-plan.md) for that later scope. Those records
+do not establish a current-main deployment or complete #44's remaining A05,
+VM/reboot, real-channel receipts and human acceptance criteria.
 
 ## Environment
 

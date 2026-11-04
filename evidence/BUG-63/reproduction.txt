@@ -1,0 +1,32 @@
+﻿Bug #63 - measured on main 43bebb1
+
+=== BEFORE the fix (Secure Baseline) ===
+GET    /api/products/not-a-uuid                         -> 503 DATABASE_UNAVAILABLE
+PUT    /api/products/<missing uuid>                     -> 503 DATABASE_UNAVAILABLE
+DELETE /api/products/<missing uuid>                     -> 503 DATABASE_UNAVAILABLE
+DELETE /api/products/<uuid referenced by OrderItem>     -> 503 DATABASE_UNAVAILABLE  (product still present: 1)
+GET    /api/orders/not-a-uuid                           -> 503 DATABASE_UNAVAILABLE
+POST   /api/products/<missing uuid>/reviews             -> 404 NOT_FOUND  (already correct)
+
+=== AFTER the fix ===
+GET    /api/products/not-a-uuid                         -> 400 INVALID_ID
+PUT    /api/products/<missing uuid>                     -> 404 NOT_FOUND
+DELETE /api/products/<missing uuid>                     -> 404 NOT_FOUND
+DELETE /api/products/<uuid referenced by OrderItem>     -> 409 CONFLICT  (product still present: 1)
+GET    /api/orders/not-a-uuid                           -> 400 INVALID_ID
+POST   /api/products/<missing uuid>/reviews             -> 404 NOT_FOUND  (unchanged)
+
+=== Prisma codes measured against this schema ===
+findUnique invalid uuid  -> P2007
+update missing record    -> P2025
+delete missing record    -> P2025
+delete referenced (FK)   -> P2003  (PostgreSQL 23503, OrderItem_productId_fkey)
+duplicate email          -> P2002  (User_email_key)
+
+=== Regression test against the OLD code (fix stashed) ===
+  x data errors keep their 4xx status instead of 503 (12.7592ms)
+  tests 19 / pass 17 / fail 2
+
+=== Regression test against the NEW code ===
+  + data errors keep their 4xx status instead of 503 (505.9008ms)
+  tests 19 / pass 19 / fail 0

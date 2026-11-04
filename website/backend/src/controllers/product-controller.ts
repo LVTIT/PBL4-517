@@ -28,11 +28,23 @@ const reviewSchema = z.strictObject({
   comment: z.string().trim().min(1, 'Nội dung nhận xét không được để trống.').max(1000, 'Nhận xét tối đa 1000 ký tự.'),
 });
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getParamId(param: string | string[] | undefined): string {
   if (typeof param !== 'string' || !param) {
     throw new AppError(400, 'INVALID_ID', 'Mã không hợp lệ.');
   }
   return param;
+}
+
+// Product ids are UUIDs. Rejecting the shape here keeps an obviously wrong id from
+// reaching the database, where Prisma would surface it as an internal failure.
+function uuidParam(param: string | string[] | undefined): string {
+  const id = getParamId(param);
+  if (!UUID_PATTERN.test(id)) {
+    throw new AppError(400, 'INVALID_ID', 'Mã không hợp lệ.');
+  }
+  return id;
 }
 
 export const getProducts: RequestHandler = async (req, res) => {
@@ -43,7 +55,7 @@ export const getProducts: RequestHandler = async (req, res) => {
 };
 
 export const getProduct: RequestHandler = async (req, res) => {
-  const id = getParamId(req.params.id);
+  const id = uuidParam(req.params.id);
   const includeVerification = req.query.includeVerification === 'true';
   res.json({ data: await getProductById(id, includeVerification) });
 };
@@ -61,7 +73,7 @@ export const handleCreateProduct: RequestHandler = async (req, res) => {
 };
 
 export const handleUpdateProduct: RequestHandler = async (req, res) => {
-  const id = getParamId(req.params.id);
+  const id = uuidParam(req.params.id);
   if (!req.is('application/json')) {
     throw new AppError(415, 'JSON_REQUIRED', 'Yêu cầu phải sử dụng application/json.');
   }
@@ -74,13 +86,13 @@ export const handleUpdateProduct: RequestHandler = async (req, res) => {
 };
 
 export const handleDeleteProduct: RequestHandler = async (req, res) => {
-  const id = getParamId(req.params.id);
+  const id = uuidParam(req.params.id);
   await deleteProduct(id);
   res.json({ data: { success: true } });
 };
 
 export const handleAddReview: RequestHandler = async (req, res) => {
-  const productId = getParamId(req.params.id);
+  const productId = uuidParam(req.params.id);
   if (!req.session.userId) {
     throw new AppError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập để đánh giá sản phẩm.');
   }
@@ -100,6 +112,6 @@ export const handleAddReview: RequestHandler = async (req, res) => {
 };
 
 export const handleGetReviews: RequestHandler = async (req, res) => {
-  const productId = getParamId(req.params.id);
+  const productId = uuidParam(req.params.id);
   res.json({ data: await listReviews(productId) });
 };

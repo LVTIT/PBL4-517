@@ -1,0 +1,52 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: npm.cmd run test:integration
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+
+> pbl517-backend@0.1.0 test:integration
+> node --test tests/api.integration.test.mjs
+
+✔ inventory #61 checkout race (332.7659ms)
+ℹ overlapping checkout writes=5; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" - $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND "public"."Product"."stock" >= $4)
+ℹ {"http":[201,201,201,400,400],"errors":["OK","OK","OK","OUT_OF_STOCK","OUT_OF_STOCK"],"finalStock":0,"orders":3,"items":3}
+✔ inventory #61 concurrent cancel (563.2581ms)
+ℹ round=1; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":1,"http":[200,400],"errors":["OK","CANNOT_CANCEL"],"finalStock":10,"status":"CANCELLED"}
+ℹ round=2; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":2,"http":[200,400],"errors":["OK","CANNOT_CANCEL"],"finalStock":10,"status":"CANCELLED"}
+ℹ round=3; overlapping cancel writes=2; SQL=UPDATE "public"."Product" SET "stock" = ("public"."Product"."stock" + $1), "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."description", "public"."Product"."price", "public"."Product"."stock", "public"."Product"."category", "public"."Product"."imageKey", "public"."Product"."createdAt", "public"."Product"."updatedAt" | UPDATE "public"."Order" SET "status" = CAST($1::text AS "public"."OrderStatus"), "updatedAt" = $2 WHERE ("public"."Order"."id" = $3 AND "public"."Order"."status" = CAST($4::text AS "public"."OrderStatus") AND "public"."Order"."userId" = $5)
+ℹ {"round":3,"http":[400,200],"errors":["CANNOT_CANCEL","OK"],"finalStock":10,"status":"CANCELLED"}
+✔ inventory #61 duplicate product lines (80.7767ms)
+ℹ stock=3 rejects total quantity 4 without writes; stock=5 accepts two original lines, total=5002.00, remaining=1
+✔ inventory #61 multi-product rollback (77.1687ms)
+ℹ A write lock observed (55P03); B sold out after pre-read; HTTP=400 OUT_OF_STOCK; stocks A=10 B=0; orders=0 items=0
+▶ real PostgreSQL API and session authentication
+  ✔ health and security headers (3.3191ms)
+  ✔ products match database rows with exact decimal money (20.8453ms)
+  ✔ public catalog excludes deployment verification items (27.1442ms)
+  ✔ anonymous user and rejected missing CSRF token (4.5745ms)
+  ✔ wrong password and unknown email have same error (843.8059ms)
+  ✔ strict input validation, malformed JSON and body size limit (22.2725ms)
+  ✔ correct login rotates session and stores only password hash (753.7852ms)
+  ✔ new client with existing cookie restores the session (7.2638ms)
+  ✔ logout invalidates session including replayed cookie (17.3316ms)
+  ✔ unknown API paths keep JSON error format (1.2652ms)
+  ✔ user registration and duplicate detection (514.5179ms)
+  ✔ product search and detail with reviews (14.8799ms)
+  ✔ product search rejects SQL injection payloads (14.6117ms)
+  ✔ orders, server-side pricing, and IDOR protection (1248.1931ms)
+  ✔ admin authorization guard (520.4715ms)
+  ✔ guest checkout without authentication (36.357ms)
+  ✔ role boundaries: admin cannot place orders or post reviews (529.9457ms)
+✔ real PostgreSQL API and session authentication (4584.5451ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5792.9725
