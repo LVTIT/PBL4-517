@@ -1,0 +1,10 @@
+✔ secure profile is default and refuses every flag in every Node runtime (2187.454ms)
+✔ explicit lab acknowledgment permits flags with production runtime (1450.4382ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3712.6358

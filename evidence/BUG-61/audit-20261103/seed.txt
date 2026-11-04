@@ -1,0 +1,17 @@
+Commit: cda5a620dc3efe898a3fb482a4f4c77879f54e53
+Variant: fixed
+Command: npm.cmd run prisma:seed
+Working directory: website\backend
+Environment: Windows; PostgreSQL 16 Docker, loopback 127.0.0.1:55461; database pbl517_lab_test; API 127.0.0.1:3061; all VULN flags false
+Exit code: 0 (expected 0)
+
+
+> pbl517-backend@0.1.0 prisma:seed
+> prisma db seed
+
+Loaded Prisma config from prisma.config.ts.
+
+Running seed command `tsx prisma/seed.ts` ...
+Seed complete: demo@example.com, admin@example.com, 6 products with categories, and reviews.
+
+The seed command has been executed.

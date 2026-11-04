@@ -1,0 +1,4 @@
+Control A: expected regression failure observed; exit=1
+Control B: expected regression failure observed; exit=1
+Control C: expected regression failure observed; exit=1
+Compiled service restored byte-for-byte; sha256=6a01759445578d34c9076589257105eca1b15d00f8e308ea63c9ba28cd1a11a1

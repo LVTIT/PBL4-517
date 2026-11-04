@@ -8,9 +8,16 @@ chưa có ALB, Target Group, listener hay Security Group mới nào được t�
 
 - Issue: [#34 — AWS-05](https://github.com/LVTIT/PBL4-517/issues/34)
 - Kiến trúc canonical: [wiki/ARCHITECTURE.md](../../wiki/ARCHITECTURE.md)
-- Hạ tầng đang chạy: [docs/aws/ec2-deployment-review.md](ec2-deployment-review.md),
+- Baseline AWS ngày 2026-11-03: [network-control-plane.md](network-control-plane.md),
+  [EIP/HTTPS và renewal](ec2-eip-https.md)
+- Hồ sơ triển khai ban đầu: [ec2-deployment-review.md](ec2-deployment-review.md),
   [docs/aws/linux-service-review.md](linux-service-review.md)
 - Bối cảnh bảo mật: [wiki/SECURITY_PLAN.md](../../wiki/SECURITY_PLAN.md)
+
+**Đồng bộ ngày 2026-11-04 với `main` tại `359acee`:** EIP hiện được ghi nhận là
+`52.221.157.206`, region `ap-southeast-1`, subnet EC2 ở `ap-southeast-1c`.
+Các quan sát ngày 2026-11-01 về IP cũ là lịch sử. Các giá trị dưới đây lấy từ
+evidence đã có; lần đồng bộ tài liệu này không thực hiện kiểm tra hay thay đổi AWS.
 
 ---
 
@@ -20,7 +27,7 @@ chưa có ALB, Target Group, listener hay Security Group mới nào được t�
 Internet
    │  TCP 80/443
    ▼
-Security Group "launch-wizard-1"
+Security Group EC2 (snapshot #33)
    │   22/TCP  ← IP quản trị /32
    │   80/TCP  ← 0.0.0.0/0
    │   443/TCP ← 0.0.0.0/0
@@ -39,13 +46,15 @@ EC2 Ubuntu 24.04
                            PostgreSQL 16 @ 127.0.0.1:5432
 ```
 
-Sự thật kỹ thuật quan trọng, dùng xuyên suốt tài liệu:
+Baseline kỹ thuật dùng xuyên suốt tài liệu; các thuộc tính runtime phải được kiểm
+tra lại trong cửa sổ triển khai ALB, không suy ra từ source hay scan timeout:
 
 | Thuộc tính | Giá trị hiện tại | Nguồn |
 | --- | --- | --- |
-| Backend bind | `127.0.0.1:3000` (chỉ loopback) | `docs/aws/linux-service-review.md` |
-| PostgreSQL bind | `127.0.0.1:5432` | như trên |
-| TLS | Let's Encrypt, cấp cho **địa chỉ IP** | `docs/aws/ec2-deployment-review.md` |
+| EIP / region / AZ EC2 | `52.221.157.206` / `ap-southeast-1` / `ap-southeast-1c` | `network-control-plane.md`, snapshot 2026-11-03 |
+| Backend bind | `127.0.0.1:3000` (chỉ loopback), baseline cần giữ | `linux-service-review.md`; cửa sổ #33 chưa kiểm tra lại host binding |
+| PostgreSQL bind | `127.0.0.1:5432`, baseline cần giữ | như trên |
+| TLS | Let's Encrypt, cấp cho EIP `52.221.157.206` | `ec2-eip-https.md`, cửa sổ 2026-11-03 |
 | `TRUST_PROXY` | chỉ nhận `'0'` hoặc `'loopback'` | `website/backend/src/lib/config.ts` |
 | Cookie `Secure` | bật khi `NODE_ENV=production` | `website/backend/src/middleware/session.ts` |
 | Nginx set `X-Forwarded-Proto` | `$scheme` | `docs/aws/ec2-deployment-review.md` |
@@ -90,7 +99,7 @@ loopback; mở nó ra VPC là hạ mức bảo mật hiện có. Nginx phải ti
 
 ---
 
-## 3. Sáu ràng buộc phải xử lý trước khi tạo ALB
+## 3. Bảy ràng buộc phải xử lý trước khi tạo ALB
 
 Đây là phần quyết định thành bại của issue. Bỏ qua bất kỳ mục nào cũng sẽ hỏng hệ thống
 đang chạy.
@@ -122,27 +131,19 @@ một lớp kiểm soát khác — nằm ngoài phạm vi issue này và không 
 ### R3 — Chứng chỉ: ACM không cấp cho địa chỉ IP
 
 [ACM public certificate](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html)
-yêu cầu *"DNS-compliant subject names"*, tức phải là tên miền. Chứng chỉ hiện tại trên EC2
-đã được kiểm tra ngày 2026-11-01 bằng TLS handshake thật:
+yêu cầu *"DNS-compliant subject names"*, tức phải là tên miền. Baseline ngày
+2026-11-03 dùng Let's Encrypt cho EIP `52.221.157.206`, với lineage
+`pbl4-517-eip`; xem [SAN, thời hạn và kiểm chứng renewal](ec2-eip-https.md).
+Chứng chỉ cấp cho EIP EC2 không xác thực tên miền ứng dụng hoặc DNS name của ALB.
+Import một chứng chỉ không làm thay đổi các định danh trong SAN của nó; vì vậy
+chỉ import lại cert EIP không giải quyết được HTTPS cho endpoint ALB đề xuất.
 
-```text
-subject        : (rỗng)
-issuer         : Let's Encrypt, CN=YE2
-subjectAltName : IP Address = 13.251.128.130
-notAfter       : Nov 5 11:42:53 2026 GMT
-TLS            : TLSv1.3
-```
-
-Chứng chỉ cấp cho **IP**, không có `DNSName` nào. Vì vậy nó **không dùng lại được** cho
-listener 443 của ALB, và cũng không thể import sang ACM để dùng đúng cách.
-
-Vòng đời quan sát được: `notBefore = Oct 29 19:42:54 2026`, `notAfter = Nov 5 11:42:53 2026`
-— chênh lệch khoảng 6,7 ngày, đúng profile `shortlived` mà
-[docs/aws/ec2-deployment-review.md](ec2-deployment-review.md) đã ghi. Điều này cho thấy
-Certbot đã tự gia hạn thành công ít nhất một lần sau khi triển khai, không phải chứng chỉ
-sắp hết hạn do bị bỏ quên. Tuy vậy, vì chứng chỉ chỉ sống ~6 ngày, mọi khoảng gián đoạn của
-timer trong tương lai sẽ làm site lỗi rất nhanh — đây là lý do kỹ thuật để chuyển TLS sang
-ALB/ACM nếu có tên miền, chứ không chỉ là chuyện thẩm mỹ.
+TLS probe ngày 2026-11-01 từng thấy cert cho IP cũ `13.251.128.130`, có thời hạn
+khoảng 6,7 ngày. Đó là quan sát lịch sử, không phải chứng chỉ hiện tại và cũng
+không chứng minh Certbot đã tự gia hạn: một cert mới có thể được cấp thủ công.
+Bằng chứng ngày 2026-11-03 mới ghi nhận timer active/enabled và renewal dry-run
+kèm deploy hook thành công. Chứng chỉ IP dùng profile `shortlived`; cần theo dõi
+timer và thời hạn thực tế, đặc biệt sau khi EC2 bị dừng rồi khởi động lại.
 
 Ba đường đi, phải chọn một trước khi triển khai:
 
@@ -209,10 +210,10 @@ append` (ALB nối thêm IP client). Nếu đổi sang `preserve`, client có th
 
 ### R6 — Redirect 80 → 443 sẽ tạo vòng lặp hoặc đi thẳng vào EC2
 
-Cấu hình hiện tại trên EC2:
+Cấu hình redirect trong [cửa sổ HTTPS ngày 2026-11-03](ec2-eip-https.md):
 
 ```nginx
-location / { return 308 https://47.129.214.70$request_uri; }
+location / { return 308 https://52.221.157.206$request_uri; }
 ```
 
 Khi ALB nói chuyện với Nginx qua cổng 80, Nginx sẽ trả 308 về `https://<IP>` — tức là
@@ -237,10 +238,13 @@ mới.
 | Unhealthy threshold | 3 | 45 s để loại target |
 | Success codes | `200` | Chỉ 200 mới là khoẻ |
 
-Đánh đổi cần biết: `/api/health` phụ thuộc database. Nếu PostgreSQL chết, ALB đánh target
-unhealthy và trả 503 cho **toàn bộ** site, kể cả phần frontend tĩnh vẫn phục vụ được. Đó là
-lựa chọn có chủ ý (fail closed) nhưng phải được ghi trong tài liệu vận hành, không phải phát
-hiện tình cờ lúc demo.
+Đánh đổi cần biết: `/api/health` phụ thuộc database. Nếu PostgreSQL chết, endpoint trả
+503 và target có thể chuyển unhealthy sau ngưỡng đã cấu hình. Tuy nhiên, theo
+[tài liệu AWS](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html),
+khi toàn bộ target đã đăng ký đều unhealthy, ALB **fail open** và vẫn gửi request tới
+các target đó. Với một EC2, không được hứa rằng ALB sẽ chặn toàn bộ site bằng 503:
+frontend tĩnh có thể vẫn hoạt động, còn API phụ thuộc database có thể lỗi. Health check
+không phải ranh giới phân quyền hay bảo đảm fail-closed; cần kiểm chứng từng endpoint.
 
 ---
 
@@ -276,10 +280,9 @@ hành vi đã kiểm chứng.
 | --- | --- | --- | --- |
 | Inbound | TCP 443 | `0.0.0.0/0` | Người dùng |
 | Inbound | TCP 80 | `0.0.0.0/0` | Chỉ để redirect |
-| Outbound | TCP 80 | `pbl4-web-sg` (tham chiếu SG) | Tới Nginx |
-| Outbound | TCP 80 | subnet CIDR của EC2 | Cần cho health check nếu không dùng tham chiếu SG |
+| Outbound | TCP 80 | SG EC2 `sg-0c0ebd38764b1df74` (tham chiếu SG) | Tới Nginx, gồm health check cùng cổng |
 
-**SG hiện tại của EC2 (`launch-wizard-1`) — thay đổi:**
+**SG hiện tại của EC2 (`sg-0c0ebd38764b1df74`, snapshot #33) — thay đổi đề xuất:**
 
 | Chiều | Trước | Sau | Ghi chú |
 | --- | --- | --- | --- |
@@ -351,7 +354,7 @@ Express vẫn là Nginx trên loopback. `NODE_ENV=production` giữ nguyên, nê
 | --- | --- | --- |
 | Điểm vào | IP công khai của EC2 | DNS name của ALB |
 | TLS | Nginx + Let's Encrypt cho IP | ACM cho tên miền, tự renew |
-| Địa chỉ IP thay đổi | Phải cấp lại cert khi IP đổi | Không ảnh hưởng, DNS ổn định |
+| Định danh truy cập | EIP hiện tại ổn định khi còn được gán; đổi EIP cần cert phù hợp | Dùng tên miền; địa chỉ node ALB có thể thay đổi |
 | Che giấu hạ tầng | Lộ IP EC2 | Chỉ lộ IP của ALB node |
 | Mở rộng | 1 instance, không cân bằng tải | Thêm target không cần đổi DNS |
 | Health check | Không có, systemd chỉ restart process | ALB loại target lỗi khỏi luồng |
@@ -387,8 +390,9 @@ chủ yếu là phần giờ chạy.
 
 Ba lưu ý bắt buộc trước khi xin duyệt:
 
-1. **Phải kiểm tra lại giá** theo region thực tế của EC2 và tại thời điểm tạo, vì giá AWS
-   thay đổi. Dùng [AWS Pricing Calculator](https://calculator.aws/) và lưu ảnh kết quả.
+1. **Phải kiểm tra lại giá** cho `ap-southeast-1` (Singapore), region đã xác nhận
+   trong #33, và tại thời điểm tạo. Các số US-East-1 ở trên không phải dự toán
+   Singapore. Dùng [AWS Pricing Calculator](https://calculator.aws/) và lưu ảnh kết quả.
 2. Tài khoản tạo sau 15/07/2025 dùng cơ chế credit Free Tier mới; tài khoản cũ có thể còn
    750 giờ/tháng dùng chung giữa Classic và Application Load Balancer. Không giả định là miễn phí.
 3. Nếu bật access log sang S3 thì phát sinh thêm phí lưu trữ — tách khỏi phạm vi #34.
@@ -405,40 +409,43 @@ Chưa thực hiện bước nào. Mỗi bước có điều kiện dừng.
 | --- | --- | --- |
 | **P0 — Chuẩn bị** | Chụp VPC ID, subnet, AZ, CIDR, SG hiện tại; xác nhận có tên miền; ghi baseline `curl` và screenshot | Thiếu tên miền → dừng, chuyển sang phương án B (NLB) hoặc hoãn |
 | **P1 — Xin duyệt** | Team Leader xác nhận chi phí và phạm vi bằng văn bản trong issue | Không có xác nhận → không tạo resource |
-| **P2 — Tạo hạ tầng song song** | Tạo `pbl4-alb-sg`, `pbl4-tg-web`, ALB, listener; **chưa đổi DNS** | Xoá ALB/TG/SG nếu health check không xanh |
-| **P3 — Kiểm thử bằng DNS của ALB** | Gọi thẳng DNS name ALB với `Host` header của domain; kiểm tra health, `/api/health`, trang chủ | Target unhealthy → xem SG và R7 trước khi đi tiếp |
-| **P4 — Sửa Nginx** | Áp dụng R4/R5/R6; `nginx -t` rồi `reload` | `nginx -t` fail → không reload, khôi phục file cũ |
+| **P2 — Tạo hạ tầng song song** | Tạo `pbl4-alb-sg`, `pbl4-tg-web`, ALB, listener với cert domain đã validate; **chưa đổi DNS** | Lỗi provisioning/cert → dừng; health check chưa thể xanh nếu Nginx vẫn redirect HTTP |
+| **P3 — Chuẩn bị đường Nginx sau ALB** | Backup Nginx/SG, giới hạn EC2:80 chỉ từ SG ALB trước khi tin forwarded header; áp dụng R4/R5/R6, `nginx -t` rồi reload; giữ HTTPS trực tiếp cho rollback | Lỗi syntax/routing → khôi phục cả cấu hình Nginx và SG; kiểm tra lại đường HTTP-01/HTTPS cũ |
+| **P4 — Kiểm thử trước đổi DNS** | Gọi URL tên miền với `curl --connect-to <domain>:443:<ALB-DNS>:443 https://<domain>/api/health` để giữ đúng TLS SNI/Host; kiểm tra target health, trang chủ và login | Chỉ đổi `Host` khi gọi URL DNS ALB không đủ để xác minh cert domain; target unhealthy hoặc login lỗi → dừng |
 | **P5 — Chuyển DNS** | Trỏ tên miền về ALB; chờ TTL hết hạn | Giữ nguyên IP EC2 để quay lại nếu cần |
 | **P6 — Đóng đường trực tiếp** | Bỏ 80/443 công khai khỏi SG EC2, chỉ cho `pbl4-alb-sg` | Đăng nhập/CSRF/checkout fail → mở lại 443 và rollback |
 | **P7 — Kiểm chứng** | Đăng nhập, CSRF, đặt hàng, `/api/health`, scanner ngoài, header `X-Forwarded-*` | Ghi evidence, không tuyên bố PASS khi chưa chạy |
 | **P8 — Dọn dẹp** | Sau demo: xoá ALB → TG → SG; ghi trạng thái resource | Không để lại resource tính phí ngoài kế hoạch |
 
-Rollback nhanh nhất trong mọi tình huống: **trỏ DNS về IP EC2 và mở lại 443 trên SG EC2**.
-Vì vậy P6 (đóng đường trực tiếp) chỉ được làm **sau** khi P5 đã ổn định.
+Rollback cần **khôi phục Nginx, SG và DNS về baseline EIP đã ghi**, rồi kiểm tra
+HTTP-01, HTTPS, login và renewal theo [runbook EIP](ec2-eip-https.md). Chỉ đổi DNS
+và mở lại 443 là chưa đủ nếu cấu hình Nginx/đường renewal đã thay đổi. P6 (đóng
+đường HTTPS trực tiếp) chỉ được làm **sau** khi P5 đã ổn định.
 
 ---
 
 ## 9. Những gì đã kiểm chứng và những gì còn phải xác minh
 
-Đã kiểm chứng trực tiếp khi soạn tài liệu (2026-11-01):
+Đối chiếu ngày 2026-11-04 với evidence đã có; không phải một lượt live test mới:
 
 | Mục | Cách kiểm | Kết quả |
 | --- | --- | --- |
-| Chứng chỉ đang cấp cho IP, không phải tên miền | TLS handshake từ máy ngoài | `subjectAltName` chỉ có `IP Address 13.251.128.130`, không có `DNSName` |
-| Chứng chỉ còn hạn và đang được gia hạn tự động | TLS handshake từ máy ngoài | `notBefore 2026-10-29`, `notAfter 2026-11-05`, `TLSv1.3` — chu kỳ ~6,7 ngày khớp profile `shortlived` |
-| Backend bind loopback | đọc `docs/aws/linux-service-review.md` | `127.0.0.1:3000`, nhất quán với `database.ts` |
+| EIP / region / subnet EC2 | [snapshot Console #33](network-control-plane.md) | `52.221.157.206`, `ap-southeast-1`, `172.31.0.0/20` tại `ap-southeast-1c` |
+| Chứng chỉ cho EIP và trusted HTTPS | [cửa sổ HTTPS #14](ec2-eip-https.md), [live #33](../../evidence/AWS-04/live-20261103/README.md) ngày 2026-11-03 | Cert `pbl4-517-eip` khớp EIP; HTTPS/health 200 trong cửa sổ ghi nhận |
+| Cấu hình renewal và deploy hook | `ec2-eip-https.md`, 2026-11-03 | Timer active/enabled, renewal dry-run kèm deploy hook PASS; không suy ra từ thời hạn cert đơn thuần |
+| Backend bind loopback | đọc `linux-service-review.md` | Baseline `127.0.0.1:3000`; host binding chưa được kiểm tra lại trong live #33 |
 | `TRUST_PROXY` chỉ nhận `0` hoặc `loopback` | đọc `website/backend/src/lib/config.ts` | Đúng — không có tuỳ chọn `true` chung chung |
 | Cookie `Secure` theo `NODE_ENV` | đọc `website/backend/src/middleware/session.ts` | `secure: config.NODE_ENV === 'production'` |
 | Nginx ghi đè `X-Forwarded-Proto` bằng `$scheme` | đọc cấu hình site trong `ec2-deployment-review.md` | Đúng — đây là gốc của R4 |
-| Redirect 80 → 443 trỏ về IP EC2 | đọc cùng file | `return 308 https://47.129.214.70$request_uri` |
-| Chỉ 80/443 mở từ Internet | quét cổng của chính nhóm | 22/3000/5432/8080 FILTERED |
+| Redirect 80 → 443 trỏ về EIP EC2 | đọc `ec2-eip-https.md` và live #33 | HTTP 308 sang `https://52.221.157.206/` |
+| Quyền ingress và quan sát từ máy quản trị | `network-control-plane.md`, live #33 | 22 từ `/32` quản trị, 80/443 public; từ máy quản trị 22/80/443 reachable, 3000/5432/8080 timeout; chưa có non-admin SSH negative control |
 
 Chưa kiểm chứng, không được coi là đã biết:
 
 - [ ] VPC hiện tại có subnet ở AZ thứ hai đủ điều kiện `/27` và ≥ 8 IP trống chưa?
-- [ ] Region thực tế của EC2 là gì (để chọn đúng giá và đặt ACM)?
+- [ ] Subnet/AZ thứ hai, IP trống và routing có đủ cho ALB trong `ap-southeast-1` không?
 - [ ] Có tên miền dùng được không, và ai quản lý DNS?
-- [ ] Giám sát Certbot renewal timer bằng cách nào để không mất TLS trong 6 ngày tới?
+- [ ] Kế hoạch giám sát cert/timer và khôi phục renewal sau khi EC2 dừng/khởi động lại đã được nhóm duyệt chưa?
 - [ ] Chứng chỉ ACM có validate được qua DNS/HTTP không?
 - [ ] Tham chiếu SG `pbl4-alb-sg` trong luật inbound của EC2 có hoạt động đúng?
 - [ ] `X-Forwarded-Proto` tới Express có thực sự là `https` (kiểm tra bằng log tạm, không log cookie)?
@@ -455,7 +462,8 @@ Chưa kiểm chứng, không được coi là đã biết:
 - Không mua tên miền, không thay đổi Route 53, không đổi DNS.
 - Không cấu hình WAF, autoscaling, nhiều EC2, hay ALB → EC2 bằng HTTPS.
 - Không thiết kế lại Network ACL; chỉ ghi chú rằng nếu dùng NACL tuỳ biến thì phải mở
-  ephemeral port `1024-65535` hai chiều giữa subnet của ALB và subnet của EC2.
+  đúng luồng request/reply và ephemeral port theo client/OS thực tế; xem
+  [phân tích SG/NACL của #33](network-control-plane.md#sg-vs-nacl-in-this-project).
 - Không thay đổi cấu hình đang chạy trên EC2.
 
 ---
@@ -466,6 +474,7 @@ Chưa kiểm chứng, không được coi là đã biết:
    cho TLS — cần cân nhắc NLB hoặc giữ nguyên hiện trạng và ghi rõ lý do.
 2. **Ngân sách**: ai chịu chi phí ALB và mức trần là bao nhiêu?
 3. **Thời điểm**: có cần ALB trong W5 để demo, hay chỉ cần thiết kế để báo cáo?
-4. **Region**: EC2 đang ở region nào, và có ràng buộc gì về AZ không?
+4. **Subnet/AZ**: region đã xác nhận là `ap-southeast-1`; subnet ở AZ thứ hai nào
+   sẽ được chọn, và đã kiểm tra routing/capacity cho ALB chưa?
 
 Trả lời được bốn câu này thì mới nên chuyển từ PROPOSED sang triển khai.

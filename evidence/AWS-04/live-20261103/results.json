@@ -1,0 +1,193 @@
+{
+  "started_utc": "2026-11-03T16:56:36.148875+00:00",
+  "target": "52.221.157.206",
+  "instance": "i-0ccfb2772f854e78b",
+  "region": "ap-southeast-1",
+  "precondition": "AWS Console refreshed: expected instance Running before invocation",
+  "attempts_per_port": 2,
+  "tcp_timeout_seconds": 4,
+  "source_public_ipv4": "171.225.185.44",
+  "tcp": [
+    {
+      "port": 22,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.367268+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 32
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:36.406487+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 47
+        }
+      ]
+    },
+    {
+      "port": 80,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.367268+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 32
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:36.408487+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 62
+        }
+      ]
+    },
+    {
+      "port": 443,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.367268+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 63
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:36.437489+00:00",
+          "outcome": "reachable",
+          "elapsed_ms": 47
+        }
+      ]
+    },
+    {
+      "port": 3000,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.368268+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:40.369135+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        }
+      ]
+    },
+    {
+      "port": 5432,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.368268+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:40.369135+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        }
+      ]
+    },
+    {
+      "port": 8080,
+      "attempts": [
+        {
+          "attempt": 1,
+          "started_utc": "2026-11-03T16:56:36.368268+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        },
+        {
+          "attempt": 2,
+          "started_utc": "2026-11-03T16:56:40.369135+00:00",
+          "outcome": "timeout_inconclusive_or_filtered",
+          "elapsed_ms": 4000
+        }
+      ]
+    }
+  ],
+  "tls": {
+    "started_utc": "2026-11-03T16:56:44.373710+00:00",
+    "verified": true,
+    "protocol": "TLSv1.3",
+    "cipher": "TLS_AES_256_GCM_SHA384",
+    "subject_alt_names": [
+      [
+        "IP Address",
+        "52.221.157.206"
+      ]
+    ],
+    "not_before": "Nov  3 08:12:41 2026 GMT",
+    "not_after": "Nov 10 00:12:40 2026 GMT"
+  },
+  "http": [
+    {
+      "path": "/",
+      "scheme": "http",
+      "started_utc": "2026-11-03T16:56:44.506703+00:00",
+      "status": 308,
+      "location": "https://52.221.157.206/",
+      "content_type": "text/html",
+      "bytes_read": 180,
+      "body_sha256": "28da607988b832b48dac9f539ac377f7e06baa161155b17371ff8cb1ad5be0bc",
+      "title": "308 Permanent Redirect",
+      "tls_verified": false
+    },
+    {
+      "path": "/",
+      "scheme": "https",
+      "started_utc": "2026-11-03T16:56:44.587649+00:00",
+      "status": 200,
+      "location": null,
+      "content_type": "text/html",
+      "bytes_read": 789,
+      "body_sha256": "3cda55ceaf3412493e738b1231c18c21dde0c8fb07e70518d3e59fb0d78ca6a8",
+      "title": "KEVILO \u2014 Ph\u1ee5 ki\u1ec7n c\u00f4ng ngh\u1ec7 cho g\u00f3c l\u00e0m vi\u1ec7c",
+      "tls_verified": true
+    },
+    {
+      "path": "/api/health",
+      "scheme": "https",
+      "started_utc": "2026-11-03T16:56:44.737895+00:00",
+      "status": 200,
+      "location": null,
+      "content_type": "application/json; charset=utf-8",
+      "bytes_read": 47,
+      "body_sha256": "0bafff56c3872378b1b5454dc1b96d430dce2564fca685da0b262ef8407b510a",
+      "public_metadata": {
+        "status": "ok",
+        "database": "connected"
+      },
+      "tls_verified": true
+    },
+    {
+      "path": "/api/version",
+      "scheme": "https",
+      "started_utc": "2026-11-03T16:56:44.924481+00:00",
+      "status": 404,
+      "location": null,
+      "content_type": "application/json; charset=utf-8",
+      "bytes_read": 66,
+      "body_sha256": "268199c7bafb4c14cb2c50b168435c979c5a93d0df39b64302dad8748ddabf28",
+      "tls_verified": true
+    },
+    {
+      "path": "/release.json",
+      "scheme": "https",
+      "started_utc": "2026-11-03T16:56:45.074594+00:00",
+      "status": 200,
+      "location": null,
+      "content_type": "text/html",
+      "bytes_read": 789,
+      "body_sha256": "3cda55ceaf3412493e738b1231c18c21dde0c8fb07e70518d3e59fb0d78ca6a8",
+      "public_metadata": "not_json",
+      "tls_verified": true
+    }
+  ],
+  "finished_utc": "2026-11-03T16:56:45.235712+00:00"
+}

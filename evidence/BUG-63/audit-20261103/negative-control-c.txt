@@ -1,0 +1,92 @@
+▶ data errors #63 PostgreSQL HTTP regression
+  ✔ malformed product/order IDs reject before DB with safe 400 (313.0207ms)
+  ✔ missing product update/delete and resource reads retain safe 404 (169.8ms)
+  ✔ real FK delete returns safe 409 and preserves all rows (44.8009ms)
+  ✔ current Prisma 7.10/PostgreSQL codes and structured context are measured (295.9782ms)
+  ℹ malformed UUID (not globally mapped): P2007; model=Product
+  ℹ missing update: P2025; model=Product
+  ℹ missing delete: P2025; model=Product
+  ℹ referenced delete: P2003; model=Product
+  ℹ duplicate email: P2002; model=User; target=email
+  ℹ generic Product.id unique: P2002 -> 409 CONFLICT
+  ✔ registration DB uniqueness race returns EMAIL_EXISTS after a stale pre-check (642.184ms)
+  ℹ uncommitted winner -> stale pre-check -> observed blocked INSERT -> COMMIT -> HTTP 409 EMAIL_EXISTS; one row
+  ✔ AppError HTTP contracts survive service catches (#61/#65/IDOR) (294.1685ms)
+  ✔ unique service failure has safe HTTP envelope (1878.5153ms)
+  ✖ unknown service failure has safe HTTP envelope (1016.0737ms)
+  ✖ unmapped service failure has safe HTTP envelope (1151.2141ms)
+  ✖ isolated unreachable DB preserves products/health 503 (1367.8653ms)
+✖ data errors #63 PostgreSQL HTTP regression (10805.6921ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 7
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11541.4449
+
+✖ failing tests:
+
+test at tests\data-errors.integration.test.mjs:199:20
+✖ unknown service failure has safe HTTP envelope (1016.0737ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  400 !== 503
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:201:13)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:199:8)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 400,
+    expected: 503,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:199:20
+✖ unmapped service failure has safe HTTP envelope (1151.2141ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  400 !== 503
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:201:13)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:199:8)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 400,
+    expected: 503,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\data-errors.integration.test.mjs:205:17
+✖ isolated unreachable DB preserves products/health 503 (1367.8653ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  400 !== 503
+
+      at expectError (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:17:10)
+      at TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:215:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async TestContext.<anonymous> (file:///D:/PBL4-517/website/backend/tests/data-errors.integration.test.mjs:205:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 400,
+    expected: 503,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
