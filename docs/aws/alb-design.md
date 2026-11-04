@@ -367,7 +367,7 @@ Express vẫn là Nginx trên loopback. `NODE_ENV=production` giữ nguyên, nê
 | Rủi ro khi triển khai | Không | R4/R5/R6 có thể làm hỏng đăng nhập nếu bỏ qua |
 
 Kết luận thẳng: với **một** EC2, ALB không cải thiện hiệu năng. Giá trị thật của nó là
-**che IP, quản lý TLS tập trung, health check và chỗ gắn WAF** — tức là phần bảo mật/vận hành,
+**giảm truy cập trực tiếp web tới EC2 bằng SG, quản lý TLS tập trung, health check và chỗ gắn WAF** — tức là phần bảo mật/vận hành,
 đúng trọng tâm đề tài 517.
 
 ---
