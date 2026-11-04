@@ -78,6 +78,13 @@ flowchart TB
 
 Giai đoạn đầu có thể phục vụ trực tiếp qua Nginx trên EC2; ALB thuộc giai đoạn mở rộng đã nêu trong đề tài, chưa triển khai. Cấu hình SG/NACL, subnet, TLS và chuỗi trust proxy phải được xác minh khi triển khai. Scanner chạy từ bên ngoài và không cần truy cập database website.
 
+Thiết kế chi tiết cho ALB nằm ở [docs/aws/alb-design.md](../docs/aws/alb-design.md)
+(Issue #34, **Proposed**): ALB cần tối thiểu hai subnet khác Availability Zone,
+target phải là Nginx cổng 80 chứ không phải backend loopback 3000, chứng chỉ ACM
+cần tên miền nên không dùng lại được cert cấp cho IP, và `X-Forwarded-Proto`
+phải được chuyển tiếp đúng nếu không cookie `Secure` sẽ làm hỏng đăng nhập.
+Chưa có resource ALB nào được tạo trong #34.
+
 Tài liệu này lưu kiến trúc lâu dài; chưa thay thế checklist/evidence của [Issue #11 — Architecture v0.1](https://github.com/LVTIT/PBL4-517/issues/11). Các bước EC2, deploy, Linux service, kiểm thử và tài liệu triển khai nằm ở Issues [#12](https://github.com/LVTIT/PBL4-517/issues/12)–[#17](https://github.com/LVTIT/PBL4-517/issues/17); kiểm tra từng issue trước khi triển khai.
 
 ## One-EC2 demo profile — 2026-10-26

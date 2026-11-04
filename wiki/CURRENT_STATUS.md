@@ -1,5 +1,26 @@
 # Current Project Status
 
+**2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
+main `359acee`, awaiting latest-head CI and human review.**
+[docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current
+direct-to-EC2 topology, the proposed Internet -> ALB -> Nginx -> Express flow, and
+the constraints that decide whether the change is safe: ALB requires at least
+two subnets in different Availability Zones; the target group must point at Nginx
+port 80 because the backend binds loopback; ACM public certificates need a DNS
+name and the EC2 IP certificate does not identify the ALB endpoint; `X-Forwarded-Proto` must be
+forwarded instead of overwritten or the `Secure` session cookie will break login;
+the real client IP needs `real_ip` with the ALB subnets; and the 80 -> 443
+redirect has to move to the ALB listener. Security Group rules, listener, target
+group, health check, ALB attributes, cost structure and a proposed rollout plan
+are included. The current network/EIP/renewal baseline comes from the dated
+#33/#14 evidence: region `ap-southeast-1`, EIP `52.221.157.206`, and renewal
+timer/deploy-hook dry-run verification on 2026-11-03. A newer certificate alone
+does not prove automatic renewal. Domain/DNS ownership, budget and target date
+remain decisions for the team; a second eligible ALB subnet/AZ still needs
+verification. Conflict resolution preserves the existing main status entries.
+No ALB deployment or human acceptance is inferred; delivery/CI status is tracked
+on [PR #60](https://github.com/LVTIT/PBL4-517/pull/60).
+
 **2026-11-03 23:56 Asia/Bangkok AWS-04 live window (#33 / PR #71): external
 observations recorded; Issue OPEN.** User authorized live network tests and
 started EC2; Console confirms Running with the expected instance/EIP/private IP.
