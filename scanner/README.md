@@ -156,6 +156,15 @@ ports remain in the baseline until a confirmed refusal. `SCAN_UNCERTAIN` and
 `SCAN_RECOVERED` describe monitoring uncertainty/recovery, not vulnerability fixes.
 A new host with only uncertain results does not establish an empty baseline.
 
+Khi các lần quét dùng danh sách cổng khác nhau (ví dụ CLI quét đầy đủ rồi ChatOps
+chỉ quét nhóm Web), `uncertain_ports` được giữ riêng cho từng target. Cổng từng
+timeout chỉ được xóa khỏi danh sách này sau khi **chính cổng đó** được quét lại và
+trả `open` hoặc `closed`. Quét thành công cổng khác, kể cả `--reset-baseline` trên
+một nhóm cổng, không chứng minh cổng chưa quét đã phục hồi. `SCAN_RECOVERED` chỉ
+phát sinh khi không còn cổng chưa xác định đã lưu; kết quả `NO_CHANGE` vẫn có thể
+đi kèm exit code 1 nếu còn timeout từ lần trước. Muốn xử lý, quét lại các cổng trong
+`uncertain_ports` của state hoặc chạy lại danh sách cổng đầy đủ đã được cho phép.
+
 State writes use an atomic replace and a single-writer OS lock. Malformed state
 fails visibly; preserve the damaged file and restore a known-good backup rather
 than resetting the baseline automatically. The state record includes a durable
@@ -170,13 +179,18 @@ acceptance but before local acknowledgement can duplicate a message. Missing
 credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
 new alerts; it preserves existing pending events. No tokens enter the outbox.
 
-Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
-observations or pending delivery; 2 = configuration/state/lock/DNS/audit failure.
+Exit codes: 0 = no stored uncertain ports or pending delivery for this target;
+1 = current or previously unresolved uncertain observations, or pending delivery;
+2 = configuration/state/lock/DNS/audit failure.
 JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at
 1 MiB with two backups. Audit write/rotation errors propagate as a failed scan;
 outbox metadata/payload are validated before baseline changes. Legacy baseline
 files without an outbox remain supported. Reports can use `PBL517_REPORTS_DIR`; score values are
 local port-based heuristics, not a validated CVSS assessment or proof of a CVE.
+Successful scan audit rows include `results` for the current scan and
+`uncertain_ports` for all unresolved observations on that target, so a partial
+scan's exit code 1 remains explainable even when every currently scanned port
+responds conclusively. Existing state files need no migration.
 
 Run `python -m unittest discover -s scanner/tests -v` from the repository root.
 These checks use loopback sockets and simulated alert outcomes; no chat is sent.
