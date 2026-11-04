@@ -1,5 +1,20 @@
 # Current Project Status
 
+**2026-11-04 partial-scan uncertainty repair (#43): Implemented / locally verified;
+hosted CI and human review tracked on delivery PR.** Scanner previously replaced
+all stored uncertainty with only the current scan's timeouts: a Web-only scan
+could erase an untested DB-port timeout, emit false `SCAN_RECOVERED` and exit 0.
+It now retains unresolved ports outside the current scan and clears each only
+after an explicit open/closed recheck, including during subset baseline reset.
+Successful scan audit rows include aggregate `uncertain_ports` alongside scoped
+`results`. Four new regressions fail on unchanged main `6c1167b`; all 31
+scanner/ChatOps tests pass after the fix. Python syntax, eight offline probe
+classification and five policy tests pass locally. Existing state remains
+compatible. [Reproduction, logs and limits](../evidence/MON-03/partial-scan-20261104/README.md),
+[canonical behavior](../scanner/README.md). External Ubuntu VM scheduler/reboot,
+current real dual-channel receipts and required human acceptance remain pending;
+Issue #43 stays open.
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current

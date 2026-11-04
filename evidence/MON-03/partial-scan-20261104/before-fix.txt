@@ -1,0 +1,114 @@
+test_cli_exit_and_audit_stay_degraded_until_timed_out_port_is_rechecked (test_partial_scans.PartialScanTests.test_cli_exit_and_audit_stay_degraded_until_timed_out_port_is_rechecked) ... FAIL
+test_disjoint_timeouts_need_individual_conclusive_rechecks (test_partial_scans.PartialScanTests.test_disjoint_timeouts_need_individual_conclusive_rechecks) ... FAIL
+test_repeated_web_only_scans_do_not_send_false_recovery (test_partial_scans.PartialScanTests.test_repeated_web_only_scans_do_not_send_false_recovery) ... FAIL
+test_subset_baseline_reset_does_not_prove_unscanned_port_recovery (test_partial_scans.PartialScanTests.test_subset_baseline_reset_does_not_prove_unscanned_port_recovery) ... FAIL
+
+======================================================================
+FAIL: test_cli_exit_and_audit_stay_degraded_until_timed_out_port_is_rechecked (test_partial_scans.PartialScanTests.test_cli_exit_and_audit_stay_degraded_until_timed_out_port_is_rechecked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\PBL4\PBL4-517\scanner\tests\test_partial_scans.py", line 75, in test_cli_exit_and_audit_stay_degraded_until_timed_out_port_is_rechecked
+    self.assertEqual(statuses, [1, 1, 0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1, 0, 0] != [1, 1, 0]
+
+First differing element 1:
+0
+1
+
+- [1, 0, 0]
+?     ^
+
++ [1, 1, 0]
+?     ^
+
+
+======================================================================
+FAIL: test_disjoint_timeouts_need_individual_conclusive_rechecks (test_partial_scans.PartialScanTests.test_disjoint_timeouts_need_individual_conclusive_rechecks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\PBL4\PBL4-517\scanner\tests\test_partial_scans.py", line 48, in test_disjoint_timeouts_need_individual_conclusive_rechecks
+    self.assertEqual(load_state(self.state)['127.0.0.1']['uncertain_ports'], [5432, 8080])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [8080] != [5432, 8080]
+
+First differing element 0:
+8080
+5432
+
+Second list contains 1 additional elements.
+First extra element 1:
+8080
+
+- [8080]
++ [5432, 8080]
+
+======================================================================
+FAIL: test_repeated_web_only_scans_do_not_send_false_recovery (test_partial_scans.PartialScanTests.test_repeated_web_only_scans_do_not_send_false_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py", line 1432, in patched
+    return func(*newargs, **newkeywargs)
+  File "D:\PBL4\PBL4-517\scanner\tests\test_partial_scans.py", line 34, in test_repeated_web_only_scans_do_not_send_false_recovery
+    self.assertEqual(self.observe({80: 'open'}, no_alert=False), 'NO_CHANGE')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'SCAN_RECOVERED' != 'NO_CHANGE'
+- SCAN_RECOVERED
++ NO_CHANGE
+
+
+======================================================================
+FAIL: test_subset_baseline_reset_does_not_prove_unscanned_port_recovery (test_partial_scans.PartialScanTests.test_subset_baseline_reset_does_not_prove_unscanned_port_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\PBL4\PBL4-517\scanner\tests\test_partial_scans.py", line 63, in test_subset_baseline_reset_does_not_prove_unscanned_port_recovery
+    self.assertEqual(record['uncertain_ports'], [5432])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != [5432]
+
+Second list contains 1 additional elements.
+First extra element 0:
+5432
+
+- []
++ [5432]
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.194s
+
+FAILED (failures=4)
+
+[>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 2 ports (Đa luồng 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+     80/tcp  OPEN     [HTTP (Nginx Web Server)] [INFO - Risk score 0.0]
+   5432/tcp  FILTERED [PostgreSQL Database]
+-----------------------------------------------------------------
+Thời gian quét : 0.00s | Cổng đang mở (1): [80]
+Đánh giá rủi ro : Xếp hạng [A] - CHỈ QUAN SÁT THẤY CỔNG WEB (Max Risk score: 0.0)
+[EVENT: INITIAL_SCAN] uncertain=[5432]; pending_alerts=0
+[+] Báo cáo HTML (Living Dashboard) đã cập nhật: C:\Users\DELL\AppData\Local\Temp\tmpkw30ltsg\latest.html
+
+[>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 1 ports (Đa luồng 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+     80/tcp  OPEN     [HTTP (Nginx Web Server)] [INFO - Risk score 0.0]
+-----------------------------------------------------------------
+Thời gian quét : 0.00s | Cổng đang mở (1): [80]
+Đánh giá rủi ro : Xếp hạng [A] - CHỈ QUAN SÁT THẤY CỔNG WEB (Max Risk score: 0.0)
+[EVENT: SCAN_RECOVERED] uncertain=[]; pending_alerts=0
+[+] Báo cáo HTML (Living Dashboard) đã cập nhật: C:\Users\DELL\AppData\Local\Temp\tmpkw30ltsg\latest.html
+
+[>] Bắt đầu quét 127.0.0.1 (127.0.0.1): 1 ports (Đa luồng 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+   5432/tcp  CLOSED   [PostgreSQL Database]
+-----------------------------------------------------------------
+Thời gian quét : 0.00s | Cổng đang mở (0): Không có
+Đánh giá rủi ro : Xếp hạng [A+] - CHƯA QUAN SÁT THẤY CỔNG MỞ (Max Risk score: 0.0)
+[EVENT: NO_CHANGE] uncertain=[]; pending_alerts=0
+[+] Báo cáo HTML (Living Dashboard) đã cập nhật: C:\Users\DELL\AppData\Local\Temp\tmpkw30ltsg\latest.html
+[EVENT: INITIAL_SCAN] uncertain=[5432]; pending_alerts=0
+[EVENT: SCAN_UNCERTAIN] uncertain=[8080]; pending_alerts=0
+[EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0
+[EVENT: SCAN_UNCERTAIN] uncertain=[5432]; pending_alerts=0
+[EVENT: SCAN_RECOVERED] uncertain=[]; pending_alerts=0
+[EVENT: INITIAL_SCAN] uncertain=[5432]; pending_alerts=0
+[EVENT: INITIAL_SCAN] uncertain=[]; pending_alerts=0

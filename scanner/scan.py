@@ -152,7 +152,12 @@ def evaluate_diff_and_notify(
                                 for p in (scanned_ports or current_open_ports)}
     current = set(current_open_ports)
     closed = {p for p, status in observed.items() if status == "closed"}
-    uncertain = sorted(p for p, status in observed.items() if status not in ("open", "closed"))
+    # A partial scan cannot resolve timeouts on ports it did not recheck.
+    # Replace uncertainty only for observed ports, including on baseline reset.
+    uncertain = sorted(
+        (set(record.get("uncertain_ports", [])) - set(observed))
+        | {p for p, status in observed.items() if status not in ("open", "closed")}
+    )
     old = set(record["baseline_open_ports"])
     events = []
     initialized = record.get("baseline_initialized", previous is not None)
@@ -299,6 +304,7 @@ def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) 
     record = load_state(state_file).get(args.host, {})
     result = 1 if record.get("uncertain_ports") or record.get("pending_alerts") else 0
     write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, results=results,
+                uncertain_ports=record.get("uncertain_ports", []),
                 pending_alerts=len(record.get("pending_alerts", [])), exit_status=result)
     return result
 
