@@ -67,24 +67,25 @@ tra lại trong cửa sổ triển khai ALB, không suy ra từ source hay scan 
 
 ```mermaid
 flowchart LR
-    Client[Browser] -->|"TCP 443"| ALB[Application Load Balancer]
-    Client -->|"TCP 80"| ALB
-    subgraph VPC["VPC cần ≥ 2 AZ"]
-        subgraph SubnetA["Subnet — AZ-a"]
-            ALB
+    Client[Browser] -->|"HTTPS 443 / HTTP 80"| ALB["ALB - logical public endpoint"]
+    subgraph VPC["Default VPC - ap-southeast-1"]
+        subgraph SubnetC["Public subnet - ap-southeast-1c (verified target AZ)"]
+            NodeC["ALB node - AZ 1c"]
+            EC2["EC2 Ubuntu - current target"]
+            Nginx[Nginx port 80]
+            Express["Express 127.0.0.1:3000"]
+            PG[("PostgreSQL loopback")]
+            EC2 --> Nginx --> Express --> PG
         end
-        subgraph SubnetB["Subnet — AZ-b"]
-            ALB2[ALB node thứ hai]
-        end
-        ALB -->|"HTTP :80"| EC2
-        subgraph EC2["EC2 Ubuntu — 1 instance"]
-            Nginx[Nginx]
-            Express[Express 127.0.0.1:3000]
-            PG[(PostgreSQL 127.0.0.1)]
-            Nginx --> Express --> PG
+        subgraph SubnetOther["Public subnet - second AZ (must verify)"]
+            NodeOther["ALB node - different AZ"]
         end
     end
-    ACM[ACM certificate] -. gắn vào listener 443 .-> ALB
+    ALB --> NodeC
+    ALB --> NodeOther
+    NodeC -->|"Target Group HTTP:80"| EC2
+    NodeOther -->|"Cross-zone target routing"| EC2
+    ACM["ACM certificate for domain"] -.-> ALB
 ```
 
 Luồng request:
@@ -117,8 +118,7 @@ không cần target; ALB vẫn tạo node ở đó. Việc này kéo theo:
 - nếu chưa, phải tạo subnet + route table (không tốn phí bản thân subnet);
 - nếu dùng cross-zone, traffic giữa hai AZ có thể phát sinh phí data transfer.
 
-**Việc cần làm ở P0:** chụp lại VPC ID, danh sách subnet, AZ và CIDR từ console. Không
-đoán.
+**Việc cần làm ở P0:** dùng #33 làm baseline, kiểm tra VPC ID và subnet/AZ thứ hai bằng AWS control plane, route tới IGW và số IP trống. **Bắt buộc enable `ap-southeast-1c` (AZ của EC2 hiện tại) trong ALB**, cộng thêm một AZ khác. Không mặc định các subnet `1a/1b` là đủ: target ở AZ không được enable có thể báo `unused / Target.NotInUse` và không nhận traffic ([AWS Target Health](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html)). Không tạo subnet/ALB ở phase thiết kế.
 
 ### R2 — Target phải là `EC2:80` (Nginx), không phải `EC2:3000`
 
@@ -246,6 +246,8 @@ các target đó. Với một EC2, không được hứa rằng ALB sẽ chặn 
 frontend tĩnh có thể vẫn hoạt động, còn API phụ thuộc database có thể lỗi. Health check
 không phải ranh giới phân quyền hay bảo đảm fail-closed; cần kiểm chứng từng endpoint.
 
+**Kiểm chứng `Host` của health check:** ALB HTTP health checker dùng private IPv4 của target trong header `Host` (với port 80 là `Host: <private-IP>`), không nhất thiết là domain của website. Nginx phải có default server hoặc vhost xử lý `GET /api/health` và trả 200 ngay cả với Host kiểu đó. Thử trên đường nội bộ với Host `172.31.11.224` (giá trị snapshot #33, phải xác nhận lại lúc live), đồng thời kiểm tra `TargetHealth` thật khi triển khai; không suy 200 từ curl domain là health check PASS ([AWS troubleshooting](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html)).
+
 ---
 
 ## 4. Cấu hình đề xuất
@@ -267,7 +269,7 @@ hành vi đã kiểm chứng.
 | Target type | `instance` |
 | Protocol / Port | HTTP / 80 |
 | VPC | VPC hiện tại của EC2 |
-| Registered target | EC2 instance ID (một target duy nhất) |
+| Registered target | EC2 instance ID (một target duy nhất), AZ `ap-southeast-1c` phải được enable trên ALB |
 | Health check | Bảng ở R7 |
 | Deregistration delay | 30 s (mặc định 300 s là quá lâu cho demo) |
 | Stickiness | **Tắt** — session nằm trong PostgreSQL, không phụ thuộc node |
@@ -355,9 +357,9 @@ Express vẫn là Nginx trên loopback. `NODE_ENV=production` giữ nguyên, nê
 | Điểm vào | IP công khai của EC2 | DNS name của ALB |
 | TLS | Nginx + Let's Encrypt cho IP | ACM cho tên miền, tự renew |
 | Định danh truy cập | EIP hiện tại ổn định khi còn được gán; đổi EIP cần cert phù hợp | Dùng tên miền; địa chỉ node ALB có thể thay đổi |
-| Che giấu hạ tầng | Lộ IP EC2 | Chỉ lộ IP của ALB node |
+| Truy cập trực tiếp EC2 | Web public qua EIP `52.221.157.206` | Web chỉ nhận từ SG ALB sau hardening; EIP vẫn tồn tại cho SSH/rollback nên không thể khẳng định IP EC2 bị ẩn |
 | Mở rộng | 1 instance, không cân bằng tải | Thêm target không cần đổi DNS |
-| Health check | Không có, systemd chỉ restart process | ALB loại target lỗi khỏi luồng |
+| Health check | Không có health check phía ALB; systemd quản lý process | ALB ghi trạng thái target; nếu tất cả target unhealthy có thể fail-open, không bảo đảm cô lập lỗi |
 | Chứng chỉ trên EC2 | Có, phải gia hạn và theo dõi | Không cần (phương án A) |
 | WAF | Không gắn được | Gắn được vào ALB (ngoài phạm vi) |
 | Chi phí | Chỉ EC2 | EC2 + phí ALB theo giờ và LCU |
@@ -375,24 +377,24 @@ Kết luận thẳng: với **một** EC2, ALB không cải thiện hiệu năng
 ALB tính phí theo **giờ chạy** cộng **LCU** (đơn vị dung lượng, lấy chiều cao nhất trong 4
 chiều: kết nối mới, kết nối đồng thời, byte đã xử lý, số rule được đánh giá).
 
-Số tham chiếu công bố trên [trang pricing](https://aws.amazon.com/elasticloadbalancing/pricing/)
-cho region US-East-1 tại thời điểm soạn tài liệu:
+**Dự toán minh họa cho Singapore `ap-southeast-1` (không phải bill/quote AWS của tài khoản nhóm):** Dữ liệu tham chiếu từ [bảng giá ALB Singapore theo AWS offer file](https://cloud-credits.org/prices/alb/ap-southeast-1), đối chiếu cách tính với [AWS ELB Pricing](https://aws.amazon.com/elasticloadbalancing/pricing/) và [AWS VPC Pricing](https://aws.amazon.com/vpc/pricing/). **Phải xác thực lại bằng [AWS Pricing Calculator](https://calculator.aws/) tại thời điểm triển khai.**
 
-| Thành phần | Đơn giá tham chiếu |
-| --- | --- |
-| Giờ ALB | ~0,0225 USD/giờ |
-| LCU | ~0,008 USD/LCU-giờ |
-| Public IPv4 của node ALB | tính theo bảng giá VPC |
+| Khoản mục | Tham chiếu Singapore | Giả định ví dụ |
+| --- | --- | --- |
+| ALB running-hour | khoảng **0,0252 USD/giờ** | 1 ALB |
+| LCU usage | khoảng **0,008 USD / LCU-giờ** | Trung bình 1 LCU |
+| Public IPv4 | **0,005 USD / IPv4-giờ** theo AWS VPC pricing | Giả sử 2 public IPv4 cho 2 ALB AZ nodes |
 
-Ví dụ của chính AWS cho lưu lượng rất nhỏ (1 kết nối mới/giây, ~300 KB/giây) ra khoảng
-**22,42 USD/tháng** cho một ALB. Với dự án này, lưu lượng demo thấp hơn rất nhiều nên chi phí
-chủ yếu là phần giờ chạy.
+Ví dụ **4 giờ demo** với 1 ALB, trung bình 1 LCU và 2 public IPv4:
+`4 × (0,0252 + 1×0,008 + 2×0,005) = 0,1728 USD` (xấp xỉ **0,17 USD**).
+Nếu chạy **730 giờ** cùng giả định: `730 × 0,0432 = 31,536 USD` (xấp xỉ **31,54 USD**).
+
+Đây chỉ là kịch bản minh họa: LCU biến thiên theo traffic, số IPv4 ALB tiêu thụ có thể thay đổi khi scale; chưa bao gồm EC2/EIP hiện có, data transfer, S3 logs, thuế và ưu đãi/credit. Giá ALB region-specific là số tổng hợp công khai, **không phải kết quả truy vấn billing tài khoản**. Không có quyết định triển khai → giữ Proposed, không phát sinh chi phí ALB.
 
 Ba lưu ý bắt buộc trước khi xin duyệt:
 
 1. **Phải kiểm tra lại giá** cho `ap-southeast-1` (Singapore), region đã xác nhận
-   trong #33, và tại thời điểm tạo. Các số US-East-1 ở trên không phải dự toán
-   Singapore. Dùng [AWS Pricing Calculator](https://calculator.aws/) và lưu ảnh kết quả.
+   trong #33, và tại thời điểm tạo. Các số Singapore ở trên vẫn chỉ là tham khảo, chưa phải báo giá hoặc chi phí thực tế của tài khoản. Dùng [AWS Pricing Calculator](https://calculator.aws/) và lưu ảnh kết quả.
 2. Tài khoản tạo sau 15/07/2025 dùng cơ chế credit Free Tier mới; tài khoản cũ có thể còn
    750 giờ/tháng dùng chung giữa Classic và Application Load Balancer. Không giả định là miễn phí.
 3. Nếu bật access log sang S3 thì phát sinh thêm phí lưu trữ — tách khỏi phạm vi #34.
@@ -410,17 +412,17 @@ Chưa thực hiện bước nào. Mỗi bước có điều kiện dừng.
 | **P0 — Chuẩn bị** | Chụp VPC ID, subnet, AZ, CIDR, SG hiện tại; xác nhận có tên miền; ghi baseline `curl` và screenshot | Thiếu tên miền → dừng, chuyển sang phương án B (NLB) hoặc hoãn |
 | **P1 — Xin duyệt** | Team Leader xác nhận chi phí và phạm vi bằng văn bản trong issue | Không có xác nhận → không tạo resource |
 | **P2 — Tạo hạ tầng song song** | Tạo `pbl4-alb-sg`, `pbl4-tg-web`, ALB, listener với cert domain đã validate; **chưa đổi DNS** | Lỗi provisioning/cert → dừng; health check chưa thể xanh nếu Nginx vẫn redirect HTTP |
-| **P3 — Chuẩn bị đường Nginx sau ALB** | Backup Nginx/SG, giới hạn EC2:80 chỉ từ SG ALB trước khi tin forwarded header; áp dụng R4/R5/R6, `nginx -t` rồi reload; giữ HTTPS trực tiếp cho rollback | Lỗi syntax/routing → khôi phục cả cấu hình Nginx và SG; kiểm tra lại đường HTTP-01/HTTPS cũ |
+| **P3 — Chuẩn bị đường Nginx sau ALB** | Backup Nginx/SG; chuẩn bị vhost cho ALB, chỉ tin forwarded headers từ ALB và giới hạn EC2:80 theo SG ALB; áp dụng R4/R5/R6 sau `nginx -t`; giữ đường HTTPS trực tiếp có kiểm soát cho rollback | Kiểm tra riêng tác động lên HTTP-01: nếu port 80 chỉ cho ALB thì Let's Encrypt xác thực EIP bằng HTTP-01 từ Internet có thể không hoạt động; không coi auto-renew là bảo đảm khi SG/route đổi. Chốt phương án renewal/rollback được duyệt trước khi cắt direct web |
 | **P4 — Kiểm thử trước đổi DNS** | Gọi URL tên miền với `curl --connect-to <domain>:443:<ALB-DNS>:443 https://<domain>/api/health` để giữ đúng TLS SNI/Host; kiểm tra target health, trang chủ và login | Chỉ đổi `Host` khi gọi URL DNS ALB không đủ để xác minh cert domain; target unhealthy hoặc login lỗi → dừng |
 | **P5 — Chuyển DNS** | Trỏ tên miền về ALB; chờ TTL hết hạn | Giữ nguyên IP EC2 để quay lại nếu cần |
 | **P6 — Đóng đường trực tiếp** | Bỏ 80/443 công khai khỏi SG EC2, chỉ cho `pbl4-alb-sg` | Đăng nhập/CSRF/checkout fail → mở lại 443 và rollback |
 | **P7 — Kiểm chứng** | Đăng nhập, CSRF, đặt hàng, `/api/health`, scanner ngoài, header `X-Forwarded-*` | Ghi evidence, không tuyên bố PASS khi chưa chạy |
-| **P8 — Dọn dẹp** | Sau demo: xoá ALB → TG → SG; ghi trạng thái resource | Không để lại resource tính phí ngoài kế hoạch |
+| **P8 — Dọn dẹp an toàn sau demo** | Trước khi xóa ALB: khôi phục Nginx/EIP site + đường HTTP-01, khôi phục SG direct 80/443 ở cấu hình baseline có kiểm soát, chuyển DNS về EIP nếu đã chuyển và chờ kiểm chứng hết TTL; kiểm tra trusted HTTPS, login/session, API health, Certbot timer và renewal path; **chỉ khi direct origin hoạt động lại ổn định mới xóa ALB → TG → SG** | Nếu bất kỳ bước phục hồi fail, **không xóa ALB**; quay về backup Nginx/SG/DNS đã chụp trước lab và xác định lại trạng thái dịch vụ. Ghi resource IDs, chi phí và xác nhận không còn ALB tính phí |
 
 Rollback cần **khôi phục Nginx, SG và DNS về baseline EIP đã ghi**, rồi kiểm tra
 HTTP-01, HTTPS, login và renewal theo [runbook EIP](ec2-eip-https.md). Chỉ đổi DNS
 và mở lại 443 là chưa đủ nếu cấu hình Nginx/đường renewal đã thay đổi. P6 (đóng
-đường HTTPS trực tiếp) chỉ được làm **sau** khi P5 đã ổn định.
+đường HTTPS trực tiếp) chỉ được làm **sau** khi P5 đã ổn định. Nếu dùng cùng một Nginx config cho direct EIP và ALB thì có thể cần cửa sổ chuyển đổi/gián đoạn có kiểm soát; không hứa zero-downtime cho một EC2.
 
 ---
 
@@ -442,12 +444,14 @@ và mở lại 443 là chưa đủ nếu cấu hình Nginx/đường renewal đ�
 
 Chưa kiểm chứng, không được coi là đã biết:
 
-- [ ] VPC hiện tại có subnet ở AZ thứ hai đủ điều kiện `/27` và ≥ 8 IP trống chưa?
+- [ ] VPC có public subnet thứ hai thuộc AZ khác `ap-southeast-1c` đủ điều kiện `/27`, ≥8 IP trống và route IGW chưa? ALB phải enable cả AZ của EC2 (`1c`) và AZ thứ hai.
 - [ ] Subnet/AZ thứ hai, IP trống và routing có đủ cho ALB trong `ap-southeast-1` không?
 - [ ] Có tên miền dùng được không, và ai quản lý DNS?
 - [ ] Kế hoạch giám sát cert/timer và khôi phục renewal sau khi EC2 dừng/khởi động lại đã được nhóm duyệt chưa?
 - [ ] Chứng chỉ ACM có validate được qua DNS/HTTP không?
 - [ ] Tham chiếu SG `pbl4-alb-sg` trong luật inbound của EC2 có hoạt động đúng?
+- [ ] Health check `GET /api/health` trả 200 khi `Host` là private IP của target, qua Nginx default vhost?
+- [ ] Trong lúc EC2:80 chỉ cho phép ALB, cert EIP còn đường HTTP-01/renewal hợp lệ không; rollback có khôi phục trước khi ALB bị xóa không?
 - [ ] `X-Forwarded-Proto` tới Express có thực sự là `https` (kiểm tra bằng log tạm, không log cookie)?
 - [ ] `req.ip` trong rate-limit có phải IP thật của client không?
 - [ ] Cookie `pbl517.sid` có còn `Secure; HttpOnly; SameSite=Lax` không?
