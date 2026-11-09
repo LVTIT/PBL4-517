@@ -1,5 +1,15 @@
 # Current Project Status
 
+**2026-11-09 security regression conflict resolution (#44 / PR #59): integrated
+main `6c1167b`; latest-head CI and human review tracked on PR.** The only conflict
+was the status-file insertion from ALB PR #60. Both the existing #44 regression
+entries and all main entries are retained, together with main's ALB design and
+architecture updates. Application/scanner/CI behavior matches main except for
+the existing Node security-suite parent timeout/comment. Historical 2026-11-01
+logs remain unchanged; they are not a fresh local run of this integration.
+[Integration scope and prior evidence](../evidence/TEST-02/local-regression-20261101/README.md),
+[PR #59](https://github.com/LVTIT/PBL4-517/pull/59).
+
 **2026-11-04 security regression integration (#44 / PR #59): merged main
 `359acee` into the feature branch; latest-head CI and human review tracked on PR.**
 Resolved the status-file conflict while preserving all existing main entries,
@@ -30,6 +40,28 @@ SG/NACL, service/reboot and real Telegram/Discord receipts remain blocked or
 unverified (#16, #17, #33, #35, #36, #41, #42, #43). No AWS/VM change, deployment,
 real alert, review or closure was performed.
 [Matrix, logs and limits](../evidence/TEST-02/local-regression-20261101/README.md).
+
+**2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
+main `359acee`, awaiting latest-head CI and human review.**
+[docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current
+direct-to-EC2 topology, the proposed Internet -> ALB -> Nginx -> Express flow, and
+the constraints that decide whether the change is safe: ALB requires at least
+two subnets in different Availability Zones; the target group must point at Nginx
+port 80 because the backend binds loopback; ACM public certificates need a DNS
+name and the EC2 IP certificate does not identify the ALB endpoint; `X-Forwarded-Proto` must be
+forwarded instead of overwritten or the `Secure` session cookie will break login;
+the real client IP needs `real_ip` with the ALB subnets; and the 80 -> 443
+redirect has to move to the ALB listener. Security Group rules, listener, target
+group, health check, ALB attributes, cost structure and a proposed rollout plan
+are included. The current network/EIP/renewal baseline comes from the dated
+#33/#14 evidence: region `ap-southeast-1`, EIP `52.221.157.206`, and renewal
+timer/deploy-hook dry-run verification on 2026-11-03. A newer certificate alone
+does not prove automatic renewal. Domain/DNS ownership, budget and target date
+remain decisions for the team; a second eligible ALB subnet/AZ still needs
+verification. Conflict resolution preserves the existing main status entries.
+No ALB deployment or human acceptance is inferred; delivery/CI status is tracked
+on [PR #60](https://github.com/LVTIT/PBL4-517/pull/60).
+
 **2026-11-03 23:56 Asia/Bangkok AWS-04 live window (#33 / PR #71): external
 observations recorded; Issue OPEN.** User authorized live network tests and
 started EC2; Console confirms Running with the expected instance/EIP/private IP.

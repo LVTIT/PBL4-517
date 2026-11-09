@@ -12,9 +12,22 @@ At that tested revision, the only source change was the test-suite time budget d
 [Finding 1](#finding-1--security-suite-budget-was-smaller-than-its-own-workload);
 application, scanner and dependency source was identical to `43bebb1`.
 
-## Integration update — 2026-11-04
+## Integration update — 2026-11-09
 
-`feature/44-local-regression-20261101` now integrates `main` at `359acee`, including
+Integrated `main` at `6c1167b` after ALB design PR #60 was merged. The only
+conflict was the insertion at the top of `wiki/CURRENT_STATUS.md`; both the
+existing #44 entries and all main status entries were retained. The ALB design
+and architecture files match main. Application/scanner/CI source also matches
+main except for the previously documented Node parent timeout/comment.
+
+The five captured `.txt` logs remain unchanged. This conflict resolution does
+not rerun the 2026-11-01 local matrix. Latest-head automated verification and
+required human review are tracked on [PR #59](https://github.com/LVTIT/PBL4-517/pull/59);
+CI from the earlier integration `73d8a67` does not verify the new merge commit.
+
+## Earlier integration update — 2026-11-04
+
+`feature/44-local-regression-20261101` integrated `main` at `359acee`, including
 the newer #61/#65 order fixes, #63 error classification and #33/#14 AWS evidence.
 The `wiki/CURRENT_STATUS.md` conflict was resolved by retaining both this dated
 regression entry and all newer main entries. The captured `.txt` logs remain
