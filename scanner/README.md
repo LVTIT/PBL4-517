@@ -170,6 +170,17 @@ acceptance but before local acknowledgement can duplicate a message. Missing
 credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
 new alerts; it preserves existing pending events. No tokens enter the outbox.
 
+Nếu DNS của mục tiêu lỗi, CLI và mỗi vòng `--watch` vẫn thử gửi tối đa hai sự kiện
+đã đến hạn trong outbox của chính mục tiêu đó, dưới cùng state lock. Backoff và
+kết quả từng kênh được lưu như khi quét bình thường; kênh đã gửi thành công không
+được gửi lại có chủ đích. Không tạo sự kiện/baseline mới hoặc cập nhật
+`baseline_open_ports`, `uncertain_ports`, `last_scan_at` từ lần DNS lỗi. Exit code
+vẫn là **2** dù gửi hết cảnh báo tồn đọng. Audit `DNS_FAILED` ghi thêm
+`retried_alerts` (số sự kiện đã thử gửi) và `pending_alerts` (số sự kiện còn lại).
+`--no-alert` giữ nguyên outbox và không gửi. State hỏng, lock đang bận hoặc lỗi
+ghi state/audit được báo trên stderr; không ghi đè baseline để phục hồi tự động.
+[Kiểm chứng hồi quy DNS/outbox](../evidence/MON-03/dns-alert-recovery-20261109/README.md).
+
 Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
 observations or pending delivery; 2 = configuration/state/lock/DNS/audit failure.
 JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at

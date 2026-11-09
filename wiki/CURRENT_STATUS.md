@@ -1,5 +1,18 @@
 # Current Project Status
 
+**2026-11-09 DNS outage / alert outbox (#43): Implemented / locally verified.**
+Scanner từng thoát trước bước retry khi không resolve được target, khiến cảnh báo
+đã lưu bị treo trong thời gian DNS lỗi. Luồng `DNS_FAILED` nay lấy state lock,
+kiểm tra state và thử tối đa hai sự kiện đến hạn của chính target bằng cơ chế
+delivery/backoff hiện có. Giữ nguyên quan sát baseline/uncertainty/last scan;
+`--no-alert` không gửi, DNS lỗi luôn trả 2. Audit ghi số sự kiện đã thử/còn chờ.
+Tám regression mới có năm FAIL trên main chưa sửa, sau sửa toàn bộ scanner/ChatOps
+35/35 PASS; policy 5/5, demo classification 8/8 và Python compileall PASS local.
+[Bằng chứng, lệnh và giới hạn](../evidence/MON-03/dns-alert-recovery-20261109/README.md).
+Hosted CI trên latest revision và human review được theo dõi trên PR bàn giao.
+Các tiêu chí Ubuntu VM/reboot, real-channel receipts và nghiệm thu #43 còn chờ
+bằng chứng riêng; issue tiếp tục OPEN.
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current
