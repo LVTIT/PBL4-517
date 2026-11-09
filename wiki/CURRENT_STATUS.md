@@ -1,5 +1,60 @@
 # Current Project Status
 
+**2026-11-09 hợp nhất monitoring fixes (#43 / PR #72): Implemented / locally verified.**
+Theo yêu cầu người dùng, tích hợp PR #73 (`c49fc20`) và #74 (`fd894b2`) vào nhánh
+PR #72 (`d0ccdd7`) bằng merge commit, bảo toàn lịch sử và toàn bộ test/evidence.
+PR #72 tập hợp ba bản sửa: partial-scan uncertainty, notifier exit/log và retry
+outbox khi DNS lỗi. Conflict tài liệu được giải quyết bằng cách giữ cả ba hành vi.
+Đối chiếu AST xác nhận các hàm scanner đúng tổ hợp bản sửa gốc; notifier và ba
+file regression giữ nguyên blob. Kiểm chứng tích hợp: scanner/ChatOps/notifier
+45/45, policy 5/5, demo classification 8/8 và Python compileall PASS local.
+[Phạm vi, cách đối chiếu và kiểm chứng](../evidence/MON-03/pr72-consolidation-20261109/README.md).
+Latest-head CI và human review theo dõi tại [PR #72](https://github.com/LVTIT/PBL4-517/pull/72).
+Các kết quả riêng 31/33/35 tests bên dưới là snapshot trước hợp nhất. Nghiệm thu
+Ubuntu VM/reboot, real-channel receipts và human acceptance của #43 còn chờ.
+
+**2026-11-04 partial-scan uncertainty repair (#43): Implemented / locally verified;
+hosted CI and human review tracked on delivery PR.** Scanner previously replaced
+all stored uncertainty with only the current scan's timeouts: a Web-only scan
+could erase an untested DB-port timeout, emit false `SCAN_RECOVERED` and exit 0.
+It now retains unresolved ports outside the current scan and clears each only
+after an explicit open/closed recheck, including during subset baseline reset.
+Successful scan audit rows include aggregate `uncertain_ports` alongside scoped
+`results`. Four new regressions fail on unchanged main `6c1167b`; all 31
+scanner/ChatOps tests pass after the fix. Python syntax, eight offline probe
+classification and five policy tests pass locally. Existing state remains
+compatible. [Reproduction, logs and limits](../evidence/MON-03/partial-scan-20261104/README.md),
+[canonical behavior](../scanner/README.md). External Ubuntu VM scheduler/reboot,
+current real dual-channel receipts and required human acceptance remain pending;
+Issue #43 stays open.
+
+**2026-11-09 notifier failure reporting (#43): Implemented / locally verified;
+hosted CI and human review tracked on the delivery PR.** Alert self-test now
+returns 0 only when all enabled channels succeed, 1 on delivery failure and 2
+when no channel has complete configuration. Disabled channels are reported as
+skipped. Discord/Telegram sender errors retain the provider and HTTP status or
+exception class without logging credential-bearing exception text. Six new
+test methods fail with 17 subtest/assertion failures on the original notifier;
+after the fix all 33 scanner/ChatOps tests, 5 policy regressions, 8 offline demo
+tests and Python syntax checks PASS locally. Simulated transport recovery
+verifies durable Telegram-only retry after reload with identical payload/Event
+ID and no duplicate Discord send. [Commands, results and limits](../evidence/MON-03/alert-delivery-20261109/README.md).
+External Ubuntu VM scheduling/reboot, real-channel receipts and required human
+acceptance for #43 remain pending.
+
+**2026-11-09 DNS outage / alert outbox (#43): Implemented / locally verified.**
+Scanner từng thoát trước bước retry khi không resolve được target, khiến cảnh báo
+đã lưu bị treo trong thời gian DNS lỗi. Luồng `DNS_FAILED` nay lấy state lock,
+kiểm tra state và thử tối đa hai sự kiện đến hạn của chính target bằng cơ chế
+delivery/backoff hiện có. Giữ nguyên quan sát baseline/uncertainty/last scan;
+`--no-alert` không gửi, DNS lỗi luôn trả 2. Audit ghi số sự kiện đã thử/còn chờ.
+Tám regression mới có năm FAIL trên main chưa sửa, sau sửa toàn bộ scanner/ChatOps
+35/35 PASS; policy 5/5, demo classification 8/8 và Python compileall PASS local.
+[Bằng chứng, lệnh và giới hạn](../evidence/MON-03/dns-alert-recovery-20261109/README.md).
+Hosted CI trên latest revision và human review được theo dõi trên PR bàn giao.
+Các tiêu chí Ubuntu VM/reboot, real-channel receipts và nghiệm thu #43 còn chờ
+bằng chứng riêng; issue tiếp tục OPEN.
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current

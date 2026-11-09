@@ -152,7 +152,12 @@ def evaluate_diff_and_notify(
                                 for p in (scanned_ports or current_open_ports)}
     current = set(current_open_ports)
     closed = {p for p, status in observed.items() if status == "closed"}
-    uncertain = sorted(p for p, status in observed.items() if status not in ("open", "closed"))
+    # A partial scan cannot resolve timeouts on ports it did not recheck.
+    # Replace uncertainty only for observed ports, including on baseline reset.
+    uncertain = sorted(
+        (set(record.get("uncertain_ports", [])) - set(observed))
+        | {p for p, status in observed.items() if status not in ("open", "closed")}
+    )
     old = set(record["baseline_open_ports"])
     events = []
     initialized = record.get("baseline_initialized", previous is not None)
@@ -208,6 +213,24 @@ def configured_alert_channels() -> list[str]:
     from alerts.notifier import get_credentials
     discord, token, chat = get_credentials()
     return (["discord"] if discord else []) + (["telegram"] if token and chat else [])
+
+
+def handle_dns_failure(args: argparse.Namespace) -> int:
+    """Retry stored alerts independently of target DNS, without new observations."""
+    print("[-] SCAN_FAILED: DNS resolution failed; baseline preserved.", file=sys.stderr)
+    state_file = Path(args.state_file)
+    try:
+        with state_lock(state_file):
+            state = load_state(state_file)
+            pending = state.get(args.host, {}).get("pending_alerts", [])
+            # Reuse the normal delivery budget, backoff and per-channel persistence.
+            # Do not create a host record or advance its last successful observation.
+            attempted = 0 if args.no_alert else _deliver_due_alerts(state_file, state, pending, time.time(), 2)
+            write_audit(state_file, target=args.host, event="DNS_FAILED", exit_status=2,
+                        retried_alerts=attempted, pending_alerts=len(pending))
+    except (OSError, ValueError, RuntimeError) as error:
+        print(f"[-] Monitoring failure during DNS outage: {error}", file=sys.stderr)
+    return 2
 
 
 def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -> int:
@@ -299,6 +322,7 @@ def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) 
     record = load_state(state_file).get(args.host, {})
     result = 1 if record.get("uncertain_ports") or record.get("pending_alerts") else 0
     write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, results=results,
+                uncertain_ports=record.get("uncertain_ports", []),
                 pending_alerts=len(record.get("pending_alerts", [])), exit_status=result)
     return result
 
@@ -380,12 +404,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             resolved = socket.gethostbyname(args.host)
         except socket.gaierror:
-            print("[-] SCAN_FAILED: DNS resolution failed; baseline preserved.", file=sys.stderr)
-            try:
-                write_audit(Path(args.state_file), target=args.host, event="DNS_FAILED", exit_status=2)
-            except OSError:
-                pass
-            return 2
+            return handle_dns_failure(args)
         return run_single_scan(args, ports, resolved)
 
     if args.watch and args.watch > 0:
