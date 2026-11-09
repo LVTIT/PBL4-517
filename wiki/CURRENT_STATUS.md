@@ -15,6 +15,20 @@ compatible. [Reproduction, logs and limits](../evidence/MON-03/partial-scan-2026
 current real dual-channel receipts and required human acceptance remain pending;
 Issue #43 stays open.
 
+**2026-11-09 notifier failure reporting (#43): Implemented / locally verified;
+hosted CI and human review tracked on the delivery PR.** Alert self-test now
+returns 0 only when all enabled channels succeed, 1 on delivery failure and 2
+when no channel has complete configuration. Disabled channels are reported as
+skipped. Discord/Telegram sender errors retain the provider and HTTP status or
+exception class without logging credential-bearing exception text. Six new
+test methods fail with 17 subtest/assertion failures on the original notifier;
+after the fix all 33 scanner/ChatOps tests, 5 policy regressions, 8 offline demo
+tests and Python syntax checks PASS locally. Simulated transport recovery
+verifies durable Telegram-only retry after reload with identical payload/Event
+ID and no duplicate Discord send. [Commands, results and limits](../evidence/MON-03/alert-delivery-20261109/README.md).
+External Ubuntu VM scheduling/reboot, real-channel receipts and required human
+acceptance for #43 remain pending.
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current

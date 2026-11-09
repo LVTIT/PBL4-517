@@ -45,6 +45,18 @@ Kiểm tra kết nối và bắn thử tin nhắn kiểm thử:
 python alerts/notifier.py
 ```
 
+Lệnh kiểm tra trả exit code `0` khi **mọi kênh đã cấu hình** gửi thành công,
+`1` khi có ít nhất một kênh gửi thất bại, và `2` khi chưa có kênh nào cấu hình
+đầy đủ. Telegram cần cả `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`; kênh chưa
+cấu hình hiển thị `BỎ QUA`, không bị tính là gửi thất bại. PowerShell xem mã
+bằng `$LASTEXITCODE`, shell Linux dùng `$?` ngay sau lệnh.
+
+Lỗi gửi Discord/Telegram chỉ ghi tên kênh và mã HTTP hoặc loại exception
+(ví dụ `HTTP 503`, `URLError`). Không ghi URL, token/webhook, nội dung phản hồi
+hoặc thông điệp exception vào log lỗi của notifier. Đối chiếu mã HTTP với cấu
+hình secret ngoài Git và trạng thái nhà cung cấp để xử lý lỗi; scanner giữ kênh
+gửi thất bại trong outbox để thử lại theo backoff bên dưới.
+
 ---
 
 ## 3. Hướng dẫn Sử dụng Scanner
