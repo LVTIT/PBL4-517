@@ -1,0 +1,23 @@
+﻿
+> pbl517-backend@0.1.0 test:security
+> node --test tests/security-lifecycle.test.mjs
+
+Γû╢ isolated local exploit -> defense lifecycle
+  Γ£ö production refuses each vulnerable flag before serving requests (5320.4608ms)
+  Γ£ö lab with production runtime retains Secure cookies through trusted HTTPS proxy (5850.6615ms)
+  Γ£ö IDOR read/update/cancel: vulnerable succeeds; defense preserves order and stock (1653.7598ms)
+  Γ£ö SQLi: identical tautology and UNION disclose fixture data only in vulnerable mode (119.0419ms)
+  Γ£ö stored XSS: same persisted review executes in lab; React escapes it in secure mode (10980.1685ms)
+  Γ£ö unavailable API remains an HTTP failure, including checkout (1684.3343ms)
+  Γ£ö deployed-demo tools: real fixtures, remote-style HTTP probes and browser retest (71035.3651ms)
+  Γ£ö authentication: bounded guessing reaches 429 only with rate-limit defense (23095.8752ms)
+Γ£ö isolated local exploit -> defense lifecycle (135199.5773ms)
+Γä╣ tests 9
+Γä╣ suites 0
+Γä╣ pass 9
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 136030.7238
+

@@ -1,5 +1,46 @@
 # Current Project Status
 
+**2026-11-09 security regression conflict resolution (#44 / PR #59): integrated
+main `6c1167b`; latest-head CI and human review tracked on PR.** The only conflict
+was the status-file insertion from ALB PR #60. Both the existing #44 regression
+entries and all main entries are retained, together with main's ALB design and
+architecture updates. Application/scanner/CI behavior matches main except for
+the existing Node security-suite parent timeout/comment. Historical 2026-11-01
+logs remain unchanged; they are not a fresh local run of this integration.
+[Integration scope and prior evidence](../evidence/TEST-02/local-regression-20261101/README.md),
+[PR #59](https://github.com/LVTIT/PBL4-517/pull/59).
+
+**2026-11-04 security regression integration (#44 / PR #59): merged main
+`359acee` into the feature branch; latest-head CI and human review tracked on PR.**
+Resolved the status-file conflict while preserving all existing main entries,
+including #61/#63/#65 audits and #33/#14 network/HTTPS evidence. The security
+lifecycle suite retains its 300 s Node parent budget; assertions and all other
+application/test behavior match main. The Linux CI wrapper still limits this
+suite to 120 s; this PR does not increase that outer deadline. The logs below
+remain historical results for `6d4f569`, not fresh tests of this integration.
+Current operational observations are in the dated #33/#14 entries and evidence;
+current-main deployment, A05 lifecycle, external VM/reboot, real chat receipts
+and required human acceptance are not established by this conflict resolution.
+[Historical matrix and integration scope](../evidence/TEST-02/local-regression-20261101/README.md),
+[PR #59](https://github.com/LVTIT/PBL4-517/pull/59).
+
+**Historical 2026-11-01 full security regression (#44), tested on `6d4f569`: local
+scenarios verified at that revision; operational gaps recorded at that time.**
+Re-ran the whole local gate on `6d4f569` (branch `feature/44-local-regression-20261101`,
+based on `main` `43bebb1`): lifecycle 9, API 18, UI 54, scanner 27, demo
+classification 8, CI helpers 5, config 2 and repository policy 0 violations all
+PASS; both build artifacts verify for the tested SHA. IDOR, SQLi, stored XSS and
+bounded auth guessing kept their vulnerable/secure contrast. External EC2 probes
+in that window rejected a SQLi tautology and an unauthenticated order read. Two findings:
+PR #58 added a subtest that did not fit the suite's 120 s budget (raised to 300 s,
+assertions unchanged), and the deployed host is **stale** - it returns 404 for the
+`/api/version` metadata added in #58 with a frontend `Last-Modified` of
+2026-10-19, so no regression claim can be made for the running deployment. A05,
+SG/NACL, service/reboot and real Telegram/Discord receipts remain blocked or
+unverified (#16, #17, #33, #35, #36, #41, #42, #43). No AWS/VM change, deployment,
+real alert, review or closure was performed.
+[Matrix, logs and limits](../evidence/TEST-02/local-regression-20261101/README.md).
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current

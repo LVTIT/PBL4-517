@@ -1,0 +1,68 @@
+﻿External exposure and HTTPS smoke test - 2026-11-01 (Asia/Saigon)
+Target: team-owned EC2 13.251.128.130 (authorized PBL4-517 host)
+
+=== scanner port sweep (no banner, no alert, temporary state file) ===
+
+[>] Bß║»t ─æß║ºu qu├⌐t 13.251.128.130 (13.251.128.130): 6 ports (─Éa luß╗ông 10 workers, timeout=1.0s)
+-----------------------------------------------------------------
+     22/tcp  FILTERED [SSH (Quß║ún trß╗ï tß╗½ xa)]
+     80/tcp  OPEN     [HTTP (Nginx Web Server)] [INFO - Risk score 0.0]
+    443/tcp  OPEN     [HTTPS (Web bß║úo mß║¡t TLS)] [INFO - Risk score 0.0]
+   3000/tcp  FILTERED [Node.js Express API (Backend th├┤)]
+   5432/tcp  FILTERED [PostgreSQL Database]
+   8080/tcp  FILTERED [HTTP Alt / Proxy]
+-----------------------------------------------------------------
+Thß╗¥i gian qu├⌐t : 1.02s | Cß╗òng ─æang mß╗ƒ (2): [80, 443]
+─É├ính gi├í rß╗ºi ro : Xß║┐p hß║íng [A] - CHß╗ê QUAN S├üT THß║ñY Cß╗öNG WEB (Max Risk score: 0.0)
+[EVENT: NO_CHANGE] uncertain=[22, 3000, 5432, 8080]; pending_alerts=0
+[+] B├ío c├ío HTML (Living Dashboard) ─æ├ú cß║¡p nhß║¡t: D:\PBL4\PBL4-517\scanner\reports\latest.html
+
+=== HTTPS /api/health response headers ===
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Sun, 01 Nov 2026 10:10:37 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 47
+Connection: keep-alive
+Content-Security-Policy: default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Origin-Agent-Cluster: ?1
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+ETag: W/"2f-17FvSWu54Cvt2OygnenV+MGoC/E"
+
+
+=== HTTP port 80 redirect ===
+HTTP/1.1 308 Permanent Redirect
+Server: nginx/1.24.0 (Ubuntu)
+Date: Sun, 01 Nov 2026 10:10:37 GMT
+Content-Type: text/html
+Content-Length: 180
+Connection: keep-alive
+Location: https://13.251.128.130/
+
+
+=== GET /api/products (first 200 chars) ===
+{"data":[{"id":"10000000-0000-4000-8000-000000000001","name":"B├án ph├¡m c╞í Mini 68","description":"B├án ph├¡m gß╗ìn vß╗¢i 68 ph├¡m, kß║┐t nß╗æi USB-C v├á switch ├¬m cho g├│c hß╗ìc tß║¡p.","price":"7
+=== GET /api/products?search=chuot ===
+{"data":[{"id":"10000000-0000-4000-8000-000000000002","name":"Chuß╗Öt kh├┤ng d├óy Everyday","description":"Chuß╗Öt kh├┤ng d├óy nhß║╣, thiß║┐t kß║┐ thuß║¡n tay v
+status=200
+=== GET /api/products?search=<tautology> (secure baseline must not disclose) ===
+{"data":[]}
+status=200
+
+=== GET /api/orders/<id> unauthenticated ===
+{"error":{"code":"UNAUTHORIZED","message":"Vui l├▓ng ─æ─âng nhß║¡p ─æß╗â tiß║┐p tß╗Ñc."}}
+status=401
+
+=== GET /api/version (release metadata added by PR #58) ===
+{"error":{"code":"NOT_FOUND","message":"Kh├┤ng t├¼m thß║Ñy API."}}
+status=404
+
