@@ -217,4 +217,5 @@ responds conclusively. Existing state files need no migration.
 
 Run `python -m unittest discover -s scanner/tests -v` from the repository root.
 These checks use loopback sockets and simulated alert outcomes; no chat is sent.
+[Kiểm chứng tích hợp ba bản sửa monitoring trong PR #72](../evidence/MON-03/pr72-consolidation-20261109/README.md).
 [Ubuntu VM scheduler template and acceptance steps](systemd/README.md).

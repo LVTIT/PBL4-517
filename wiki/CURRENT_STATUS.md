@@ -1,5 +1,18 @@
 # Current Project Status
 
+**2026-11-09 hợp nhất monitoring fixes (#43 / PR #72): Implemented / locally verified.**
+Theo yêu cầu người dùng, tích hợp PR #73 (`c49fc20`) và #74 (`fd894b2`) vào nhánh
+PR #72 (`d0ccdd7`) bằng merge commit, bảo toàn lịch sử và toàn bộ test/evidence.
+PR #72 tập hợp ba bản sửa: partial-scan uncertainty, notifier exit/log và retry
+outbox khi DNS lỗi. Conflict tài liệu được giải quyết bằng cách giữ cả ba hành vi.
+Đối chiếu AST xác nhận các hàm scanner đúng tổ hợp bản sửa gốc; notifier và ba
+file regression giữ nguyên blob. Kiểm chứng tích hợp: scanner/ChatOps/notifier
+45/45, policy 5/5, demo classification 8/8 và Python compileall PASS local.
+[Phạm vi, cách đối chiếu và kiểm chứng](../evidence/MON-03/pr72-consolidation-20261109/README.md).
+Latest-head CI và human review theo dõi tại [PR #72](https://github.com/LVTIT/PBL4-517/pull/72).
+Các kết quả riêng 31/33/35 tests bên dưới là snapshot trước hợp nhất. Nghiệm thu
+Ubuntu VM/reboot, real-channel receipts và human acceptance của #43 còn chờ.
+
 **2026-11-04 partial-scan uncertainty repair (#43): Implemented / locally verified;
 hosted CI and human review tracked on delivery PR.** Scanner previously replaced
 all stored uncertainty with only the current scan's timeouts: a Web-only scan
