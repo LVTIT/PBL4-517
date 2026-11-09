@@ -215,6 +215,24 @@ def configured_alert_channels() -> list[str]:
     return (["discord"] if discord else []) + (["telegram"] if token and chat else [])
 
 
+def handle_dns_failure(args: argparse.Namespace) -> int:
+    """Retry stored alerts independently of target DNS, without new observations."""
+    print("[-] SCAN_FAILED: DNS resolution failed; baseline preserved.", file=sys.stderr)
+    state_file = Path(args.state_file)
+    try:
+        with state_lock(state_file):
+            state = load_state(state_file)
+            pending = state.get(args.host, {}).get("pending_alerts", [])
+            # Reuse the normal delivery budget, backoff and per-channel persistence.
+            # Do not create a host record or advance its last successful observation.
+            attempted = 0 if args.no_alert else _deliver_due_alerts(state_file, state, pending, time.time(), 2)
+            write_audit(state_file, target=args.host, event="DNS_FAILED", exit_status=2,
+                        retried_alerts=attempted, pending_alerts=len(pending))
+    except (OSError, ValueError, RuntimeError) as error:
+        print(f"[-] Monitoring failure during DNS outage: {error}", file=sys.stderr)
+    return 2
+
+
 def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -> int:
     try:
         with state_lock(Path(args.state_file)):
@@ -386,12 +404,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             resolved = socket.gethostbyname(args.host)
         except socket.gaierror:
-            print("[-] SCAN_FAILED: DNS resolution failed; baseline preserved.", file=sys.stderr)
-            try:
-                write_audit(Path(args.state_file), target=args.host, event="DNS_FAILED", exit_status=2)
-            except OSError:
-                pass
-            return 2
+            return handle_dns_failure(args)
         return run_single_scan(args, ports, resolved)
 
     if args.watch and args.watch > 0:
