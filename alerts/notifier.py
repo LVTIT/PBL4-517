@@ -99,6 +99,12 @@ def format_port_label(port: int, banner: str | None = None) -> str:
     return f"`{port}/tcp` ({service}){badge}{banner_str}"
 
 
+def _log_delivery_error(channel: str, error: Exception) -> None:
+    """Keep failure diagnostics without printing credential-bearing URLs/reasons."""
+    diagnostic = f"HTTP {error.code}" if isinstance(error, urllib.error.HTTPError) else type(error).__name__
+    print(f"[-] {channel} error: {diagnostic}", file=sys.stderr)
+
+
 def send_discord_alert(
     webhook_url: str,
     title: str,
@@ -159,7 +165,7 @@ def send_discord_alert(
         with urllib.request.urlopen(req, timeout=10) as resp:
             return resp.status in (200, 204)
     except Exception as exc:
-        print(f"[-] Discord Webhook error: {exc}", file=sys.stderr)
+        _log_delivery_error("Discord Webhook", exc)
         return False
 
 
@@ -198,7 +204,7 @@ def send_telegram_alert(
             data = json.loads(resp.read().decode("utf-8"))
             return bool(data.get("ok"))
     except Exception as exc:
-        print(f"[-] Telegram Bot error: {exc}", file=sys.stderr)
+        _log_delivery_error("Telegram Bot", exc)
         return False
 
 
@@ -349,13 +355,14 @@ def main() -> int:
     """Hỗ trợ kiểm tra nhanh kết nối Webhook & Bot khi chạy trực tiếp script."""
     print("[*] Kiểm tra kết nối cấu hình Alert System (PBL4-517)...")
     discord_url, tele_token, tele_chat_id = get_credentials()
+    enabled = {"discord": bool(discord_url), "telegram": bool(tele_token and tele_chat_id)}
 
-    print(f"[*] Discord Webhook : {'ĐÃ CẤU HÌNH' if discord_url else 'CHƯA CÓ'}")
-    print(f"[*] Telegram Bot    : {'ĐÃ CẤU HÌNH' if tele_token and tele_chat_id else 'CHƯA CÓ'}")
+    print(f"[*] Discord Webhook : {'ĐÃ CẤU HÌNH' if enabled['discord'] else 'CHƯA CÓ'}")
+    print(f"[*] Telegram Bot    : {'ĐÃ CẤU HÌNH' if enabled['telegram'] else 'CHƯA CÓ'}")
 
-    if not discord_url and not (tele_token and tele_chat_id):
-        print("[-] Lỗi: Chưa tìm thấy cấu hình DISCORD_WEBHOOK_URL hoặc TELEGRAM_BOT_TOKEN trong .env!")
-        return 1
+    if not any(enabled.values()):
+        print("[-] Lỗi: Cần DISCORD_WEBHOOK_URL hoặc cả TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID!")
+        return 2
 
     print("[*] Đang gửi tin nhắn thử nghiệm (Test Alert)...")
     res = notify_scan_event(
@@ -364,9 +371,13 @@ def main() -> int:
         open_ports=[22, 80],
         scan_duration=0.5,
     )
-    print(f"[+] Kết quả gửi Discord  : {'THÀNH CÔNG (200/204)' if res['discord'] else 'THẤT BẠI'}")
-    print(f"[+] Kết quả gửi Telegram : {'THÀNH CÔNG (ok: true)' if res['telegram'] else 'THẤT BẠI'}")
-    return 0
+    for channel, label in (("discord", "Discord"), ("telegram", "Telegram")):
+        if not enabled[channel]:
+            outcome = "BỎ QUA (chưa cấu hình)"
+        else:
+            outcome = "THÀNH CÔNG" if res.get(channel) else "THẤT BẠI"
+        print(f"[*] Kết quả gửi {label}: {outcome}")
+    return 0 if all(res.get(channel) for channel in enabled if enabled[channel]) else 1
 
 
 if __name__ == "__main__":
