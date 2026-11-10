@@ -2,6 +2,11 @@
 
 Ngày thực nghiệm: **2026-09-22**. Nhánh: `feat/owasp-01-idor` / `main`.
 
+> **Ghi chú lịch sử (2026-11-10):** các lệnh `exploit_*.py` trong tài liệu này là
+> bằng chứng lịch sử. Entrypoint hiện tại là `.\demo <scenario>` hoặc
+> `python scripts/attacker/demo.py --scenario ...` (probe nằm trong
+> `scripts/attacker/probes/`). Không sửa các file log `.txt` đã chụp.
+
 Tài liệu này ghi nhận hồ sơ kiểm thử, phân tích lỗ hổng, cơ chế phòng thủ chuyên sâu tầng Database, giao diện minh họa trực quan và bộ bằng chứng thực nghiệm đầy đủ cho kịch bản **OWASP Top 10 - A01: Broken Access Control (IDOR)** trong đề tài PBL4-517.
 
 ---
