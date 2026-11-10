@@ -2,6 +2,11 @@
 
 Ngày thực nghiệm: **2026-09-30**. Issue: [#37 — Implement SQL Injection Lab Lifecycle](https://github.com/LVTIT/PBL4-517/issues/37). Nhánh: `feature/37-sqli-lab` (`Refs #37`).
 
+> **Ghi chú lịch sử (2026-11-10):** các lệnh `exploit_*.py` trong tài liệu này là
+> bằng chứng lịch sử. Entrypoint hiện tại là `.\demo sqli` hoặc
+> `python scripts/attacker/demo.py --scenario sqli ...` (probe nằm trong
+> `scripts/attacker/probes/sqli.py`). Không sửa các file log `.txt` đã chụp.
+
 Tài liệu này ghi nhận toàn bộ chu trình **vulnerable → exploit → evidence → fix → retest** cho kịch bản SQL Injection trên ô tìm kiếm sản phẩm, đồng thời giữ `main` là Secure Baseline.
 
 ---

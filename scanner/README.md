@@ -8,7 +8,7 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
 - **Hệ thống cảnh báo kép (Dual Alerts) với nút bấm tương tác:**
   - **Discord Webhook:** Rich Embed trực quan kèm Action Row Link Buttons dẫn tới cẩm nang khắc phục AWS Security Group & tài liệu chuẩn OWASP A05.
   - **Telegram Group Bot:** Thông báo định dạng Markdown an toàn kèm Inline Keyboard nút bấm tương tác nhanh.
-- **Telegram ChatOps Bot hai chiều:** Module `alerts/bot_listener.py` chạy nền tiếp nhận lệnh điều khiển từ xa (`/scan`, `/status`, `/ping`, `/help`).
+- **Telegram ChatOps Bot hai chiều:** Module `alerts/bot_listener.py` chạy nền tiếp nhận lệnh điều khiển từ xa (`/scan`, `/status`, `/report`, `/ping`, `/help`), gửi kèm bàn phím nút bấm và gửi trực tiếp file báo cáo HTML/Markdown vào chat.
 - **Xuất báo cáo kép (Dual Reporting):**
   - **Living HTML Dashboard (`latest.html`):** Giao diện Dark Cyber Glassmorphism hiện đại, tự động lưu trữ tối đa 10 snapshot sự kiện, tích hợp nút in/xuất PDF trực tiếp từ trình duyệt (`window.print()`).
   - **Markdown Report (`latest.md`):** Tự động sinh báo cáo chuẩn Markdown phục vụ việc sao chép vào báo cáo đề tài/đồ án.
@@ -106,18 +106,36 @@ Xem tên biến tại [`.env.example`](../.env.example); giữ cấu hình thậ
 
 Các lệnh tương tác hỗ trợ:
 - `/scan [target] [ports]`: Quét IPv4 trong allowlist (mặc định: `SCANNER_TARGET`); `/scan 80,443` chọn port trên target mặc định.
-- `/status`: Xem Baseline đã lưu của các target mà không cần quét lại.
+- `/status`: Xem Baseline đã lưu của các target, gồm xếp hạng rủi ro, cổng mở, cổng timeout/filtered và số cảnh báo đang chờ gửi.
+- `/report`: Gửi trực tiếp `latest.html` và `latest.md` vào chat dưới dạng tài liệu Telegram. Nếu chưa có báo cáo, bot hướng dẫn chạy `/scan`; nếu gửi file thất bại, bot chỉ ra đường dẫn file trên máy scanner.
 - `/ping`: Kiểm tra độ trễ và tình trạng sẵn sàng của ChatOps Bot.
-- `/help`: Xem hướng dẫn sử dụng và danh sách lệnh.
+- `/help` (hoặc `/menu`, `/start`): Xem hướng dẫn sử dụng, giới hạn an toàn và danh sách lệnh.
+
+Bot cũng đăng ký menu lệnh với Telegram, gửi bàn phím nút bấm cho các hành động thường dùng
+(quét lại, quét web/DB, baseline, báo cáo, ping, trợ giúp) và dùng đúng một hàng đợi
+lệnh cho cả tin nhắn lẫn callback. Mọi lệnh và callback đều kiểm tra đồng thời chat và người gửi.
+Trên Discord, hai nút tài liệu là link button; webhook tự thêm `with_components=true`
+(giữ nguyên `thread_id` và chờ server xác nhận) vì incoming webhook mặc định bỏ qua
+`components`. ChatOps không suy ra cổng timeout/filtered là đã đóng và không tự đổi
+AWS Security Group.
 
 ---
 
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
-Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục `scanner/reports/`:
-1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, cảnh báo trực quan, biểu đồ tình trạng, và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
+Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục báo cáo (mặc định `.local/reports/scanner/`, đổi bằng `PBL517_REPORTS_DIR`):
+1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, banner trạng thái theo sự kiện, ma trận toàn bộ cổng đã quét, phần giải thích giới hạn và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
 2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
+
+Khi một lần quét thất bại (DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
+scanner ghi đè `latest.html`/`latest.md` bằng **trang lỗi** (`generate_error_report`). Trang này
+nêu lý do, việc cần kiểm tra và những gì nó **không** kết luận, để người xem không đọc nhầm
+báo cáo cũ hoặc tưởng lần quét vừa rồi đã thành công.
+
+Báo cáo quét thành công cũng không tự nhận "an toàn": nếu có cổng `timeout/filtered`, banner
+trạng thái chuyển sang cảnh báo chưa đầy đủ; nếu không thấy cổng mở, báo cáo vẫn ghi rõ đó chỉ
+là phạm vi quét cổng, không phải kiểm thử toàn diện ứng dụng, TLS hay phân quyền.
 
 Toàn bộ bộ bằng chứng thực nghiệm đạt chuẩn kiểm thử cho Issue #10 được lưu trữ tại [`evidence/SCAN-01/`](../evidence/SCAN-01/).
 
@@ -145,10 +163,12 @@ Toàn bộ bộ bằng chứng thực nghiệm đạt chuẩn kiểm thử cho I
 | **`NEW_PORT_DETECTED`** | Phát hiện cổng mới mở thêm ($P_{\text{mới}} = P_{\text{hiện tại}} \setminus P_{\text{baseline}}$) | Cập nhật Baseline. **Bắn chuông báo động đỏ khẩn cấp** kèm điểm heuristic và nút hướng dẫn xử lý! |
 | **`PORT_CLOSED`** | Kết nối TCP tới cổng bị từ chối rõ ràng | Cập nhật Baseline và cảnh báo đóng cổng; không suy ra các cổng còn lại hay ứng dụng đã an toàn. |
 | **`NO_CHANGE`** | Trạng thái cổng không đổi so với Baseline | Cập nhật thời gian quét. **Im lặng hoàn toàn** (tránh gây phiền nhiễu cho nhóm chat). |
+| **`SCAN_UNCERTAIN`** | Có cổng timeout/filtered hoặc danh sách cổng chưa xác định thay đổi | Gửi cảnh báo "kết quả chưa đầy đủ"; không coi các cổng đó là đã đóng. |
+| **`SCAN_RECOVERED`** | Lần quét trước có cổng chưa xác định, lần này không còn | Thông báo kết nối/giám sát đã phục hồi; không tuyên bố hệ thống đã an toàn. |
 
 
 
-## Reliability and local verification ? Refs #35, #43, #44
+## Reliability and local verification — Refs #35, #43, #44
 
 `open` means a TCP connection succeeded; `closed` means an explicit refusal.
 `filtered`/timeout is uncertain and never confirms a closed port. Previously open
