@@ -1,8 +1,9 @@
 # Current Project Status
 
 **2026-11-10 demo evidence and probe layout (#68, Related to #44):
-implemented / offline verified; uncommitted.** `.\demo <scenario>` now prints a
-bounded `observed` section for what the vulnerability actually exposed or changed,
+implemented / offline verified; committed `afc896d`, PR #75 open.** `.\demo
+<scenario>` now prints a bounded `observed` section for what the vulnerability
+actually exposed or changed,
 plus `controls` and `limits`; it still prints the numbered request/status trace,
 fixture run/order/product/review identifiers and report paths. IDOR read shows
 only the disclosed order (not stock); IDOR update/cancel show address/status and
@@ -19,9 +20,11 @@ only for CI/automation. Non-loopback targets redact `observed` unless
 `--show-evidence` is explicitly allowed. Password, cookie, CSRF token and session
 values are never printed. Existing `exploit_*.py` remain 5-line compatibility
 wrappers. Offline checks: demo **9/9**, attacker Python **16/16**, mocked XSS
-**5/5**, `py_compile`, `node --check` and both `--help` commands PASS. No live
-service/probe, env/DB mutation, EC2/CI run, commit/PR or human review is claimed;
-the earlier #68 entries below retain their historical CLI behavior.
+**5/5**, `py_compile`, `node --check` and both `--help` commands PASS. Hosted CI
+run [42807230570](https://github.com/LVTIT/PBL4-517/actions/runs/42807230570)
+passed all six checks on `afc896d`. No live service/probe, env/DB mutation, EC2
+deployment or human review is claimed; the earlier #68 entries below retain their
+historical CLI behavior.
 
 **2026-11-10 operator feedback: concise demo CLI (#68, Related to #44):
 implemented / offline verified; uncommitted.** Default `.\demo <scenario>` now
