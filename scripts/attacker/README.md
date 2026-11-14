@@ -57,6 +57,24 @@ cấu hình/release tốt; không đổi NODE_ENV để lách guard. Không tự
 Tại gốc repo cần Python 3 và Node 24. Python dùng standard library; XSS dùng Playwright.
 SSH/scp thêm `-i <key>` nếu cần. Không chia sẻ key hoặc manifest.
 
+Cấu trúc probe:
+
+```text
+scripts/attacker/
+  demo.py          # entrypoint: --scenario, guard target/fixture, in một JSON
+  core.py          # Client/login/CSRF/cookie, trace, fixture, redact evidence
+  probes/idor.py   # IDOR đọc + sửa + hủy, evidence từng bài
+  probes/sqli.py   # control dương/âm và sản phẩm bị lộ
+  probes/auth.py   # 12 lần login sai, chuỗi 401/429
+  probes/release.py# revision/dirty/hash cho EC2
+  xss.mjs          # Chromium/DOM/marker
+  exploit_*.py     # vỏ tương thích cũ; nên dùng demo.py trực tiếp
+```
+
+Mở đúng file khi bảo vệ: `demo.py` là cửa vào; `core.py` là phần chung; mỗi
+`probes/<bài>.py` chứa toàn bộ request/control/evidence của bài đó; `xss.mjs`
+tách riêng vì cần Chromium.
+
 ```powershell
 npm.cmd --prefix website/frontend ci
 npm.cmd --prefix website/frontend exec -- playwright install chromium
@@ -136,7 +154,7 @@ python scripts/attacker/demo.py --scenario auth --url $target --fixture $fixture
 ```
 
 Auth để cuối: bộ đếm theo IP, không theo tab/incognito. Chờ 15 phút hoặc restart lab
-trước mỗi pha để bắt đầu mới. Sau pha secure, đúng mật khẩu cũng có thể nhận 429.
+trước mỗi lượt để bắt đầu mới. Sau lượt secure, đúng mật khẩu cũng có thể nhận 429.
 
 XSS: mở `$target/products/<productId>` để trình bày. Marker chỉ đặt
 `window.__pbl517_xss_probe=1`, không lấy cookie/gửi dữ liệu. Tắt cờ thì cùng chuỗi đã
@@ -154,8 +172,10 @@ Reset xác minh owner/sản phẩm/run/item/trạng thái, phục hồi chỉ đ
 transaction; giữ ID và review XSS. Chạy cùng payload ở secure. CANNOT_CANCEL/400 do
 đơn đã hủy không chứng minh chặn IDOR. Không reset đồng thời với thao tác nhóm.
 
-`exploit_idor*.py` và `exploit_sqli.py` gọi cùng bộ kiểm chứng, giờ cần
-`--url --fixture --expect`; bỏ account/order/local URL mặc định và payload tùy ý cũ.
+`exploit_idor*.py` và `exploit_sqli.py` vẫn được giữ làm **vỏ tương thích** 5 dòng
+gọi `demo.main(scenario)`. Chúng nhận cùng tham số với entrypoint, ví dụ target
+EC2 cần `--url --fixture --revision`; `--expect` chỉ là kỳ vọng tùy chọn.
+Entrypoint khuyến nghị là `python scripts/attacker/demo.py --scenario ...`.
 
 ## 6. Kết quả và kết thúc
 
@@ -166,10 +186,15 @@ transaction; giữ ID và review XSS. Chạy cùng payload ở secure. CANNOT_CA
 | INCONCLUSIVE | TLS/login/CSRF/429 bất ngờ, outage hoặc fixture sai | 2 |
 | RELEASE_VERIFIED | FE/BE đúng revision sạch, FE hash và health phù hợp | 0 |
 
-Output JSON không chứa password/cookie/response cá nhân. Ghi stdout vào
-`.local/demo/<scenario>-<phase>.json`, kiểm tra `$LASTEXITCODE`. Chỉ đưa báo cáo đã
-rà soát vào evidence, không đưa manifest credential. Ghi SHA/URL/thời điểm/run ID,
-cờ, trước/sau, control, receipt và hạn chế. 502/503 hoặc sai CSRF **không** là đã vá.
+Output JSON không chứa password/cookie/CSRF token. Mỗi probe cung cấp
+`evidence.observed` (dữ liệu bị lộ hoặc tác động thật), `controls` (đối chứng)
+và `limits` (bài chưa chứng minh gì). Với target ngoài loopback, `observed` bị
+che mặc định; chỉ thêm `--show-evidence` khi đã được phép. Lệnh thường dùng
+`--observe` và ghi `.local/demo/<scenario>.json`; khi đặt kỳ vọng ghi
+`.local/demo/<scenario>-<expect>.json`. Kiểm tra `$LASTEXITCODE`. Khi chạy qua
+`.\demo`, launcher còn ghi bản `.md` dễ đọc. Chỉ đưa báo cáo đã rà soát vào
+evidence, không đưa manifest credential. Ghi SHA/URL/thời điểm/run ID, cờ,
+trước/sau, control, receipt và hạn chế. 502/503 hoặc sai CSRF **không** là đã vá.
 Tắt cờ chọn nhánh phòng vệ: khi trình bày giải thích query scoping, Prisma
 parameterization, React escaping và rate limit.
 

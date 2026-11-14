@@ -5,27 +5,30 @@ Tạo báo cáo kiểm toán an ninh mạng chuyên nghiệp định dạng HTML
 - Không phụ thuộc mạng Internet/CDN (mở xem offline khi chấm bài hoàn hảo).
 - Nút bấm In ấn / Xuất PDF trực tiếp trên giao diện trình duyệt.
 - Tự động sinh báo cáo định dạng Markdown (latest.md) để dễ dàng kẹp vào bài nộp Word đồ án.
-- Cơ chế Living Dashboard chống đầy ổ cứng: Mặc định ghi đè file `scanner/reports/latest.html`.
+- Cơ chế Living Dashboard chống đầy ổ cứng: Mặc định ghi đè file `.local/reports/scanner/latest.html`.
 - Cơ chế lưu trữ sự cố: Tự động lưu snapshot khi có cảnh báo và giới hạn tối đa 10 file gần nhất.
 """
 
 from __future__ import annotations
 
 import datetime
-import os
 from html import escape
 from pathlib import Path
 
 from scanner.risk_matrix import assess_port, calculate_system_posture
 
-REPORTS_DIR = Path(os.environ.get("PBL517_REPORTS_DIR", str(Path(__file__).resolve().parent / "reports")))
+from scanner.config import reports_dir
+
+# None uses shared dynamic configuration; tests may override with a temporary Path.
+REPORTS_DIR: Path | None = None
 MAX_ARCHIVED_REPORTS = 10
 
 
 def ensure_reports_dir() -> Path:
     """Đảm bảo thư mục lưu báo cáo tồn tại."""
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    return REPORTS_DIR
+    directory = REPORTS_DIR if REPORTS_DIR is not None else reports_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
 
 
 def clean_old_reports(reports_dir: Path, max_keep: int = MAX_ARCHIVED_REPORTS) -> None:
@@ -127,6 +130,66 @@ def generate_markdown_report(
     return md_path
 
 
+EVENT_STYLES: dict[str, tuple[str, str, str, str]] = {
+    # event_type: (css class, icon, title, detail)
+    "INITIAL_SCAN": (
+        "alert-info", "📢", "Đã thiết lập mốc Baseline",
+        "Lần quét này được lưu làm mốc so sánh cho các lần sau.",
+    ),
+    "NEW_PORT_DETECTED": (
+        "alert-danger", "🚨", "Phát hiện cổng mới mở ngoài Baseline",
+        "Đối chiếu ngay Security Group, tiến trình đang chạy và chủ đích của thay đổi.",
+    ),
+    "PORT_CLOSED": (
+        "alert-success", "🛡️", "Đã xác nhận đóng cổng",
+        "Chỉ các cổng nhận TCP refusal rõ ràng mới được coi là đã đóng. Các cổng còn mở và bảo mật ứng dụng vẫn cần đánh giá riêng.",
+    ),
+    "SCAN_UNCERTAIN": (
+        "alert-warning", "⚠️", "Kết quả quét chưa đầy đủ",
+        "Có cổng timeout/filtered. Không kết luận các cổng đó đã đóng hay hệ thống đã an toàn.",
+    ),
+    "SCAN_RECOVERED": (
+        "alert-info", "🔄", "Kết nối giám sát đã phục hồi",
+        "Lần quét này không còn cổng chưa xác định; vẫn cần đọc chi tiết từng cổng.",
+    ),
+    "NO_CHANGE": (
+        "alert-neutral", "ℹ️", "Không có thay đổi cổng đã xác nhận",
+        "Không có thay đổi không đồng nghĩa hệ thống không còn lỗ hổng.",
+    ),
+    "MANUAL_SCAN": (
+        "alert-neutral", "🔎", "Quét thủ công",
+        "Đây là kết quả tại thời điểm quét, không phải chứng nhận an toàn lâu dài.",
+    ),
+}
+
+
+def _status_banner(event_type: str, uncertain_ports: list[int]) -> str:
+    """Banner trung thực về ý nghĩa của lần quét hiện tại."""
+    if uncertain_ports and event_type not in ("SCAN_UNCERTAIN",):
+        css, icon, title, detail = EVENT_STYLES["SCAN_UNCERTAIN"]
+    else:
+        css, icon, title, detail = EVENT_STYLES.get(
+            event_type, EVENT_STYLES["MANUAL_SCAN"]
+        )
+    extra = ""
+    if uncertain_ports:
+        extra = (
+            f'<p class="alert-extra">Cổng chưa xác định: '
+            f'<code>{", ".join(str(p) for p in uncertain_ports)}</code>. '
+            "Timeout/filtered không chứng minh cổng đã đóng.</p>"
+        )
+    return f"""
+    <div class="alert-banner {css}" role="status">
+      <div class="alert-icon" aria-hidden="true">{icon}</div>
+      <div>
+        <p class="alert-title">{escape(title)}</p>
+        <p class="alert-detail">{escape(detail)}</p>
+        {extra}
+      </div>
+    </div>
+    """
+
+
 def generate_html_report(
     target_host: str,
     target_ip: str,
@@ -144,7 +207,10 @@ def generate_html_report(
     timestamp_id = now_dt.strftime("%Y%m%d_%H%M%S")
 
     open_ports = [p for p, status in sorted(port_results.items()) if status == "open"]
+    uncertain_ports = [p for p, status in sorted(port_results.items()) if status == "filtered"]
+    closed_ports = [p for p, status in sorted(port_results.items()) if status == "closed"]
     posture = calculate_system_posture(open_ports)
+    status_banner = _status_banner(event_type, uncertain_ports)
 
     # 1. Xây dựng các hàng cho bảng phát hiện cổng mở
     findings_rows = []
@@ -163,11 +229,23 @@ def generate_html_report(
               <td class="rec-cell"><code>{profile.recommendation}</code></td>
             </tr>
             """)
+    elif uncertain_ports:
+        findings_rows.append(f"""
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 24px; color: #f59e0b;">
+            ⚠️ <strong>Chưa kết luận an toàn:</strong> không có cổng mở được xác nhận,
+            nhưng {len(uncertain_ports)} cổng timeout/filtered
+            (<code>{", ".join(str(p) for p in uncertain_ports)}</code>).
+            Cần quét lại từ nguồn được phép và đối chiếu Security Group/tiến trình.
+          </td>
+        </tr>
+        """)
     else:
         findings_rows.append("""
         <tr>
           <td colspan="7" style="text-align: center; padding: 24px; color: #27ae60;">
-            ✅ <strong>Tuyệt vời:</strong> Không phát hiện bất kỳ cổng nhạy cảm nào bị phơi bày ra ngoài Internet!
+            ✅ <strong>Không quan sát thấy cổng mở</strong> trong phạm vi quét này.
+            Đây không phải kiểm thử toàn diện ứng dụng, TLS hay quyền truy cập.
           </td>
         </tr>
         """)
@@ -320,20 +398,49 @@ def generate_html_report(
     .guide-box ol {{ padding-left: 20px; color: #cbd5e1; font-size: 0.92rem; }}
     .guide-box li {{ margin-bottom: 8px; }}
 
+    /* Status / error banner */
+    .alert-banner {{
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+    }}
+    .alert-banner.alert-danger {{ border-color: #ef4444; background: rgba(239, 68, 68, 0.12); }}
+    .alert-banner.alert-warning {{ border-color: #f59e0b; background: rgba(245, 158, 11, 0.12); }}
+    .alert-banner.alert-success {{ border-color: #10b981; background: rgba(16, 185, 129, 0.12); }}
+    .alert-banner.alert-info {{ border-color: #38bdf8; background: rgba(56, 189, 248, 0.10); }}
+    .alert-banner.alert-neutral {{ border-color: #475569; background: rgba(148, 163, 184, 0.08); }}
+    .alert-icon {{ font-size: 1.5rem; line-height: 1; }}
+    .alert-title {{ font-weight: 700; font-size: 1rem; margin-bottom: 4px; }}
+    .alert-detail {{ color: var(--text-muted); font-size: 0.92rem; }}
+    .alert-extra {{ color: #fcd34d; font-size: 0.88rem; margin-top: 8px; }}
+    .alert-extra code {{ color: #fde68a; }}
+
+    /* Limitations */
+    .limits-box {{ background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 20px 24px; margin-bottom: 32px; }}
+    .limits-box h3 {{ font-size: 1rem; margin-bottom: 10px; color: var(--text); }}
+    .limits-box ul {{ padding-left: 20px; color: var(--text-muted); font-size: 0.9rem; }}
+    .limits-box li {{ margin-bottom: 6px; }}
+    .limits-box code {{ color: #a5f3fc; }}
+
     .footer {{ text-align: center; color: var(--text-muted); font-size: 0.85rem; padding-top: 24px; border-top: 1px solid var(--card-border); }}
 
     /* Print / PDF Media Styles */
     @media print {{
       body {{ background: white !important; color: black !important; padding: 0 !important; }}
       .btn-action, .badge {{ display: none !important; }}
-      .card, .table-container, .pills-box, .guide-box {{
+      .card, .table-container, .pills-box, .guide-box, .alert-banner, .limits-box {{
         background: white !important;
         border: 1px solid #cbd5e1 !important;
         color: black !important;
         box-shadow: none !important;
       }}
       th {{ background: #f1f5f9 !important; color: #0f172a !important; }}
-      td, p, h1, h2, h3, .meta-time, .card-title {{ color: #0f172a !important; }}
+      td, p, h1, h2, h3, .meta-time, .card-title, .alert-detail, .alert-extra, .limits-box ul {{ color: #0f172a !important; }}
       .port-num {{ color: #0284c7 !important; }}
       .banner-code {{ background: #f8fafc !important; color: #0f172a !important; border: 1px solid #e2e8f0; }}
       .guide-box {{ border-color: #94a3b8 !important; }}
@@ -357,6 +464,8 @@ def generate_html_report(
         </button>
       </div>
     </header>
+
+    {status_banner}
 
     <!-- Executive Summary Cards -->
     <div class="grid-cards">
@@ -428,6 +537,19 @@ def generate_html_report(
       </ol>
     </div>
 
+    <!-- Reading guide and limits -->
+    <div class="limits-box">
+      <h3>📘 Cách đọc kết quả &amp; giới hạn của lần quét</h3>
+      <ul>
+        <li><strong>OPEN</strong>: kết nối TCP thành công. Cổng đang có dịch vụ lắng nghe, cần đánh giá tiếp quyền truy cập và lỗ hổng ứng dụng.</li>
+        <li><strong>CLOSED</strong>: nhận TCP refusal rõ ràng từ host. Chỉ cổng này được coi là đóng tại thời điểm quét.</li>
+        <li><strong>FILTERED</strong>: timeout hoặc không có phản hồi. Không kết luận cổng đóng; có thể do firewall, Security Group hoặc mất mạng.</li>
+        <li>Kết quả phụ thuộc nguồn quét, thời điểm, timeout và tuyến mạng. Quét lại từ nguồn được phép khi cần kết luận.</li>
+        <li>Báo cáo cổng không chứng minh SQL Injection, XSS, IDOR hay xác thực đã được vá; các kiểm thử đó nằm ở quy trình OWASP riêng.</li>
+        <li>Không đưa báo cáo này lên Internet công khai nếu có thông tin hạ tầng nhạy cảm.</li>
+      </ul>
+    </div>
+
     <footer class="footer">
       <p>Đề tài PBL4-517: Tìm hiểu AWS Cloud, xây dựng chương trình phân tích và giám sát các điểm yếu bảo mật từ bên ngoài.</p>
       <p style="margin-top: 4px; font-size: 0.8rem;">Báo cáo được sinh tự động bởi <code>scanner/reporter.py</code> • Trường Đại học Bách Khoa - ĐH Đà Nẵng</p>
@@ -459,6 +581,101 @@ def generate_html_report(
             f.write(html_content)
         clean_old_reports(reports_dir)
 
+    return latest_file
+
+
+def generate_error_report(
+    target_host: str,
+    reason: str,
+    *,
+    target_ip: str = "",
+    event_type: str = "SCAN_FAILED",
+    output_path: Path | None = None,
+) -> Path:
+    """Tạo trang HTML lỗi tự chứa khi không thể hoàn tất một lần quét.
+
+    Trang này thay thế ``latest.html`` để người xem không đọc nhầm báo cáo cũ
+    hoặc tưởng lần quét vừa rồi đã thành công.
+    """
+    directory = ensure_reports_dir()
+    now_dt = datetime.datetime.now()
+    now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+    target = escape(str(target_host))
+    ip_text = escape(str(target_ip)) if target_ip else "chưa phân giải được"
+    safe_reason = escape(str(reason))
+    html_content = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quét thất bại — {target}</title>
+  <style>
+    :root {{ --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; --muted: #94a3b8; --danger: #ef4444; --warning: #f59e0b; }}
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{ background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 32px 20px; line-height: 1.6; }}
+    .container {{ max-width: 860px; margin: 0 auto; }}
+    .eyebrow {{ color: var(--danger); font-size: .82rem; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }}
+    h1 {{ font-size: 1.7rem; margin: 6px 0 10px; }}
+    .meta {{ color: var(--muted); font-size: .9rem; margin-bottom: 24px; }}
+    .panel {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; }}
+    .panel.danger {{ border-color: var(--danger); background: rgba(239, 68, 68, .12); }}
+    .panel h2 {{ font-size: 1.05rem; margin-bottom: 10px; }}
+    .reason {{ font-family: ui-monospace, SFMono-Regular, Consolas, "Segoe UI", monospace; background: #0b1329; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; color: #fca5a5; overflow-wrap: anywhere; }}
+    ol, ul {{ padding-left: 22px; color: #cbd5e1; font-size: .92rem; }}
+    li {{ margin-bottom: 8px; }}
+    code {{ color: #a5f3fc; }}
+    .footer {{ color: var(--muted); font-size: .82rem; border-top: 1px solid var(--border); padding-top: 18px; margin-top: 28px; }}
+    @media print {{ body {{ background: white; color: black; }} .panel, .reason {{ background: white !important; color: black !important; border-color: #cbd5e1 !important; }} ol, ul, .meta, .footer {{ color: #0f172a !important; }} }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="eyebrow">PBL4-517 SECURITY AUDIT SUITE</p>
+    <h1>Không thể hoàn tất lần quét</h1>
+    <p class="meta">Mục tiêu: <strong>{target}</strong> ({ip_text}) • Thời điểm: <strong>{now_str}</strong> • Sự kiện: <code>{escape(event_type)}</code></p>
+
+    <div class="panel danger">
+      <h2>⚠️ Lý do</h2>
+      <p class="reason">{safe_reason}</p>
+    </div>
+
+    <div class="panel">
+      <h2>Việc cần kiểm tra</h2>
+      <ol>
+        <li>Xác nhận mục tiêu đúng là host được phép quét và DNS/địa chỉ IP phân giải được.</li>
+        <li>Kiểm tra kết nối mạng, VPN hoặc Security Group có chặn nguồn quét hay không.</li>
+        <li>Chạy lại <code>python scanner/scan.py &lt;target&gt; --no-alert</code> để tách lỗi mạng khỏi lỗi cấu hình.</li>
+        <li>Đọc log/audit của scanner; không sửa hoặc xóa Baseline khi chưa xác minh nguyên nhân.</li>
+      </ol>
+    </div>
+
+    <div class="panel">
+      <h2>Điều trang này KHÔNG kết luận</h2>
+      <ul>
+        <li>Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn.</li>
+        <li>Không thay thế báo cáo quét thành công gần nhất; báo cáo cũ có thể đã lỗi thời.</li>
+        <li>Không chứng minh SQL Injection, XSS, IDOR hay xác thực đã được vá.</li>
+      </ul>
+    </div>
+
+    <p class="footer">Trang lỗi được sinh tự động bởi <code>scanner/reporter.py</code> • Đề tài PBL4-517.</p>
+  </div>
+</body>
+</html>"""
+    latest_file = output_path or (directory / "latest.html")
+    with open(latest_file, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    md_path = directory / "latest.md"
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write(
+            "# Báo cáo quét thất bại\n\n"
+            f"- **Mục tiêu:** `{target_host}` ({target_ip or 'chưa phân giải được'})\n"
+            f"- **Thời điểm:** {now_str}\n"
+            f"- **Sự kiện:** `{event_type}`\n"
+            f"- **Lý do:** {reason}\n\n"
+            "Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn. "
+            "Kiểm tra DNS, mạng, Security Group và chạy lại khi điều kiện cho phép.\n"
+        )
     return latest_file
 
 

@@ -156,13 +156,51 @@ jobs:
           test -f scanner/scan.py
           test -f alerts/notifier.py
           test -f scripts/attacker/exploit_idor.py
-          python -m compileall -q scanner alerts scripts/attacker scripts/ci
+          test -f scripts/attacker/demo.py
+          test -f scripts/attacker/probes/idor.py
+          test -f scripts/attacker/probes/sqli.py
+          python -m compileall -q scanner alerts scripts/attacker scripts/ci scripts/dev
       - name: Verify scanner with loopback sockets and simulated alert failures
         run: python -m unittest discover -s scanner/tests -v
       - name: Verify demo result classification (offline)
         run: python -m unittest discover -s scripts/attacker/tests -v
+      - name: Verify runtime migration preserves pending alerts (offline)
+        run: python -m unittest discover -s scripts/dev/tests -v
+      - name: Verify manual demo argument forwarding and failure handling
+        run: python -m unittest discover -s scripts/demo/tests -v
       - name: Validate project-local UI UX Pro Max skill
         run: |
           python -m compileall -q .agents/skills/ui-ux-pro-max/scripts
           python .agents/skills/ui-ux-pro-max/scripts/validate_data.py
           python -m unittest discover -s .agents/skills/ui-ux-pro-max/scripts/tests -p test_core.py -v
+
+  local-tools:
+    name: local-tools
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/backend/package-lock.json
+      - name: Install locked backend tools
+        run: npm --prefix website/backend ci
+      - name: Verify local database guards and scenario selection
+        run: node --test scripts/dev/tests/settings.test.mjs
+      - name: Verify XSS probe report contract (offline)
+        run: node --experimental-vm-modules --test scripts/attacker/tests/xss-observe.test.mjs
+      - name: Verify lifecycle and stale PID protection
+        shell: powershell
+        run: ./scripts/dev/tests/lifecycle.ps1
+      - name: Parse every PowerShell launcher without starting services
+        shell: powershell
+        run: |
+          Get-ChildItem scripts/dev,scripts/demo -Recurse -Filter *.ps1 | ForEach-Object {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) { throw "Invalid PowerShell: $($_.FullName)" }
+          }

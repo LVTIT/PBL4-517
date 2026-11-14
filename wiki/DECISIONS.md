@@ -2,6 +2,37 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-11-10 — Demo probe layout: shared core + one module per vulnerability (Refs #68)
+
+**Status: Accepted** — user approved this layout for the local demo, the EC2 lab demo
+and the code walkthrough during review.
+
+**Decision:** Keep `scripts/attacker/demo.py` as the CLI/dispatcher. Move shared
+HTTP, login/CSRF/cookie, trace, fixture and redaction helpers into
+`scripts/attacker/core.py`, and put each probe in
+`scripts/attacker/probes/{idor,sqli,auth,release}.py`. Stored XSS stays in
+`scripts/attacker/xss.mjs` because it needs Chromium. `scripts/demo/cli.py`
+remains the short-command UX and delegates rendering to
+`scripts/demo/report.py`. Each probe owns its `evidence`
+(`observed`, `controls`, `limits`); the dispatcher/report layer does not infer
+exploit content. `exploit_*.py` remain 5-line compatibility wrappers for existing
+CI/evidence references but are not the canonical entrypoint. The positional
+`phase` syntax and environment-derived phase inference are removed;
+`--expect` is only an optional PASS/FAIL assertion.
+
+**Reason:** A single large `demo.py` made it hard to open the exact scenario
+during review and increased the cost of adding evidence, EC2 checks and future
+scenarios. Copy-per-vulnerability scripts would duplicate login/CSRF/trace/report
+logic. The core + probes layout keeps short commands, avoids duplication and
+gives each vulnerability a single explainable file.
+
+**Consequences:** A new probe implements one `run(...)` returning
+`(result, evidence)`. Evidence stays bounded and synthetic-only; non-loopback
+targets redact `observed` unless `--show-evidence` is explicitly allowed. Reports
+are JSON plus Markdown under `.local/reports/security`. CI checks `demo.py` and
+`probes/`. This does not change endpoints, payloads, PASS/FAIL semantics, lab
+flags or the secure baseline.
+
 ## 2026-10-26 — One EC2 synthetic-data demo profile (Refs #44)
 
 **Status: Accepted for implementation** — user explicitly requested completing the

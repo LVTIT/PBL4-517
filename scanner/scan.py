@@ -51,13 +51,14 @@ except ImportError:
     }
     notify_scan_event = None  # type: ignore
 
+from scanner.config import state_file, resolve_path
 from scanner.state_store import load_state, save_state, state_lock, write_audit
 from scanner.prober import grab_banner
 from scanner.risk_matrix import assess_port, calculate_system_posture
-from scanner.reporter import generate_html_report
+from scanner.reporter import generate_html_report, generate_error_report
 
 DEFAULT_PORTS = (22, 80, 443, 3000, 5432, 8080)
-DEFAULT_STATE_FILE = Path(__file__).resolve().parent / "scanner_state.json"
+DEFAULT_STATE_FILE = ROOT_DIR / ".local/runtime/scanner.state.json"
 
 
 def parse_ports(value: str) -> list[int]:
@@ -192,7 +193,8 @@ def evaluate_diff_and_notify(
                 "payload": {"event_type": event_type, "target_host": host_key,
                     "event_id": event_id, "detected_at": record["last_scan_at"],
                     "open_ports": sorted(current), "new_ports": new_ports,
-                    "closed_ports": closed_ports, "scan_duration": scan_duration,
+                    "closed_ports": closed_ports, "uncertain_ports": uncertain,
+                    "scan_duration": scan_duration,
                     "banners": banners}})
     state[host_key] = record
     save_state(state_file, state)
@@ -220,6 +222,19 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
             write_audit(Path(args.state_file), target=args.host, event="SCAN_FAILED", exit_status=2)
         except OSError:
             pass
+        if not getattr(args, "no_alert", False):
+            try:
+                output = Path(args.html_output) if getattr(args, "html_output", None) else None
+                report = generate_error_report(
+                    args.host,
+                    f"{type(error).__name__}: {error}",
+                    target_ip=resolved,
+                    event_type="SCAN_FAILED",
+                    output_path=output,
+                )
+                print(f"[+] Trang lỗi HTML đã cập nhật: {report}")
+            except OSError as report_error:
+                print(f"[-] Không ghi được trang lỗi HTML: {report_error}", file=sys.stderr)
         return 2
 
 
@@ -327,7 +342,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--state-file",
-        default=str(DEFAULT_STATE_FILE),
+        default=str(state_file()),
         help=f"Đường dẫn file lưu Baseline trạng thái (Mặc định: {DEFAULT_STATE_FILE.name})",
     )
     parser.add_argument(
@@ -362,6 +377,9 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+    args.state_file = str(resolve_path(args.state_file))
+    if args.html_output:
+        args.html_output = str(resolve_path(args.html_output))
 
     if args.timeout <= 0:
         print("[-] Lỗi: --timeout phải lớn hơn 0.", file=sys.stderr)
@@ -385,6 +403,18 @@ def main(argv: list[str] | None = None) -> int:
                 write_audit(Path(args.state_file), target=args.host, event="DNS_FAILED", exit_status=2)
             except OSError:
                 pass
+            if not args.no_alert:
+                try:
+                    output = Path(args.html_output) if args.html_output else None
+                    report = generate_error_report(
+                        args.host,
+                        "DNS resolution failed. Kiểm tra tên miền/IP, DNS và kết nối mạng.",
+                        event_type="DNS_FAILED",
+                        output_path=output,
+                    )
+                    print(f"[+] Trang lỗi HTML đã cập nhật: {report}")
+                except OSError as report_error:
+                    print(f"[-] Không ghi được trang lỗi HTML: {report_error}", file=sys.stderr)
             return 2
         return run_single_scan(args, ports, resolved)
 

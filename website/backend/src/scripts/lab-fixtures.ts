@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { open, readFile, unlink } from 'node:fs/promises';
+import { open, readFile, unlink, writeFile, rename, copyFile } from 'node:fs/promises';
 import bcrypt from 'bcryptjs';
 import { config } from '../lib/config.js';
 import { prisma, closeDatabase } from '../lib/database.js';
@@ -10,16 +10,65 @@ class LabInputError extends Error {}
 // A new output path creates a fresh run; keep the same manifest for before/after.
 async function main() {
   const [option, output] = process.argv.slice(2);
-  if (!['--output', '--reset-order'].includes(option ?? '') || !output || process.argv.length !== 4) throw new LabInputError('Usage: node dist/scripts/lab-fixtures.js --output|--reset-order PRIVATE_MANIFEST.json');
+  if (!['--output', '--reset-order', '--local-accounts'].includes(option ?? '') || !output || process.argv.length !== 4) throw new LabInputError('Usage: node dist/scripts/lab-fixtures.js --output|--reset-order|--local-accounts PRIVATE_MANIFEST.json');
   if (config.APP_PROFILE !== 'lab' || config.LAB_DATA_ACK !== 'synthetic-only') throw new LabInputError('Requires acknowledged lab profile.');
   if (!/(?:^|[_-])lab(?:$|[_-])/i.test(new URL(config.DATABASE_URL).pathname.slice(1))) throw new LabInputError('Use a dedicated database with a lab name segment, e.g. kevilo_lab.');
+  const databaseUrl = new URL(config.DATABASE_URL);
+  const localDatabase = config.NODE_ENV === 'development'
+    && ['127.0.0.1', 'localhost', '[::1]'].includes(databaseUrl.hostname)
+    && databaseUrl.pathname === '/kevilo_local_lab';
+  if (option === '--local-accounts') {
+    if (!localDatabase) throw new LabInputError('Memorable accounts are restricted to development loopback kevilo_local_lab.');
+    const fixture = JSON.parse(await readFile(output, 'utf8'));
+    if (fixture.schema !== 1 || !/^[a-f0-9-]{36}$/.test(fixture.run)) throw new LabInputError('Invalid fixture manifest.');
+    const names = ['owner', 'attacker', 'admin'] as const;
+    const passwords = { owner: 'Owner517!demo', attacker: 'Attacker517!demo', admin: 'Admin517!demo' };
+    const changed = structuredClone(fixture);
+    const hashes = Object.fromEntries(await Promise.all(names.map(async name => [name, await bcrypt.hash(passwords[name], 12)])));
+    const temporary = output + '.pending-local';
+    if (!fixture.localAccounts) await copyFile(output, output + '.before-local-' + Date.now());
+    try {
+      await prisma.$transaction(async tx => {
+        const product = await tx.product.findUnique({ where: { id: fixture.productId } });
+        const order = await tx.order.findUnique({ where: { id: fixture.orderId } });
+        if (product?.name !== `KEVILO lab ${fixture.run}` || order?.userId !== fixture.owner.id) throw new LabInputError('Fixture binding changed; no accounts modified.');
+        for (const name of names) {
+          const email = `${name}@local.test`;
+          const user = await tx.user.findUnique({ where: { id: fixture[name].id } });
+          const collision = await tx.user.findUnique({ where: { email } });
+          if (!user || ![`${name}-${fixture.run}@example.invalid`, email].includes(user.email)
+            || user.role !== (name === 'admin' ? 'ADMIN' : 'CUSTOMER')
+            || (collision && collision.id !== user.id)) throw new LabInputError('Local account name collision or fixture mismatch; no accounts overwritten.');
+          if (fixture.localAccounts) {
+            if (fixture[name].email !== email || !await bcrypt.compare(fixture[name].password, user.passwordHash)) throw new LabInputError('Local manifest and account differ; inspect private backup instead of resetting passwords.');
+          } else {
+            await tx.user.update({ where: { id: user.id }, data: { email, name: `Lab ${name}`, passwordHash: hashes[name]! } });
+            changed[name] = { id: user.id, email, password: passwords[name] };
+          }
+        }
+        if (!fixture.localAccounts) {
+          await tx.order.update({ where: { id: fixture.orderId }, data: { customerEmail: 'owner@local.test' } });
+          await tx.$executeRaw`DELETE FROM "session" WHERE sess->>'userId' IN (${fixture.owner.id}, ${fixture.attacker.id}, ${fixture.admin.id})`;
+          changed.localAccounts = true;
+          await writeFile(temporary, JSON.stringify(changed, null, 2) + '\n', { mode: 0o600 });
+        }
+      }, { isolationLevel: 'Serializable', timeout: 15000 });
+      if (!fixture.localAccounts) await rename(temporary, output);
+    } catch (error) {
+      await unlink(temporary).catch(() => {});
+      throw error;
+    }
+    console.log('Local accounts verified: owner@local.test, attacker@local.test, admin@local.test. IDs/order/review retained; credentials in the private manifest.');
+    return;
+  }
   if (option === '--reset-order') {
     const fixture = JSON.parse(await readFile(output, 'utf8'));
     if (fixture.schema !== 1 || !/^[a-f0-9-]{36}$/.test(fixture.run)) throw new LabInputError('Invalid fixture manifest.');
     await prisma.$transaction(async tx => {
       const order = await tx.order.findUnique({ where: { id: fixture.orderId }, include: { user: true, items: { include: { product: true } } } });
       const item = order?.items[0];
-      if (!order || order.userId !== fixture.owner.id || order.user?.email !== `owner-${fixture.run}@example.invalid`
+      const expectedEmail = fixture.localAccounts && localDatabase ? 'owner@local.test' : `owner-${fixture.run}@example.invalid`;
+      if (!order || order.userId !== fixture.owner.id || order.user?.email !== expectedEmail || fixture.owner.email !== expectedEmail
         || order.items.length !== 1 || !item || item.productId !== fixture.productId || item.quantity !== 2
         || item.product.name !== `KEVILO lab ${fixture.run}` || !['PENDING', 'CANCELLED'].includes(order.status)) {
         throw new LabInputError('Fixture ownership/content changed; refusing reset.');

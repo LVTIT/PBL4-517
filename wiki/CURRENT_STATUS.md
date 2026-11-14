@@ -1,5 +1,119 @@
 # Current Project Status
 
+**2026-11-10 demo evidence and probe layout (#68, Related to #44):
+implemented / offline verified; committed `afc896d`, PR #75 open.** `.\demo
+<scenario>` now prints a bounded `observed` section for what the vulnerability
+actually exposed or changed,
+plus `controls` and `limits`; it still prints the numbered request/status trace,
+fixture run/order/product/review identifiers and report paths. IDOR read shows
+only the disclosed order (not stock); IDOR update/cancel show address/status and
+stock impact; SQLi shows row count and disclosed product names/IDs; XSS shows the
+stored review, `labUnsafeReviewHtml`, `<img>` count and marker; auth shows the
+12-result status chain and first 429. The engine is split into
+`scripts/attacker/demo.py` (dispatcher), `scripts/attacker/core.py` (shared HTTP,
+login/CSRF/cookie, trace, fixture, redaction), `scripts/attacker/probes/{idor,sqli,auth,release}.py`
+and `scripts/attacker/xss.mjs` for Chromium. `scripts/demo/cli.py` renders through
+`scripts/demo/report.py` and writes both `.local/reports/security/<scenario>.json`
+and `.md`. Positional `phase` syntax and environment-derived phase inference are
+removed; ordinary runs use `--observe`, and `--expect vulnerable|secure` remains
+only for CI/automation. Non-loopback targets redact `observed` unless
+`--show-evidence` is explicitly allowed. Password, cookie, CSRF token and session
+values are never printed. Existing `exploit_*.py` remain 5-line compatibility
+wrappers. Offline checks: demo **9/9**, attacker Python **16/16**, mocked XSS
+**5/5**, `py_compile`, `node --check` and both `--help` commands PASS. Hosted CI
+run [42807230570](https://github.com/LVTIT/PBL4-517/actions/runs/42807230570)
+passed all six checks on `afc896d`. No live service/probe, env/DB mutation, EC2
+deployment or human review is claimed; the earlier #68 entries below retain their
+historical CLI behavior.
+
+**2026-11-10 operator feedback: concise demo CLI (#68, Related to #44):
+implemented / offline verified; uncommitted.** Default `.\demo <scenario>` now
+asks only target/request inputs and streams numbered request/status/error traces
+as responses arrive; terminal lessons, patch explanations and password printing
+were removed. Default probes observe actual behavior without inferring an expected
+phase from env. Optional legacy `secure`/`vulnerable` and `--expect` still assert
+expectations for regression and do not change backend flags. Ordinary reports use
+`<scenario>.json` with `completed`; expectation runs retain `<scenario>-<expect>.json`
+and `passed`. Python/XSS JSON stdout contracts and explicit-expect behavior are
+preserved; trace uses stderr. Manual now explains terminal commands, optional
+expectations, repeated identical before/after commands and exit/report semantics.
+Demo tests **7/7**, attacker Python **11/11**, mocked XSS module tests **4/4** PASS;
+XSS syntax and launcher help PASS. [Verification and limits](../evidence/DEVTOOLS-01/manual-guide-20261110/README.md#operator-feedback-follow-up).
+No live service/probe, env/DB mutation, chat send, AWS change, new build/integration,
+commit/PR, latest-head hosted CI or human review is claimed. The earlier guide
+entry below records the previous CLI behavior before this explicit user correction.
+
+**2026-11-10 detailed operator-run demo guide (#68, Related to #44):
+documentation/source audit and offline checks complete; uncommitted.**
+[MANUAL.md](../scripts/demo/MANUAL.md) now maps the current working-tree symbols,
+terminal prompts, requests/bodies, controls, browser observations and secure code
+for IDOR read/update/cancel, SQLi, stored XSS, auth and TCP exposure. It documents
+manual env/restart ownership, order reset, fresh auth counters, separate CLI/browser
+sessions, actual SQL interpolation, report overwrite/exit behavior and dev metadata
+limits. CLI explanation now names `handleUpdateOrderDetails` correctly and no
+longer describes address updates as an atomic transaction; XSS/auth observation
+instructions were clarified. Website README supplies the missing canonical local
+setup anchor and manual startup path. Existing demo 5/5 and attacker 8/8 offline
+tests PASS; 59 internal links/anchors checked, launcher help and scoped diff checks
+PASS. [Verification and limits](../evidence/DEVTOOLS-01/manual-guide-20261110/README.md).
+No runtime startup/restart, env/DB mutation, live probe, chat send or AWS action in
+this task. Full runtime walkthrough, fresh-clone acceptance, hosted latest-head CI,
+commit/PR and required human review remain separate/pending.
+
+**2026-11-10 ChatOps copy, buttons and demo walkthrough (#68): implemented /
+locally verified with real Telegram + Discord receipts; uncommitted; not
+deployed.** Alert and ChatOps text was reduced to concise Vietnamese: no
+all-caps banners, horizontal rules or decorative emoji; severity is shown as
+`[CRITICAL]`/`[HIGH]`/`[MEDIUM]`; the "Không suy ra…" safety wording is kept.
+`/scan` now parses `Cổng đang mở (N): [...]` correctly (previous stray
+"3): [...]"), treats exit 1 with only pending deliveries as a completed scan
+instead of uncertain ports, and reports the last `[-]` scanner error instead of
+dumping raw stdout. Discord webhook execution now adds
+`with_components=true&wait=true` while preserving `thread_id`, so link buttons
+are no longer silently dropped; payloads disable mentions and no longer override
+the webhook avatar. Bot startup validates the token with `getMe` and exits
+clearly on HTTP 409 instead of looping. Real sends used the existing local
+`.env`: Telegram buttons Ping, Baseline, Help, Report and the scan actions
+responded; `.\demo idor --non-interactive` returned `EXPLOIT_CONFIRMED` against
+the running local backend. Suite results: scanner 55/55, demo 5/5, attacker 8/8,
+dev 5/5 PASS. No AWS/deployment change, no commit/PR and no human review;
+latest-hosted CI and issue closure remain pending. The earlier #68 entries
+below retain their dated scope.
+
+**2026-11-09 scanner, ChatOps and report UX polish (#68): implemented /
+locally verified on `feature/68-simple-local-demo`, uncommitted; not deployed.**
+Scanner HTML reports now show an explicit event/status banner and a
+limitations section; a scan with `timeout/filtered` ports can no longer render
+as "no open ports / safe", and a failed scan (DNS, state/lock, configuration)
+writes a dedicated error page over `latest.html`/`latest.md` unless
+`--no-alert` is set. Telegram ChatOps adds `/report` (sends `latest.html` and
+`latest.md` as documents), `/status` with risk grade/open/uncertain/pending
+counts, a shared action keyboard, `/menu`/`/start`, and clearer validation,
+delivery and missing-report errors; Discord embeds now include uncertain ports
+and posture. Pending-alert payloads validate `uncertain_ports`. Scanner suite
+now 46/46 PASS (31 existing + 15 focused report/error/ChatOps/document tests);
+attacker, dev and demo suites also PASS. No real chat, DNS or AWS call was
+used; hosted CI, fresh-clone verification, commit/PR and human review remain
+pending. The existing #68 entry below retains the earlier consolidation scope.
+
+**2026-11-09 local demo consolidation (#68): IN PROGRESS on
+`feature/68-simple-local-demo`, uncommitted; not deployed.** User approved short
+commands and one shared synthetic local database, then requested stopping agent
+services and learning manual operation. Earlier local setup copied legacy website
+tables to `kevilo_local_lab` and compared table contents before switching config;
+legacy sources/private backup retained. Initial launcher checks for IDOR
+read/update/cancel, SQLi, XSS and auth observed vulnerable/secure outcomes locally.
+These preliminary checks do not establish final automated acceptance or fresh-clone
+readiness. At the handoff the agent stopped managed web/database services and
+verified ports 3000/5173/8080/55432 no longer listening; subsequent manual runtime
+belongs to the user. [Detailed manual tutorial](../scripts/demo/MANUAL.md) now
+documents login, browser actions, before/after controls, source defenses and probe
+limitations. Documentation links checked; no runtime started for this tutorial.
+Remaining consolidation, documentation, fresh-source verification, latest-head CI,
+commit/PR and human review are pending. Existing entries below retain their dated
+historical scope; no merge, issue completion, AWS acceptance or team understanding
+is inferred.
+
 **2026-11-04 ALB integration design (#34 / PR #60): Proposed; integrated with
 main `359acee`, awaiting latest-head CI and human review.**
 [docs/aws/alb-design.md](../docs/aws/alb-design.md) documents the current
@@ -233,7 +347,7 @@ disabled. [Deployment evidence, limits and rollback](../evidence/UI-01/ec2-check
 full deployed real-data acceptance is not established by that merge. API contract:
 [website README](../website/README.md#api-endpoints).
 
-**Last updated:** 2026-11-01 (Asia/Saigon; #65 admin status/inventory fix verified locally, no new AWS availability claim)
+**Last updated:** 2026-11-10 (Asia/Saigon; ChatOps copy/buttons and demo walkthrough verified locally with authorized real Telegram/Discord sends, no new AWS availability claim)
 
 **Latest #15 check:** Human-approved reboot completed at 15:15–15:17 Asia/Bangkok. Boot ID changed, backend automatically started without manual intervention, backend/Nginx/PostgreSQL active/enabled, IP unchanged, Express/PostgreSQL loopback-only. External HTTPS frontend/health/products all 200. [Reboot/autostart evidence](../evidence/LINUX-02/07-reboot.txt), [external check](../evidence/LINUX-02/08-post-reboot-https.txt). Lifecycle and journal also PASS; PR #48 now records human review and is merged, all five PR checks PASS, and #15 is CLOSED.
 

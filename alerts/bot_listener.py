@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import ipaddress
 import os
+import re
 import subprocess
 import sys
 import time
@@ -33,11 +34,12 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from alerts.notifier import get_credentials, load_env, send_telegram_alert
+from alerts.notifier import get_credentials, send_telegram_alert, send_telegram_document
+from scanner.config import setting, state_file, reports_dir
 
 
 def _setting(name: str, default: str = "") -> str:
-    return os.environ.get(name, load_env().get(name, default))
+    return setting(name, default)
 
 
 def _authorized_sender(chat_id: str, user_id: str | int | None) -> bool:
@@ -59,16 +61,17 @@ def _scan_target(target: str) -> str:
 
 
 def _state_file() -> Path:
-    return Path(_setting("SCANNER_STATE_FILE", str(ROOT_DIR / "scanner" / "scanner_state.json")))
+    return state_file()
 
 
 def register_bot_commands(bot_token: str, chat_id: str | None = None) -> None:
     """Tự động đăng ký danh sách lệnh và nút Menu với Telegram API để hiển thị Menu và gợi ý khi gõ '/'."""
     commands = [
-        {"command": "scan", "description": "Dò quét an ninh mục tiêu (VD: /scan 127.0.0.1)"},
-        {"command": "status", "description": "Xem trạng thái Baseline & các cổng đang mở"},
-        {"command": "ping", "description": "Kiểm tra kết nối và độ trễ của Bot"},
-        {"command": "help", "description": "Xem danh sách lệnh và menu tương tác"},
+        {"command": "scan", "description": "Quét cổng mục tiêu (VD: /scan 127.0.0.1)"},
+        {"command": "status", "description": "Xem baseline và cổng đang mở"},
+        {"command": "report", "description": "Nhận báo cáo HTML/Markdown mới nhất"},
+        {"command": "ping", "description": "Kiểm tra bot còn chạy"},
+        {"command": "help", "description": "Xem hướng dẫn và menu"},
     ]
 
     scopes = [
@@ -121,6 +124,122 @@ def answer_callback_query(bot_token: str, query_id: str, text: str = "") -> None
         pass
 
 
+def _keyboard() -> list[list[dict[str, str]]]:
+    """Bàn phím ChatOps dùng chung cho mọi phản hồi."""
+    return [
+        [
+            {"text": "Quét lại", "callback_data": "scan_default"},
+            {"text": "Quét web", "callback_data": "scan_web"},
+            {"text": "Quét DB", "callback_data": "scan_db"},
+        ],
+        [
+            {"text": "Baseline", "callback_data": "status"},
+            {"text": "Báo cáo", "callback_data": "report"},
+            {"text": "Ping", "callback_data": "ping"},
+        ],
+        [
+            {"text": "Trợ giúp", "callback_data": "help"},
+            {
+                "text": "OWASP A05",
+                "url": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/",
+            },
+        ],
+    ]
+
+
+def _help_text() -> str:
+    return (
+        "*PBL4-517 ChatOps*\n\n"
+        "*Quét cổng*\n"
+        "`/scan` — target mặc định, 6 cổng thường gặp\n"
+        "`/scan 80,443` — chọn cổng trên target mặc định\n"
+        "`/scan 127.0.0.1 5432` — IPv4 trong allowlist\n\n"
+        "*Xem kết quả*\n"
+        "`/status` — baseline, cổng mở, cổng timeout/filtered\n"
+        "`/report` — nhận `latest.html` và `latest.md`\n"
+        "`/ping` — kiểm tra bot\n"
+        "`/help` — menu này\n\n"
+        "Chỉ nhận IPv4 trong allowlist, tối đa 32 cổng mỗi lần, không nhận hostname/CIDR. "
+        "`/scan` bỏ qua banner để trả lời nhanh."
+    )
+
+
+def _short(value: object, limit: int = 80) -> str:
+    text = str(value).replace("`", "'").replace("\n", " ")
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def _format_status(state_data: dict) -> str:
+    from alerts.notifier import format_port_label
+    from scanner.risk_matrix import calculate_system_posture
+
+    lines = ["*Baseline hiện tại*"]
+    hosts = list(state_data.items())
+    for index, (host, info) in enumerate(hosts[:8]):
+        if index:
+            lines.append("")
+        ports = info.get("baseline_open_ports", [])
+        uncertain = info.get("uncertain_ports", [])
+        pending = info.get("pending_alerts", [])
+        last_time = info.get("last_scan_at", "chưa có")
+        posture = calculate_system_posture(ports)
+        lines.append(f"\n*Mục tiêu:* `{_short(host)}`")
+        lines.append(f"Quét lần cuối: `{_short(last_time, 40)}`")
+        lines.append(f"Đánh giá: {posture['grade']} · {posture['status'].capitalize()}")
+        if ports:
+            lines.append("Cổng đang mở trong baseline:")
+            lines.extend(f"  • {format_port_label(p)}" for p in ports)
+        else:
+            lines.append("Cổng đang mở trong baseline: Không có")
+        if uncertain:
+            lines.append(f"Timeout/filtered lần quét gần nhất: `{', '.join(str(p) for p in uncertain)}`")
+        if pending:
+            lines.append(f"Cảnh báo chờ gửi: {len(pending)}")
+    if len(hosts) > 8:
+        lines.append(f"… còn {len(hosts) - 8} mục tiêu khác trong state.")
+    lines.append("\nKhông thấy cổng mở không đồng nghĩa ứng dụng đã an toàn.")
+    return "\n".join(lines)
+
+
+def _send_report(bot_token: str, chat_id: str) -> None:
+    """Gửi báo cáo HTML/Markdown mới nhất vào chat."""
+    latest_html = reports_dir() / "latest.html"
+    latest_md = reports_dir() / "latest.md"
+    if not latest_html.is_file() and not latest_md.is_file():
+        send_telegram_alert(
+            bot_token,
+            chat_id,
+            "Chưa có báo cáo. Chạy `/scan` trước nhé.",
+            buttons=_keyboard(),
+        )
+        return
+    existing = [path.name for path in (latest_html, latest_md) if path.is_file()]
+    caption = (
+        "*Báo cáo quét mới nhất*\n"
+        f"Kèm {', '.join(existing)}. Mở HTML để xem chi tiết hoặc in PDF; Markdown để trích vào báo cáo."
+    )
+    sent = False
+    if latest_html.is_file():
+        sent = send_telegram_document(
+            bot_token, chat_id, latest_html,
+            caption=caption if not sent else "",
+            buttons=_keyboard() if not sent else None,
+        ) or sent
+    if latest_md.is_file():
+        sent = send_telegram_document(
+            bot_token, chat_id, latest_md,
+            caption="" if sent else caption,
+            buttons=None if sent else _keyboard(),
+        ) or sent
+    if not sent:
+        send_telegram_alert(
+            bot_token,
+            chat_id,
+            f"Không gửi được file báo cáo. File đang ở máy scanner:\n`{_short(latest_html if latest_html.is_file() else latest_md)}`",
+            buttons=_keyboard(),
+        )
+
+
 def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: str | int | None = None) -> None:
     """Xử lý các câu lệnh nhận được từ người dùng trên Telegram."""
     if not _authorized_sender(chat_id, user_id):
@@ -131,46 +250,19 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
     cmd = parts[0].lower().split("@")[0]  # Bỏ @bot_username nếu có
     args = parts[1:]
 
-    interactive_buttons = [
-        [
-            {"text": "🔍 Quét Mặc Định", "callback_data": "scan_default"},
-            {"text": "🎯 Quét Web (80,443,8080)", "callback_data": "scan_web"},
-        ],
-        [
-            {"text": "🗄️ Quét DB (5432,3306,6379)", "callback_data": "scan_db"},
-            {"text": "📊 Xem Baseline", "callback_data": "status"},
-        ],
-        [
-            {"text": "🏓 Ping Bot", "callback_data": "ping"},
-            {"text": "🛡️ Chuẩn OWASP A05", "url": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/"},
-        ],
-    ]
-
-    if cmd in ("/start", "/help"):
-        help_msg = (
-            "🤖 *[PBL4-517 SECURITY SCANNER BOT]* 🤖\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "Danh sách các lệnh điều khiển từ xa:\n\n"
-            "🔍 `/scan [host] [ports]` — Quét an ninh mạng:\n"
-            "   • `/scan` : Quét các cổng mặc định trên target đã cấu hình\n"
-            "   • `/scan 8080` : Quét cổng cụ thể `8080`\n"
-            "   • `/scan 80,443,8080` : Quét nhóm cổng Web\n"
-            "   • `/scan 127.0.0.1 5432` : Quét IPv4 đã cho phép, tối đa 32 cổng\n"
-            "📊 `/status` — Xem trạng thái Baseline và các cổng đang mở\n"
-            "🏓 `/ping` — Kiểm tra trạng thái hoạt động của Bot\n"
-            "❓ `/help` — Hiển thị menu hướng dẫn này\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💡 *Mẹo:* Bạn có thể bấm trực tiếp các nút chọn nhanh bên dưới hoặc gõ `/` để chọn lệnh từ menu gợi ý!"
-        )
-        send_telegram_alert(bot_token, chat_id, help_msg, buttons=interactive_buttons)
+    if cmd in ("/start", "/help", "/menu"):
+        send_telegram_alert(bot_token, chat_id, _help_text(), buttons=_keyboard())
 
     elif cmd == "/ping":
         send_telegram_alert(
             bot_token,
             chat_id,
-            "🏓 *Pong!* Bot giám sát an ninh PBL4-517 đang hoạt động bình thường.",
-            buttons=interactive_buttons,
+            "Bot vẫn đang chạy. Dùng `/scan` để quét hoặc `/status` để xem baseline.",
+            buttons=_keyboard(),
         )
+
+    elif cmd == "/report":
+        _send_report(bot_token, chat_id)
 
     elif cmd == "/status":
         state_file = _state_file()
@@ -178,34 +270,28 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
             send_telegram_alert(
                 bot_token,
                 chat_id,
-                "ℹ️ *Chưa có dữ liệu Baseline.* Vui lòng chạy lệnh `/scan` để khởi tạo.",
-                buttons=interactive_buttons,
+                "Chưa có baseline. Chạy `/scan` để tạo mốc so sánh.",
+                buttons=_keyboard(),
             )
             return
-
         try:
             with open(state_file, "r", encoding="utf-8") as f:
                 state_data = json.load(f)
             if not state_data:
-                send_telegram_alert(bot_token, chat_id, "ℹ️ File trạng thái rỗng.", buttons=interactive_buttons)
+                send_telegram_alert(bot_token, chat_id, "Chưa có baseline. Chạy `/scan` trước nhé.", buttons=_keyboard())
                 return
-
-            msg_lines = [
-                "📊 *[BÁO CÁO TRẠNG THÁI BASELINE HIỆN TẠI]*",
-                "━━━━━━━━━━━━━━━━━━━━",
-            ]
-            for host, info in state_data.items():
-                ports = info.get("baseline_open_ports", [])
-                last_time = info.get("last_scan_at", "N/A")
-                ports_str = ", ".join(str(p) for p in ports) if ports else "Không có cổng nào mở"
-                msg_lines.append(f"🎯 *Mục tiêu:* `{host}`")
-                msg_lines.append(f"🕒 *Quét lần cuối:* `{last_time}`")
-                msg_lines.append(f"🔓 *Cổng đang mở:* `{ports_str}`")
-                msg_lines.append("────────────────────")
-
-            send_telegram_alert(bot_token, chat_id, "\n".join(msg_lines), buttons=interactive_buttons)
+            message = _format_status(state_data)
+            if len(message) > 4000:
+                message = message[:3990] + "\n… (đã rút gọn)"
+            send_telegram_alert(bot_token, chat_id, message, buttons=_keyboard())
         except Exception as exc:
-            send_telegram_alert(bot_token, chat_id, f"[-] Lỗi đọc trạng thái: `{exc}`")
+            send_telegram_alert(
+                bot_token,
+                chat_id,
+                f"Không đọc được trạng thái: `{_short(exc)}`\n"
+                "Kiểm tra quyền đọc file state và chạy lại `/status`.",
+                buttons=_keyboard(),
+            )
 
     elif cmd == "/scan":
         target = _setting("SCANNER_TARGET", "127.0.0.1")
@@ -233,13 +319,23 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
                     raise ValueError("ChatOps scans are limited to 32 ports.")
                 ports_arg = ",".join(map(str, requested_ports))
         except ValueError:
-            send_telegram_alert(bot_token, chat_id,
-                "❌ Mục tiêu/cổng không hợp lệ: chỉ IPv4 trong SCANNER_ALLOWED_TARGETS, tối đa 32 cổng.")
+            send_telegram_alert(
+                bot_token,
+                chat_id,
+                "*Mục tiêu hoặc cổng không hợp lệ.*\n"
+                "• Chỉ nhận IPv4 nằm trong `SCANNER_ALLOWED_TARGETS`.\n"
+                "• Tối đa 32 cổng/lần, ví dụ `/scan 80,443,8080`.\n"
+                "• Không nhận hostname, CIDR hoặc tham số thừa.",
+                buttons=_keyboard(),
+            )
             return
 
-        ports_desc = f" (Cổng: `{ports_arg}`)" if ports_arg else " (Mặc định 6 cổng)"
-        ack_msg = f"⏳ *Đang tiến hành dò quét an ninh cho mục tiêu:* `{target}`{ports_desc}...\n*Vui lòng đợi vài giây!*"
-        send_telegram_alert(bot_token, chat_id, ack_msg)
+        ports_desc = f"cổng `{ports_arg}`" if ports_arg else "6 cổng mặc định"
+        send_telegram_alert(
+            bot_token,
+            chat_id,
+            f"Đang quét `{target}` ({ports_desc})…",
+        )
 
         # Chạy scanner/scan.py dưới dạng subprocess
         cmd_run = [sys.executable, str(ROOT_DIR / "scanner" / "scan.py"), target,
@@ -259,62 +355,89 @@ def handle_command(bot_token: str, chat_id: str, command_text: str, *, user_id: 
             )
             print(f"[+] Hoàn tất lệnh /scan {target} {ports_arg or ''} (Exit code: {proc.returncode})")
 
-            if proc.returncode == 0:
-                duration_str = "1.0s"
+            if proc.returncode in (0, 1):
+                duration_str = "N/A"
                 posture_str = "Chưa có dữ liệu đánh giá"
-                open_ports_str = "Không có cổng nào mở"
+                open_ports_str = "Không có"
+                uncertain_str = "Không có"
+                pending_str = "0"
 
                 for line in proc.stdout.splitlines():
                     if "Thời gian quét" in line:
                         parts_dur = line.split("|")
                         duration_str = parts_dur[0].replace("Thời gian quét :", "").strip()
                         if len(parts_dur) > 1:
-                            raw_open = parts_dur[1].replace("Cổng đang mở", "").strip(" :()")
-                            if raw_open and raw_open != "0":
-                                open_ports_str = raw_open
+                            match = re.search(r"Cổng đang mở\s*\(\d+\):\s*(.*)", parts_dur[1])
+                            if match:
+                                open_ports_str = match.group(1).strip(" []") or "Không có"
                     elif "Đánh giá rủi ro" in line:
                         posture_str = line.replace("Đánh giá rủi ro :", "").strip()
+                        match = re.search(r"Xếp hạng (\[[^]]+\]) - (.*?) \(Max Risk score:", posture_str)
+                        if match:
+                            posture_str = f"{match.group(1).strip('[]')} · {match.group(2).capitalize()}"
+                    elif line.startswith("[EVENT:"):
+                        try:
+                            tail = line.split("uncertain=", 1)[1]
+                            uncertain_str = tail.split(";", 1)[0].strip(" []") or "Không có"
+                            pending_str = tail.split("pending_alerts=", 1)[1].strip()
+                        except (IndexError, ValueError):
+                            pass
 
                 is_no_change = "EVENT: NO_CHANGE" in proc.stdout
                 is_initial = "EVENT: INITIAL_SCAN" in proc.stdout
+                # Exit 1 can also mean pending alert delivery, not uncertain ports.
+                is_uncertain = uncertain_str != "Không có" or "EVENT: SCAN_UNCERTAIN" in proc.stdout
 
                 summary_lines = [
-                    "✅ *[HOÀN TẤT DÒ QUÉT AN NINH]*",
-                    "━━━━━━━━━━━━━━━━━━━━",
-                    f"🎯 *Mục tiêu:* `{target}`" + (f" (Cổng: `{ports_arg}`)" if ports_arg else ""),
-                    f"⏱️ *Thời gian:* `{duration_str}`",
-                    f"🛡️ *Đánh giá rủi ro:* `{posture_str}`",
-                    f"🔓 *Cổng đang mở:* `{open_ports_str}`",
-                    "━━━━━━━━━━━━━━━━━━━━",
+                    "*Quét xong*" if not is_uncertain else "*Quét xong, kết quả chưa đầy đủ*",
+                    f"Mục tiêu: `{target}`" + (f" (cổng `{ports_arg}`)" if ports_arg else ""),
+                    f"Thời gian: {duration_str}",
+                    f"Đánh giá: {posture_str}",
+                    f"Cổng đang mở: `{open_ports_str}`",
                 ]
+                if uncertain_str != "Không có":
+                    summary_lines.append(f"Timeout/filtered: `{uncertain_str}`")
+                if pending_str != "0":
+                    summary_lines.append(f"Cảnh báo chờ gửi: {pending_str}")
 
-                if is_no_change:
-                    summary_lines.append("ℹ️ *Trạng thái:* Không có thay đổi cổng đã xác nhận; không phải kết luận hết lỗ hổng.")
+                if is_uncertain:
+                    summary_lines.append(
+                        "\nCó cổng timeout/filtered, chưa thể coi là đã đóng. Xem báo cáo để biết chi tiết."
+                    )
+                elif is_no_change:
+                    summary_lines.append("\nKhông có thay đổi cổng đã xác nhận; không phải kết luận hết lỗ hổng.")
                 elif is_initial:
-                    summary_lines.append("ℹ️ *Trạng thái:* Đã khởi tạo mốc Baseline ban đầu thành công.")
+                    summary_lines.append("\nĐã lưu baseline làm mốc so sánh.")
                 else:
-                    summary_lines.append("⚠️ *Trạng thái:* Đã phát hiện thay đổi cổng và gửi thông báo chi tiết!")
+                    summary_lines.append("\nCó thay đổi cổng. Xem cảnh báo chi tiết; tin chưa gửi được sẽ được giữ để thử lại.")
 
+                summary_lines.append("Bấm Báo cáo hoặc dùng `/report` để nhận file.")
                 send_telegram_alert(
                     bot_token,
                     chat_id,
                     "\n".join(summary_lines),
-                    buttons=interactive_buttons,
+                    buttons=_keyboard(),
                 )
             else:
-                err_text = proc.stderr.strip() or proc.stdout.strip() or f"Mã lỗi: {proc.returncode}"
+                output_lines = (proc.stderr or proc.stdout).splitlines()
+                errors = [line for line in output_lines if line.strip().startswith("[-]")]
+                err_text = errors[-1].removeprefix("[-]").strip() if errors else f"Mã lỗi: {proc.returncode}"
                 send_telegram_alert(
                     bot_token,
                     chat_id,
-                    f"❌ *Lỗi khi quét mục tiêu:* `{err_text}`",
-                    buttons=interactive_buttons,
+                    "*Không quét được mục tiêu*\n"
+                    f"`{_short(err_text, 300)}`\n\n"
+                    "Kiểm tra mạng, allowlist và quyền ghi báo cáo. "
+                    "Nếu có trang lỗi, dùng `/report` để xem chi tiết.",
+                    buttons=_keyboard(),
                 )
         except Exception as exc:
             send_telegram_alert(
                 bot_token,
                 chat_id,
-                f"[-] Lỗi khi thực thi scanner: `{exc}`",
-                buttons=interactive_buttons,
+                f"Không chạy được scanner: `{_short(exc, 300)}`\n"
+                "Kiểm tra Python, quyền thư mục `.local/` và chạy `/scan` lại.",
+                buttons=_keyboard(),
             )
 
 
@@ -331,7 +454,7 @@ def handle_callback_query(bot_token: str, callback: dict) -> None:
     if sender.get("is_bot") or not _authorized_sender(chat_id, user_id):
         return
 
-    answer_callback_query(bot_token, query_id, f"Đang thực hiện: {data}")
+    answer_callback_query(bot_token, query_id)
 
     if data in ("scan_local", "scan_default"):
         handle_command(bot_token, chat_id, "/scan", user_id=user_id)
@@ -341,10 +464,32 @@ def handle_callback_query(bot_token: str, callback: dict) -> None:
         handle_command(bot_token, chat_id, "/scan 5432,3306,6379", user_id=user_id)
     elif data == "status":
         handle_command(bot_token, chat_id, "/status", user_id=user_id)
+    elif data == "report":
+        handle_command(bot_token, chat_id, "/report", user_id=user_id)
+    elif data in ("menu", "start"):
+        handle_command(bot_token, chat_id, "/help", user_id=user_id)
     elif data == "ping":
         handle_command(bot_token, chat_id, "/ping", user_id=user_id)
     elif data == "help":
         handle_command(bot_token, chat_id, "/help", user_id=user_id)
+
+
+def verify_bot_credentials(bot_token: str) -> str | None:
+    """Kiểm tra token thật trước khi coi tiến trình bot là đã sẵn sàng."""
+    try:
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{bot_token}/getMe",
+            headers={"User-Agent": "PBL4-517-BotListener/1.0"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if not data.get("ok"):
+            return "Telegram không chấp nhận token."
+        return None
+    except urllib.error.HTTPError as exc:
+        return f"Telegram từ chối token (HTTP {exc.code})."
+    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        return f"Không kết nối được Telegram: {exc}"
 
 
 def run_listener() -> int:
@@ -360,30 +505,22 @@ def run_listener() -> int:
         print("[-] ChatOps requires TELEGRAM_CHAT_ID and TELEGRAM_ALLOWED_USER_IDS.", file=sys.stderr)
         return 2
 
+    credential_error = verify_bot_credentials(tele_token)
+    if credential_error:
+        print(f"[-] {credential_error}", file=sys.stderr)
+        return 2
+
     print("[*] Đang đồng bộ danh sách lệnh và nút Menu với Telegram API...")
     register_bot_commands(tele_token, tele_chat_id)
     print("[+] Đã đăng ký lệnh gợi ý (Autocomplete Menu) thành công!")
 
     # Gửi tin nhắn thông báo sẵn sàng vào nhóm
     if tele_chat_id:
-        ready_buttons = [
-            [
-                {"text": "🔍 Quét target đã cấu hình", "callback_data": "scan_local"},
-                {"text": "📊 Xem Baseline", "callback_data": "status"},
-            ],
-            [
-                {"text": "🏓 Ping Bot", "callback_data": "ping"},
-                {"text": "🛡️ Chuẩn OWASP A05", "url": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/"},
-            ],
-        ]
         send_telegram_alert(
             tele_token,
             tele_chat_id,
-            "🤖 *[PBL4 CHATOPS BOT ĐÃ SẴN SÀNG]* 🤖\n\n"
-            "Hệ thống điều khiển từ xa đã kết nối. Quản trị viên có thể:\n"
-            "• Gõ `/` để xem menu danh sách lệnh tự động gợi ý.\n"
-            "• Bấm trực tiếp các nút chọn nhanh bên dưới để thao tác tức thì!",
-            buttons=ready_buttons,
+            "Bot đã chạy. Chọn thao tác bên dưới hoặc dùng `/help` để xem lệnh.",
+            buttons=_keyboard(),
         )
 
     print("[*] Đang khởi động Telegram Bot Interactive Listener (ChatOps PBL4-517)...")
@@ -424,6 +561,12 @@ def run_listener() -> int:
                 if text.startswith("/") and not sender.get("is_bot") and _authorized_sender(chat_id, sender.get("id")):
                     handle_command(tele_token, chat_id, text, user_id=sender.get("id"))
 
+        except urllib.error.HTTPError as exc:
+            if exc.code == 409:
+                print("[-] Một bot khác đang polling cùng token; dừng tiến trình cũ trước.", file=sys.stderr)
+                return 2
+            print(f"[-] Telegram HTTP {exc.code}; thử lại sau 3 giây.", file=sys.stderr)
+            time.sleep(3)
         except urllib.error.URLError:
             time.sleep(3)
         except KeyboardInterrupt:

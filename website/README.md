@@ -13,6 +13,66 @@ Frontend dùng React, TypeScript, Vite và CSS thuần (tuân thủ design syste
 
 Trên Windows PowerShell, nếu `npm` bị chặn bởi execution policy, dùng **`npm.cmd`** thay cho `npm` trong mọi lệnh bên dưới. Không cần đổi execution policy của máy.
 
+<a id="local-nhanh-tren-windows"></a>
+
+## Local nhanh trên Windows
+
+Luồng này dùng launcher hiện có của Issue #68, với **một database dữ liệu giả
+`kevilo_local_lab`** cho web và demo. Cần Git, Node.js 24/npm, Python 3 và Docker
+Desktop đang chạy Linux containers. Từ gốc repository, khi backend/frontend đã
+dừng, chuẩn bị một lần:
+
+```powershell
+.\dev setup
+```
+
+Lệnh cài dependency/build hai project, provision PostgreSQL 16 qua Compose,
+migrate, seed khi User/Product đều trống, tạo/kiểm tra fixture local và cài
+Chromium cho XSS. Secret database nằm trong `.local/private/database.env`;
+backend dùng `website/backend/.env`. Không copy đè file env đang có. Nếu setup
+từ chối database không thuộc launcher quản lý, giữ cấu hình/dữ liệu cũ và đọc
+[quy tắc bảo toàn dữ liệu](../scripts/dev/README.md#database-và-bảo-toàn-dữ-liệu).
+Tài khoản dễ nhớ chỉ dành cho database development loopback này.
+
+Các lần thực hành sau, terminal A tại gốc repo tự khởi động database:
+
+```powershell
+docker compose --env-file .local/private/database.env up -d --wait db
+```
+
+Terminal B chạy API; sửa `website/backend/.env` theo
+[Environment](#environment) và [hướng dẫn demo tay](../scripts/demo/MANUAL.md):
+
+```powershell
+cd website/backend
+npm.cmd run dev
+```
+
+Terminal C mở từ gốc repo:
+
+```powershell
+cd website/frontend
+npm.cmd run dev
+```
+
+Web: <http://127.0.0.1:5173>; health: <http://127.0.0.1:3000/api/health>.
+Sau mỗi lần đổi `.env`, tự Ctrl+C ở B rồi chạy lại `npm.cmd run dev`.
+Ở A, `.\demo idor` hỏi URL/order, hiện trace API và kết quả thực tế; launcher
+demo không đổi cờ hay restart server. Hướng dẫn đủ từng bài, tài khoản, browser,
+request và code phòng vệ ở [MANUAL.md](../scripts/demo/MANUAL.md).
+
+Khi xong, Ctrl+C ở B/C và dừng DB từ A:
+
+```powershell
+docker compose --env-file .local/private/database.env stop db
+```
+
+Nếu muốn launcher quản lý web thay vì chạy từng terminal, dùng `.\dev up` và
+`.\dev down` trong một lượt riêng. `up` ép secure bằng biến môi trường của
+process con; không dùng luồng đó khi đang học chuyển cờ `.env` bằng tay.
+Setup PostgreSQL thủ công vẫn được mô tả bên dưới cho luồng không dùng launcher;
+các tài khoản/fixture `@local.test` của demo ngắn cần setup #68 ở trên.
+
 ## Project structure
 
 ```text

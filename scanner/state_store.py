@@ -24,7 +24,7 @@ def _validate_pending(pending, host: str) -> None:
         raise ValueError("Invalid scanner alert outbox; restore its backup.")
     event_types = {"INITIAL_SCAN", "NEW_PORT_DETECTED", "PORT_CLOSED", "SCAN_UNCERTAIN", "SCAN_RECOVERED"}
     payload_fields = {"event_type", "target_host", "open_ports", "new_ports", "closed_ports",
-                      "scan_duration", "banners", "event_id", "detected_at"}
+                      "uncertain_ports", "scan_duration", "banners", "event_id", "detected_at"}
     for event in pending:
         if not isinstance(event, dict):
             raise ValueError("Invalid scanner pending event.")
@@ -42,7 +42,7 @@ def _validate_pending(pending, host: str) -> None:
                 or payload.get("target_host") != host
                 or not _valid_ports(payload.get("open_ports"))):
             raise ValueError("Invalid scanner pending event payload.")
-        for field in ("new_ports", "closed_ports"):
+        for field in ("new_ports", "closed_ports", "uncertain_ports"):
             if field in payload and not _valid_ports(payload[field]):
                 raise ValueError("Invalid scanner pending event ports.")
         if "scan_duration" in payload and not _valid_number(payload["scan_duration"]):
