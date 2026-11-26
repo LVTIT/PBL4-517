@@ -1,5 +1,7 @@
 # PBL4 - Project 517
 
+[Thực hành đọc HTTP trên KEVILO local bằng Burp Suite Community](docs/burp/README.md)
+
 ## Topic
 
 Tìm hiểu AWS Cloud, xây dựng chương trình phân tích và giám sát các điểm yếu bảo
