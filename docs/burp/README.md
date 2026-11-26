@@ -8,6 +8,8 @@ Sau bài này, bạn có thể chọn một thao tác trên KEVILO, tìm request
 2. Cài **Community Edition** theo [hướng dẫn của PortSwigger](https://portswigger.net/burp/documentation/desktop/getting-started/download-and-install). Chọn dự án tạm trong bộ nhớ, dùng cấu hình mặc định. Trong **Settings → Tools → Proxy**, kiểm tra listener đang chạy trên loopback. Cổng mặc định là 8080. Nếu cổng bận, chọn cổng loopback còn trống.
 3. Tại **Proxy → Intercept**, đặt **Intercept off**, rồi chọn **Open browser**. Trình duyệt đi kèm dùng sẵn proxy của Burp. Nhập `http://127.0.0.1:5173/products`. Trong **HTTP history**, chọn host `127.0.0.1:5173` và lọc đường dẫn `/api/`. Intercept off cho request đi ngay và vẫn ghi lịch sử. [Giao diện HTTP history của PortSwigger](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history)
 
+Để nhận diện đúng tab trong lần mở đầu tiên, xem [ảnh nút Intercept off](https://portswigger.net/burp/documentation/desktop/images/getting-started/quick-start-pro-intercept-off.png) và [ảnh bảng HTTP history](https://portswigger.net/burp/documentation/desktop/images/getting-started/quick-start-pro-proxy-history.png). Đây là ảnh giao diện trong hướng dẫn của PortSwigger. Ảnh KEVILO bên dưới được chụp riêng trên máy local.
+
 ```mermaid
 sequenceDiagram
     participant C as Chromium của Burp
