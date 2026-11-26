@@ -13,7 +13,8 @@ Audit ngày 26/11/2026 trên nhánh `feature/burp-suite-demo`, nguồn ứng d�
 
 | Kiểm tra | Kết quả | Giới hạn |
 | --- | --- | --- |
-| Cài Burp trên Windows | Bản Community chính thức `2026.3.3-47134`; SHA-256 bộ cài khớp manifest WinGet, đã chạy lệnh xem phiên bản | Phiên đầu dừng tại bước xác nhận điều khoản. Ảnh HTTP history của KEVILO và thao tác Repeater/Comparer trên máy này chờ xác nhận trực tiếp |
+| Cài Burp trên Windows | Bản Community chính thức `2026.3.3-47134`; SHA-256 bộ cài khớp manifest WinGet. Sau khi người dùng chấp nhận điều khoản, Burp chạy ở chế độ headless và mở listener tại `127.0.0.1:8080` | Xác minh tiến trình sở hữu socket là Java chạy JAR Burp Community |
+| Chromium → Burp → KEVILO secure | Chromium tải `/products` qua proxy. Với `GET /api/products`, peer TCP mà Chromium ghi nhận là `127.0.0.1:8080`, response trả 200 và 11 sản phẩm; tên sản phẩm từ JSON xuất hiện trên trang | Mới xác minh đường truyền. Kết nối điều khiển desktop Windows chưa khả dụng để chụp HTTP history và kiểm tra thao tác Repeater/Comparer |
 | Launcher secure và Chromium | PostgreSQL 16 healthy; GET danh mục qua Vite trả 200 và 11 sản phẩm; [ảnh local](catalogue-local.png) | Trình duyệt mới, chưa đăng nhập |
 | Chromium đọc trang chi tiết có review fixture đã lưu | Một comment có dấu `<` trong text, 0 phần tử DOM con | Quan sát riêng nhánh secure |
 | Backend `test:integration` | 40/40 qua, API và PostgreSQL local | Có kiểm tra session, ranh giới quyền và tìm kiếm |
