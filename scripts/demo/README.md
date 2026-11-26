@@ -1,5 +1,7 @@
 # Vừa học vừa demo KEVILO trên local
 
+Để trình diễn trên lớp, bắt đầu bằng [Burp Suite Community và bốn bài đọc HTTP](../../docs/burp/README.md). Các probe dưới đây phục vụ đối chiếu và hồi quy.
+
 **Tự chạy tay, đăng nhập từng cửa sổ và xem từng request:** đọc
 [MANUAL.md](MANUAL.md). Đây là lộ trình dành cho người mới đang học từng thao tác.
 MANUAL có bản đồ file/symbol, thứ tự câu hỏi, request/body, giải thích kết quả,

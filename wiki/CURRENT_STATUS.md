@@ -1,5 +1,7 @@
 # Current Project Status
 
+**2026-11-26 — Burp Community local (Refs #44, #68).** Đã bổ sung [hướng dẫn đọc HTTP và bốn bài học](../docs/burp/README.md). Đã chạy secure trên PostgreSQL local, kiểm tra danh mục và DOM review trong Chromium. [Biên bản và phạm vi kiểm chứng](../docs/burp/audit.md) phân biệt kết quả mới với ma trận vulnerable/secure lịch sử. PR #75 được merge tại `1444cb9`; mục ngày 10/11 bên dưới ghi trạng thái tại thời điểm đó.
+
 **2026-11-10 demo evidence and probe layout (#68, Related to #44):
 implemented / offline verified; committed `afc896d`, PR #75 open.** `.\demo
 <scenario>` now prints a bounded `observed` section for what the vulnerability
