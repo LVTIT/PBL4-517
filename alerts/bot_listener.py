@@ -203,9 +203,10 @@ def _format_status(state_data: dict) -> str:
 
 def _send_report(bot_token: str, chat_id: str) -> None:
     """Gửi báo cáo HTML/Markdown mới nhất vào chat."""
-    latest_html = reports_dir() / "latest.html"
-    latest_md = reports_dir() / "latest.md"
-    if not latest_html.is_file() and not latest_md.is_file():
+    directory = reports_dir()
+    files = (directory / "latest.html", directory / "latest.md")
+    available = [path for path in files if path.is_file()]
+    if not available:
         send_telegram_alert(
             bot_token,
             chat_id,
@@ -215,9 +216,7 @@ def _send_report(bot_token: str, chat_id: str) -> None:
         return
     sent_files = []
     failed_files = []
-    for path in (latest_html, latest_md):
-        if not path.is_file():
-            continue
+    for path in available:
         sent = send_telegram_document(
             bot_token, chat_id, path,
             caption="" if sent_files else "*Báo cáo quét mới nhất*",
@@ -225,15 +224,24 @@ def _send_report(bot_token: str, chat_id: str) -> None:
         )
         (sent_files if sent else failed_files).append(path)
 
-    if failed_files:
-        failed_names = ", ".join(f"`{path.name}`" for path in failed_files)
+    missing_files = [path for path in files if path not in available]
+    if failed_files or missing_files:
+        notes = []
         if sent_files:
             sent_names = ", ".join(f"`{path.name}`" for path in sent_files)
-            message = f"Đã gửi {sent_names}. Gửi thất bại: {failed_names}."
-        else:
-            message = f"Không gửi được file báo cáo: {failed_names}.\nThư mục báo cáo: `{_short(latest_html.parent)}`."
+            notes.append(f"Đã gửi {sent_names}.")
+        if failed_files:
+            failed_names = ", ".join(f"`{path.name}`" for path in failed_files)
+            if sent_files:
+                notes.append(f"Gửi thất bại: {failed_names}.")
+            else:
+                notes.append(f"Không gửi được file báo cáo: {failed_names}.")
+                notes.append(f"Thư mục báo cáo: `{_short(directory)}`.")
+        if missing_files:
+            missing_names = ", ".join(f"`{path.name}`" for path in missing_files)
+            notes.append(f"Chưa có file {missing_names}.")
         send_telegram_alert(
-            bot_token, chat_id, message, buttons=_keyboard(),
+            bot_token, chat_id, " ".join(notes), buttons=_keyboard(),
         )
 
 

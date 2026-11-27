@@ -177,6 +177,16 @@ class ChatOpsUxTests(unittest.TestCase):
                 bot_listener.handle_command('unused-token', 'trusted-chat', '/report', user_id=123)
                 self.assertEqual(send_alert.call_args.args[2], f'Đã gửi `{sent}`. Gửi thất bại: `{failed}`.')
 
+    @patch('alerts.bot_listener.send_telegram_alert', return_value=True)
+    @patch('alerts.bot_listener.send_telegram_document', return_value=True)
+    def test_report_names_the_missing_file_when_only_one_is_available(self, send_document, send_alert):
+        reports = self.root / 'reports'
+        reports.mkdir()
+        (reports / 'latest.html').write_text('demo', encoding='utf-8')
+        bot_listener.handle_command('unused-token', 'trusted-chat', '/report', user_id=123)
+        send_document.assert_called_once()
+        self.assertEqual(send_alert.call_args.args[2], 'Đã gửi `latest.html`. Chưa có file `latest.md`.')
+
     @patch('alerts.bot_listener.send_telegram_alert')
     def test_status_summarizes_risk_and_uncertain_ports(self, send):
         (self.root / 'state.json').write_text(json.dumps({
