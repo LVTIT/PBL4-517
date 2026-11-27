@@ -6,9 +6,10 @@ removed the Python TCP port loop and its worker option. CLI, timer and Telegram
 `/scan` share the same scanner. Baseline, reports and alert retry use the existing
 flow. Local Windows tests verified the initial scan, silent steady state, a new
 lower-numbered port, preserved state after failure and a fresh ChatOps process
-using the same baseline. Real channel delivery and Ubuntu VM/EC2 acceptance
-remain pending. The scanner suite passed 61/61 on Windows and Ubuntu 24.04
-in a container, where static systemd unit verification also passed.
+using the same baseline. Discord and Telegram each confirmed the initial and
+new-port alerts from the authorized local run. The scanner suite passed 61/61
+on Windows and Ubuntu 24.04 in a container, where static systemd unit
+verification also passed. Ubuntu VM reboot and EC2 acceptance remain pending.
 [Local evidence](../evidence/MON-01/local-nmap-20261127/README.md)
 and [scanner setup](../scanner/README.md).
 
