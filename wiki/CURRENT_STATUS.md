@@ -1,5 +1,10 @@
 # Current Project Status
 
+**2026-11-28 — Demo scanner bằng website KEVILO local (Refs #35).** Nmap quét
+Express `3000/tcp`, Vite `5173/tcp` và PostgreSQL `55432/tcp`. Hai kênh xác
+nhận tin lập mốc và chỉ ghi `5173/tcp` ở mục cổng mới mỗi lần bật Vite. Lượt
+giữ nguyên im lặng. [Bằng chứng](../evidence/MON-01/website-demo-20261128/README.md).
+
 **2026-11-28 — Giao diện báo cáo quét cổng (Refs #35).** HTML dùng toàn bộ bề rộng
 khả dụng trên desktop. Bảng phân biệt kết quả TCP và thay đổi so với mốc đã
 lưu. Hướng dẫn, mã sự kiện và chi tiết cổng mở hiển thị trực tiếp. Điểm tham

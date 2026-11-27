@@ -70,26 +70,26 @@ class ReportPageTests(unittest.TestCase):
 
     @patch('scanner.scan.configured_alert_channels', return_value=['discord', 'telegram'])
     @patch('scanner.scan.notify_scan_event', return_value={'discord': True, 'telegram': True})
-    @patch('scanner.scan.scan_tcp_ports', return_value={18079: 'open', 18080: 'closed', 18081: 'filtered'})
+    @patch('scanner.scan.scan_tcp_ports', return_value={3000: 'closed', 5173: 'open', 55432: 'filtered'})
     def test_same_changes_and_ids_reach_alert_report_and_audit(self, measure, notify, channels):
         state = self.root / 'state.json'
-        save_state(state, {'127.0.0.1': {'baseline_open_ports': [18080, 18081]}})
-        self.assertEqual(scan.main(['127.0.0.1', '--ports', '18079-18081', '--state-file', str(state), '--no-banner']), 1)
+        save_state(state, {'127.0.0.1': {'baseline_open_ports': [3000, 55432]}})
+        self.assertEqual(scan.main(['127.0.0.1', '--ports', '3000,5173,55432', '--state-file', str(state), '--no-banner']), 1)
         audit = json.loads(Path(f'{state}.audit.log').read_text(encoding='utf-8'))
         self.assertEqual(
             [(event['event_type'], event['ports']) for event in audit['events']],
-            [('NEW_PORT_DETECTED', [18079]), ('PORT_CLOSED', [18080]), ('SCAN_UNCERTAIN', [18081])],
+            [('NEW_PORT_DETECTED', [5173]), ('PORT_CLOSED', [3000]), ('SCAN_UNCERTAIN', [55432])],
         )
         html = (self.root / 'latest.html').read_text(encoding='utf-8')
         markdown = (self.root / 'latest.md').read_text(encoding='utf-8')
-        self.assertIn('Phát hiện thêm cổng 18079/tcp có thể kết nối', html)
-        self.assertIn('Đồng thời xác nhận đóng 18080/tcp.', html)
+        self.assertIn('Phát hiện thêm cổng 5173/tcp có thể kết nối', html)
+        self.assertIn('Đồng thời xác nhận đóng 3000/tcp.', html)
         self.assertIn('Kết nối bị từ chối', html)
         self.assertIn('Chưa đủ dữ liệu so sánh', html)
         self.assertIn('Mới phát hiện mở', html)
         self.assertEqual(html.count('<table '), 1)
         self.assertNotIn('<details', html)
-        self.assertIn('| `18081/tcp` | Chưa xác định', markdown)
+        self.assertIn('| `55432/tcp` | Chưa xác định', markdown)
         self.assertNotIn('(An toàn)', markdown)
         for event in audit['events']:
             self.assertIn(event['event_id'], html)
@@ -98,7 +98,7 @@ class ReportPageTests(unittest.TestCase):
             self.assertEqual(call.kwargs['event_id'], event['event_id'])
             self.assertEqual(call.kwargs['detected_at'], audit['detected_at'])
         persisted = json.loads(state.read_text(encoding='utf-8'))['127.0.0.1']
-        self.assertEqual(persisted['baseline_open_ports'], [18079, 18081])
+        self.assertEqual(persisted['baseline_open_ports'], [5173, 55432])
         self.assertEqual(persisted['pending_alerts'][0]['id'], audit['events'][2]['event_id'])
 
     def test_success_report_escapes_host_and_banner(self):
@@ -113,11 +113,11 @@ class ReportPageTests(unittest.TestCase):
 
     def test_html_keeps_scores_and_groups_identical_open_port_guidance(self):
         output = reporter.generate_html_report(
-            '127.0.0.1', '127.0.0.1', {18079: 'open', 18080: 'open', 18081: 'closed'}, {}, 0.07,
+            '127.0.0.1', '127.0.0.1', {3000: 'closed', 5173: 'open', 55432: 'open'}, {}, 0.07,
         )
         html = output.read_text(encoding='utf-8')
         markdown = (self.root / 'latest.md').read_text(encoding='utf-8')
-        self.assertIn('<h3><code>18079/tcp</code>, <code>18080/tcp</code></h3>', html)
+        self.assertIn('<h3><code>5173/tcp</code>, <code>55432/tcp</code></h3>', html)
         self.assertEqual(html.count('LOW · Điểm tham khảo 3.5/10'), 1)
         self.assertEqual(markdown.count('LOW · Điểm tham khảo 3.5/10'), 2)
         self.assertIn('<code>ss -tlpn</code>', html)

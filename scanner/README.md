@@ -87,6 +87,29 @@ python scanner/scan.py 127.0.0.1 --no-alert --state-file .local/runtime/local-ch
 `--no-alert` vẫn cập nhật baseline và báo cáo. Dùng file state riêng cho lần thử
 để giữ mốc so sánh của lịch giám sát.
 
+### 3.5. Demo với website KEVILO local
+
+Mở PostgreSQL và Express theo [hướng dẫn chạy website](../website/README.md#local-nhanh-tren-windows).
+Chờ API `http://127.0.0.1:3000/api/health` báo kết nối database. Để Vite dừng
+trong lần quét đầu. Mở PowerShell ở gốc repo và dùng thư mục mới cho mỗi lượt demo.
+
+```powershell
+$demo = '.local/reports/website-demo-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
+$env:PBL517_REPORTS_DIR = $demo
+python scanner/scan.py 127.0.0.1 --ports 3000,5173,55432 --state-file "$demo/baseline.json" --no-banner --no-alert
+```
+
+Lần đầu, `3000/tcp` (Express) và `55432/tcp` (PostgreSQL) được ghi vào mốc.
+Bật Vite, chờ `http://127.0.0.1:5173` tải được rồi chạy lại **cùng lệnh với cùng file mốc**.
+Scanner ghi mới mở `5173/tcp`. Quét thêm một lần để thấy `NO_CHANGE`.
+Dừng Vite bằng Ctrl+C ở terminal frontend rồi quét để xác nhận đóng `5173/tcp`.
+Bật Vite và quét lại để xác nhận mở thêm lần nữa.
+
+Để gửi tin thật, chạy từ **lần đầu** với thư mục mốc mới, bỏ `--no-alert` và
+dùng kênh thử đã cấu hình. Xem HTML trong thư mục demo. Khi thử bằng bot local
+đã cấu hình đích `127.0.0.1`, dùng `/scan 3000,5173,55432` rồi `/report`.
+[Bằng chứng demo](../evidence/MON-01/website-demo-20261128/README.md).
+
 ---
 
 ## 4. Telegram ChatOps Bot tương tác hai chiều

@@ -3,6 +3,8 @@
 Ngày 2026-11-27, Refs #35. Phạm vi là Windows local với Nmap 7.993 và Chrome
 qua Playwright. Scanner chạy trên `127.0.0.1` với file baseline riêng.
 
+Kịch bản trình diễn hiện tại dùng [website KEVILO local](../website-demo-20261128/README.md).
+
 | Ca thử | Kết quả |
 | --- | --- |
 | Khởi tạo với `18080` | Nmap đo thật. Discord và Telegram xác nhận tạo tin baseline. Mã sự kiện khớp với audit. |

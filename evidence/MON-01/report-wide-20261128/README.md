@@ -3,6 +3,8 @@
 Ngày 2026-11-28, Refs #35. Scanner trên Windows dùng Nmap với `127.0.0.1` và
 baseline riêng. Bộ `python -m unittest discover -s scanner/tests -q` pass 66/66.
 
+Kịch bản trình diễn hiện tại dùng [website KEVILO local](../website-demo-20261128/README.md).
+
 | Ca thử | Kết quả |
 | --- | --- |
 | Lập mốc | Nmap kết nối được `18080/tcp`. HTML nêu mốc vừa lưu. |

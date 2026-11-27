@@ -4,6 +4,8 @@ Ngày 2026-11-27, trên Windows với Python 3.13.7 và Nmap 7.993. Refs #35.
 Listener TCP thử dùng `127.0.0.1` và file state riêng. Mỗi lượt gọi scanner
 qua một tiến trình mới.
 
+Kịch bản trình diễn hiện tại dùng [website KEVILO local](../website-demo-20261128/README.md).
+
 ## Lượt kiểm chứng với đích mô phỏng
 
 Một HTTP server loopback nhận và lưu nội dung POST Discord rồi trả HTTP 204.
