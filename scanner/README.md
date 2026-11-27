@@ -10,7 +10,7 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
   - **Telegram Group Bot:** Thông báo định dạng Markdown an toàn kèm Inline Keyboard nút bấm tương tác nhanh.
 - **Telegram ChatOps Bot hai chiều:** Module `alerts/bot_listener.py` chạy nền tiếp nhận lệnh điều khiển từ xa (`/scan`, `/status`, `/report`, `/ping`, `/help`), gửi kèm bàn phím nút bấm và gửi trực tiếp file báo cáo HTML/Markdown vào chat.
 - **Xuất báo cáo kép (Dual Reporting):**
-  - **Living HTML Dashboard (`latest.html`):** Giao diện Dark Cyber Glassmorphism hiện đại, tự động lưu trữ tối đa 10 snapshot sự kiện, tích hợp nút in/xuất PDF trực tiếp từ trình duyệt (`window.print()`).
+  - **HTML (`latest.html`):** Tóm tắt thay đổi ở đầu trang, một bảng trạng thái cổng và phần chi tiết mở rộng. Có bản in A4 và lưu tối đa 10 snapshot.
   - **Markdown Report (`latest.md`):** Tự động sinh báo cáo chuẩn Markdown phục vụ việc sao chép vào báo cáo đề tài/đồ án.
 - **Phụ thuộc runtime:** Nmap CLI và Python. Các module Python dùng thư viện chuẩn.
 
@@ -117,7 +117,7 @@ Xem tên biến tại [`.env.example`](../.env.example); giữ cấu hình thậ
 Các lệnh tương tác hỗ trợ:
 - `/scan [target] [ports]`: Quét IPv4 trong allowlist (mặc định: `SCANNER_TARGET`); `/scan 80,443` chọn port trên target mặc định.
 - `/status`: Xem Baseline đã lưu của các target, gồm xếp hạng rủi ro, cổng mở, cổng timeout/filtered và số cảnh báo đang chờ gửi.
-- `/report`: Gửi trực tiếp `latest.html` và `latest.md` vào chat dưới dạng tài liệu Telegram. Nếu chưa có báo cáo, bot hướng dẫn chạy `/scan`; nếu gửi file thất bại, bot chỉ ra đường dẫn file trên máy scanner.
+- `/report`: Gửi `latest.html` và `latest.md` dưới dạng tài liệu Telegram. Nút **Báo cáo** hiện phản hồi khi bắt đầu gửi. Nếu một file thất bại, bot nêu tên file đã gửi và tên file chưa gửi được.
 - `/ping`: Kiểm tra độ trễ và tình trạng sẵn sàng của ChatOps Bot.
 - `/help` (hoặc `/menu`, `/start`): Xem hướng dẫn sử dụng, giới hạn an toàn và danh sách lệnh.
 
@@ -134,9 +134,12 @@ AWS Security Group.
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
 Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục báo cáo (mặc định `.local/reports/scanner/`, đổi bằng `PBL517_REPORTS_DIR`):
-1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, banner trạng thái theo sự kiện, ma trận toàn bộ cổng đã quét, phần giải thích giới hạn và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
-2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
+1. **`latest.html`:** Báo cáo tự chứa, xem được khi offline. Đầu trang ghi cổng mới và cổng vừa đóng. Bảng ghi trạng thái của từng cổng. Phần **Chi tiết cổng mở** chứa banner, điểm tham khảo và khuyến nghị. Dùng **In / Lưu PDF** để in A4.
+2. **`latest.md`:** Cùng trạng thái, thời điểm và mã sự kiện ở dạng văn bản để trích vào báo cáo đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
+
+Mục **Mã sự kiện** trong HTML dùng để đối chiếu tin Discord, Telegram và trường
+`events` của audit. Một lượt có thể ghi cả cổng mới và cổng vừa đóng.
 
 Khi một lần quét thất bại (Nmap, DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
 scanner ghi đè `latest.html`/`latest.md` bằng **trang lỗi** (`generate_error_report`). Trang này

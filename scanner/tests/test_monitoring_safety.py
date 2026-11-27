@@ -27,8 +27,8 @@ class MonitoringSafetyTests(unittest.TestCase):
         self.state = Path(temporary.name) / 'monitor.state.json'
 
     def observe(self, ports, no_alert=True):
-        return evaluate_diff_and_notify('127.0.0.1', ports, 0.1, self.state, {},
-            no_alert=no_alert, scanned_ports=ports, port_results={p: 'open' for p in ports})
+        return evaluate_diff_and_notify('127.0.0.1', {p: 'open' for p in ports}, 0.1, self.state, {},
+            no_alert=no_alert).event_type
 
     @patch('scanner.scan.configured_alert_channels', return_value=['telegram'])
     @patch('scanner.scan.notify_scan_event', return_value={'telegram': True})

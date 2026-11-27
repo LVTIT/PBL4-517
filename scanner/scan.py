@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import argparse
 import copy
+from dataclasses import asdict
 import datetime
 import math
-import uuid
 import socket
 import sys
 import time
@@ -52,6 +52,7 @@ except ImportError:
 
 from scanner.config import state_file, resolve_path
 from scanner.nmap_backend import scan_tcp_ports
+from scanner.scan_result import ScanEvent, ScanResult
 from scanner.state_store import load_state, save_state, state_lock, write_audit
 from scanner.prober import grab_banner
 from scanner.risk_matrix import assess_port, calculate_system_posture
@@ -104,39 +105,36 @@ def _deliver_due_alerts(state_file: Path, state: dict, pending: list, now: float
 
 
 def evaluate_diff_and_notify(
-    host_key: str, current_open_ports: list[int], scan_duration: float,
-    state_file: Path, banners: dict[int, str | None], reset_baseline: bool = False,
-    no_alert: bool = False, scanned_ports: list[int] | None = None,
-    port_results: dict[int, str] | None = None,
-) -> str:
+    host_key: str, port_results: dict[int, str], scan_duration: float,
+    state_file: Path, banners: dict[int, str | None], *, reset_baseline: bool = False,
+    no_alert: bool = False,
+) -> ScanResult:
     """Preserve uncertain observations; persist an alert outbox before delivery."""
     state = load_state(state_file)
     previous = state.get(host_key)
     record = copy.deepcopy(previous or {"baseline_open_ports": [], "baseline_initialized": False})
     pending = record.setdefault("pending_alerts", [])
     now = time.time()
-    observed = port_results or {p: ("open" if p in current_open_ports else "closed")
-                                for p in (scanned_ports or current_open_ports)}
-    current = set(current_open_ports)
-    closed = {p for p, status in observed.items() if status == "closed"}
-    uncertain = sorted(p for p, status in observed.items() if status not in ("open", "closed"))
+    current = {p for p, status in port_results.items() if status == "open"}
+    closed = {p for p, status in port_results.items() if status == "closed"}
+    uncertain = sorted(p for p, status in port_results.items() if status not in ("open", "closed"))
     old = set(record["baseline_open_ports"])
     events = []
     initialized = record.get("baseline_initialized", previous is not None)
     if (not initialized or reset_baseline) and (current or closed):
         record["baseline_open_ports"] = sorted(current)
         record["baseline_initialized"] = True
-        events.append(("INITIAL_SCAN", [], []))
+        events.append(ScanEvent("INITIAL_SCAN"))
     elif initialized and not reset_baseline:
-        new_ports = sorted(current - old)
-        closed_ports = sorted(old & closed)
+        new_ports = tuple(sorted(current - old))
+        closed_ports = tuple(sorted(old & closed))
         record["baseline_open_ports"] = sorted((old - closed) | current)
         if new_ports:
-            events.append(("NEW_PORT_DETECTED", new_ports, []))
+            events.append(ScanEvent("NEW_PORT_DETECTED", new_ports))
         if closed_ports:
-            events.append(("PORT_CLOSED", [], closed_ports))
+            events.append(ScanEvent("PORT_CLOSED", closed_ports))
     if uncertain != record.get("uncertain_ports", []):
-        events.append(("SCAN_UNCERTAIN" if uncertain else "SCAN_RECOVERED", [], []))
+        events.append(ScanEvent("SCAN_UNCERTAIN" if uncertain else "SCAN_RECOVERED", tuple(uncertain)))
     record["uncertain_ports"] = uncertain
     record["last_scan_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     attempted = 0
@@ -150,16 +148,17 @@ def evaluate_diff_and_notify(
             record["pending_alerts"] = pending
         if channels and len(pending) + len(events) > 100:
             raise RuntimeError("Alert outbox full; delivery retried, stored baseline preserved.")
-        for event_type, new_ports, closed_ports in events:
+        for event in events:
             if not channels:
                 continue
-            event_id = uuid.uuid4().hex
-            pending.append({"id": event_id, "channels": channels,
+            pending.append({"id": event.event_id, "channels": channels,
                 "attempts": 0, "next_attempt_at": 0,
-                "payload": {"event_type": event_type, "target_host": host_key,
-                    "event_id": event_id, "detected_at": record["last_scan_at"],
-                    "open_ports": sorted(current), "new_ports": new_ports,
-                    "closed_ports": closed_ports, "uncertain_ports": uncertain,
+                "payload": {"event_type": event.event_type, "target_host": host_key,
+                    "event_id": event.event_id, "detected_at": record["last_scan_at"],
+                    "open_ports": sorted(current),
+                    "new_ports": list(event.ports) if event.event_type == "NEW_PORT_DETECTED" else [],
+                    "closed_ports": list(event.ports) if event.event_type == "PORT_CLOSED" else [],
+                    "uncertain_ports": uncertain,
                     "scan_duration": scan_duration,
                     "banners": banners}})
     state[host_key] = record
@@ -167,9 +166,9 @@ def evaluate_diff_and_notify(
     # Retry only failed channels; successful channels are never deliberately resent.
     if not no_alert:
         _deliver_due_alerts(state_file, state, pending, now, 2 - attempted)
-    event_type = events[0][0] if events else "NO_CHANGE"
-    print(f"[EVENT: {event_type}] uncertain={uncertain}; pending_alerts={len(pending)}")
-    return event_type
+    result = ScanResult(record["last_scan_at"], tuple(events), len(pending))
+    print(f"[EVENT: {result.event_type}] uncertain={uncertain}; pending_alerts={result.pending_alerts}")
+    return result
 
 
 def configured_alert_channels() -> list[str]:
@@ -242,20 +241,20 @@ def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) 
     # Đánh giá thay đổi và gửi cảnh báo
     state_file = Path(args.state_file)
     host_key = f"{args.host}"
-    event_type = evaluate_diff_and_notify(
+    scan_result = evaluate_diff_and_notify(
         host_key=host_key,
-        current_open_ports=open_ports,
+        port_results=results,
         scan_duration=duration,
         state_file=state_file,
         banners=banners,
         reset_baseline=args.reset_baseline,
         no_alert=args.no_alert,
-        scanned_ports=ports,
-        port_results=results,
     )
 
-    # Xuất Báo cáo HTML tự chứa (Living Dashboard + Snapshot nếu có sự cố)
-    archive_snapshot = bool(args.save_report or event_type in ("NEW_PORT_DETECTED", "PORT_CLOSED"))
+    # Xuất báo cáo HTML và lưu bản chụp khi có thay đổi cổng.
+    archive_snapshot = bool(args.save_report or any(
+        event.event_type in ("NEW_PORT_DETECTED", "PORT_CLOSED") for event in scan_result.events
+    ))
     output_html_path = Path(args.html_output) if args.html_output else None
 
     latest_report = generate_html_report(
@@ -264,18 +263,18 @@ def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) 
         port_results=results,
         banners=banners,
         scan_duration=duration,
-        event_type=event_type,
+        scan_result=scan_result,
         output_path=output_html_path,
         archive_snapshot=archive_snapshot,
     )
-    print(f"[+] Báo cáo HTML (Living Dashboard) đã cập nhật: {latest_report}")
+    print(f"[+] Báo cáo HTML đã cập nhật: {latest_report}")
     if archive_snapshot:
         print("[+] Đã lưu snapshot lịch sử sự cố vào thư mục reports/ (tự động lưu tối đa 10 bản gần nhất).")
 
-    record = load_state(state_file).get(args.host, {})
-    result = 1 if record.get("uncertain_ports") or record.get("pending_alerts") else 0
-    write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, scanner="nmap", results=results,
-                pending_alerts=len(record.get("pending_alerts", [])), exit_status=result)
+    result = 1 if scan_result.pending_alerts or any(status not in ("open", "closed") for status in results.values()) else 0
+    write_audit(state_file, target=args.host, target_ip=resolved, event=scan_result.event_type,
+                events=[asdict(event) for event in scan_result.events], detected_at=scan_result.detected_at,
+                scanner="nmap", results=results, pending_alerts=scan_result.pending_alerts, exit_status=result)
     return result
 
 

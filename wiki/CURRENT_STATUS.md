@@ -1,5 +1,13 @@
 # Current Project Status
 
+**2026-11-27 — Báo cáo scanner và phản hồi Telegram (Refs #35, Related to #36 và #43).**
+Scanner dùng chung sự kiện thay đổi cho audit, HTML, Markdown và hai kênh cảnh báo.
+Báo cáo nêu cổng mới và cổng vừa đóng. Telegram xác nhận thao tác Báo cáo và
+báo tên file khi chỉ gửi được một phần. 64 kiểm thử scanner/ChatOps pass trên Windows.
+Demo localhost dùng Nmap thật và đối chiếu được mã sự kiện giữa HTML, audit,
+Discord và Telegram. Chrome kiểm tra sáu trạng thái ở 1440, 390 và 320 px.
+Bản in giữ trạng thái cổng. [Bằng chứng local](../evidence/MON-01/report-refresh-20261127/README.md).
+
 **2026-11-27 — Nmap external monitoring (Refs #35, related to #36 and #43).**
 Implemented Nmap TCP Connect as the scanner's single measurement engine and
 removed the Python TCP port loop and its worker option. CLI, timer and Telegram

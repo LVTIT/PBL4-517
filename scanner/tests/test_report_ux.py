@@ -7,7 +7,8 @@ import unittest
 from unittest.mock import patch
 
 from alerts import bot_listener, notifier
-from scanner import reporter
+from scanner import reporter, scan
+from scanner.state_store import save_state
 
 
 class ReportPageTests(unittest.TestCase):
@@ -67,6 +68,45 @@ class ReportPageTests(unittest.TestCase):
         self.assertNotIn('<img src=x', html)
         self.assertIn('&lt;script&gt;', html)
 
+    @patch('scanner.scan.configured_alert_channels', return_value=['discord', 'telegram'])
+    @patch('scanner.scan.notify_scan_event', return_value={'discord': True, 'telegram': True})
+    @patch('scanner.scan.scan_tcp_ports', return_value={18079: 'open', 18080: 'closed', 18081: 'filtered'})
+    def test_same_changes_and_ids_reach_alert_report_and_audit(self, measure, notify, channels):
+        state = self.root / 'state.json'
+        save_state(state, {'127.0.0.1': {'baseline_open_ports': [18080, 18081]}})
+        self.assertEqual(scan.main(['127.0.0.1', '--ports', '18079-18081', '--state-file', str(state), '--no-banner']), 1)
+        audit = json.loads(Path(f'{state}.audit.log').read_text(encoding='utf-8'))
+        self.assertEqual(
+            [(event['event_type'], event['ports']) for event in audit['events']],
+            [('NEW_PORT_DETECTED', [18079]), ('PORT_CLOSED', [18080]), ('SCAN_UNCERTAIN', [18081])],
+        )
+        html = (self.root / 'latest.html').read_text(encoding='utf-8')
+        markdown = (self.root / 'latest.md').read_text(encoding='utf-8')
+        self.assertIn('Mở mới 18079/tcp', html)
+        self.assertIn('Vừa đóng 18080/tcp', html)
+        self.assertEqual(html.count('<table>'), 1)
+        self.assertIn('| `18081/tcp` | Chưa xác định', markdown)
+        self.assertNotIn('(An toàn)', markdown)
+        for event in audit['events']:
+            self.assertIn(event['event_id'], html)
+            self.assertIn(event['event_id'], markdown)
+        for call, event in zip(notify.call_args_list, audit['events'][:2], strict=True):
+            self.assertEqual(call.kwargs['event_id'], event['event_id'])
+            self.assertEqual(call.kwargs['detected_at'], audit['detected_at'])
+        persisted = json.loads(state.read_text(encoding='utf-8'))['127.0.0.1']
+        self.assertEqual(persisted['baseline_open_ports'], [18079, 18081])
+        self.assertEqual(persisted['pending_alerts'][0]['id'], audit['events'][2]['event_id'])
+
+    def test_success_report_escapes_host_and_banner(self):
+        output = reporter.generate_html_report(
+            '<script>host</script>', '127.0.0.1', {80: 'open'},
+            {80: '<img src=x onerror=alert(1)>'}, 0.1,
+        )
+        html = output.read_text(encoding='utf-8')
+        self.assertNotIn('<script>host', html)
+        self.assertNotIn('<img src=x', html)
+        self.assertIn('&lt;img src=x', html)
+
 
 class ChatOpsUxTests(unittest.TestCase):
     def setUp(self):
@@ -122,6 +162,21 @@ class ChatOpsUxTests(unittest.TestCase):
         self.assertIn('Không gửi được file báo cáo', text)
         self.assertIn('latest.html', text)
 
+    @patch('alerts.bot_listener.send_telegram_alert', return_value=True)
+    @patch('alerts.bot_listener.send_telegram_document')
+    def test_report_reports_partial_delivery_in_both_directions(self, send_document, send_alert):
+        reports = self.root / 'reports'
+        reports.mkdir()
+        for name in ('latest.html', 'latest.md'):
+            (reports / name).write_text('demo', encoding='utf-8')
+        for outcomes, sent, failed in (([True, False], 'latest.html', 'latest.md'),
+                                       ([False, True], 'latest.md', 'latest.html')):
+            with self.subTest(outcomes=outcomes):
+                send_document.side_effect = outcomes
+                send_alert.reset_mock()
+                bot_listener.handle_command('unused-token', 'trusted-chat', '/report', user_id=123)
+                self.assertEqual(send_alert.call_args.args[2], f'Đã gửi `{sent}`. Gửi thất bại: `{failed}`.')
+
     @patch('alerts.bot_listener.send_telegram_alert')
     def test_status_summarizes_risk_and_uncertain_ports(self, send):
         (self.root / 'state.json').write_text(json.dumps({
@@ -143,6 +198,9 @@ class ChatOpsUxTests(unittest.TestCase):
     @patch('alerts.bot_listener.answer_callback_query')
     @patch('alerts.bot_listener.handle_command')
     def test_report_callback_reuses_command_boundary(self, command, answer):
+        command.side_effect = lambda *args, **kwargs: answer.assert_called_once_with(
+            'unused-token', 'query', 'Đang gửi báo cáo…',
+        )
         bot_listener.handle_callback_query('unused-token', {
             'id': 'query', 'data': 'report', 'from': {'id': 123},
             'message': {'chat': {'id': 'trusted-chat'}},

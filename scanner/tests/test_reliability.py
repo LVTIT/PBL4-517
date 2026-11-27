@@ -19,8 +19,7 @@ class ReliabilityTests(unittest.TestCase):
         self.state = Path(self.temporary.name) / 'monitor.state.json'
 
     def scan(self, results, no_alert=True):
-        return evaluate_diff_and_notify('127.0.0.1', [p for p, status in results.items() if status == 'open'],
-            0.1, self.state, {}, no_alert=no_alert, scanned_ports=list(results), port_results=results)
+        return evaluate_diff_and_notify('127.0.0.1', results, 0.1, self.state, {}, no_alert=no_alert).event_type
 
     def test_real_listener_lifecycle(self):
         with socket.socket() as listener:

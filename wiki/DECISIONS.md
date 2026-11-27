@@ -16,6 +16,17 @@ Cách đo mới thay quyết định ở prototype Issue #9 về việc dùng tr
 luồng cảnh báo đã kiểm thử. Nmap là phụ thuộc runtime trên máy quét. Xem
 [cài đặt, nguồn tham khảo và kiểm thử](../scanner/README.md).
 
+## 2026-11-27 — Dùng chung sự kiện giữa báo cáo và cảnh báo (Refs #35)
+
+**Status: Accepted.** Người dùng duyệt bố cục báo cáo đơn giản, kết quả theo
+cổng và phản hồi khi gửi báo cáo qua Telegram.
+
+Mỗi thay đổi đã xác nhận có mã và danh sách cổng do phép so baseline tạo ra.
+Audit và báo cáo nhận cùng dữ liệu mà notifier dùng. Audit giữ trường sự kiện
+chính để tương thích với luồng hiện có và thêm `events` cho toàn bộ thay đổi trong
+lượt đo. Logic so baseline đọc trực tiếp các trạng thái cổng, vì một cổng thiếu
+kết quả chưa chứng minh cổng đã đóng. HTML nhúng CSS cục bộ để mở offline và in A4.
+
 ## 2026-11-10 — Demo probe layout: shared core + one module per vulnerability (Refs #68)
 
 **Status: Accepted** — user approved this layout for the local demo, the EC2 lab demo
