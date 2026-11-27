@@ -10,7 +10,7 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
   - **Telegram Group Bot:** Thông báo định dạng Markdown an toàn kèm Inline Keyboard nút bấm tương tác nhanh.
 - **Telegram ChatOps Bot hai chiều:** Module `alerts/bot_listener.py` chạy nền tiếp nhận lệnh điều khiển từ xa (`/scan`, `/status`, `/report`, `/ping`, `/help`), gửi kèm bàn phím nút bấm và gửi trực tiếp file báo cáo HTML/Markdown vào chat.
 - **Xuất báo cáo kép (Dual Reporting):**
-  - **HTML (`latest.html`):** Tóm tắt thay đổi ở đầu trang, một bảng trạng thái cổng và phần chi tiết mở rộng. Có bản in A4 và lưu tối đa 10 snapshot.
+  - **HTML (`latest.html`):** Tóm tắt thay đổi ở đầu trang, bảng kết quả TCP và hướng dẫn kiểm tra hiển thị trực tiếp. Có bản in A4 và lưu tối đa 10 snapshot.
   - **Markdown Report (`latest.md`):** Tự động sinh báo cáo chuẩn Markdown phục vụ việc sao chép vào báo cáo đề tài/đồ án.
 - **Phụ thuộc runtime:** Nmap CLI và Python. Các module Python dùng thư viện chuẩn.
 
@@ -134,7 +134,7 @@ AWS Security Group.
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
 Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục báo cáo (mặc định `.local/reports/scanner/`, đổi bằng `PBL517_REPORTS_DIR`):
-1. **`latest.html`:** Báo cáo tự chứa, xem được khi offline. Đầu trang ghi cổng mới và cổng vừa đóng. Bảng ghi trạng thái của từng cổng. Phần **Chi tiết cổng mở** chứa banner, điểm tham khảo và khuyến nghị. Dùng **In / Lưu PDF** để in A4.
+1. **`latest.html`:** Báo cáo tự chứa, xem được khi offline. Đầu trang nêu thay đổi và số cổng theo từng kết quả TCP. Bảng phân biệt kết quả kết nối lần này với thay đổi so với mốc đã lưu. Trên màn hình rộng, **Việc cần kiểm tra** và **Mã sự kiện** (khi có) nằm cạnh bảng. Trên điện thoại, các phần xếp dọc. **Chi tiết cổng mở** hiển thị điểm tham khảo, hướng dẫn và banner nếu đã thu thập. Dùng **In / Lưu PDF** để in A4.
 2. **`latest.md`:** Cùng trạng thái, thời điểm và mã sự kiện ở dạng văn bản để trích vào báo cáo đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
 

@@ -82,9 +82,13 @@ class ReportPageTests(unittest.TestCase):
         )
         html = (self.root / 'latest.html').read_text(encoding='utf-8')
         markdown = (self.root / 'latest.md').read_text(encoding='utf-8')
-        self.assertIn('Mở mới 18079/tcp', html)
-        self.assertIn('Vừa đóng 18080/tcp', html)
-        self.assertEqual(html.count('<table>'), 1)
+        self.assertIn('Phát hiện thêm cổng 18079/tcp có thể kết nối', html)
+        self.assertIn('Đồng thời xác nhận đóng 18080/tcp.', html)
+        self.assertIn('Kết nối bị từ chối', html)
+        self.assertIn('Chưa đủ dữ liệu so sánh', html)
+        self.assertIn('Mới phát hiện mở', html)
+        self.assertEqual(html.count('<table '), 1)
+        self.assertNotIn('<details', html)
         self.assertIn('| `18081/tcp` | Chưa xác định', markdown)
         self.assertNotIn('(An toàn)', markdown)
         for event in audit['events']:
@@ -106,6 +110,18 @@ class ReportPageTests(unittest.TestCase):
         self.assertNotIn('<script>host', html)
         self.assertNotIn('<img src=x', html)
         self.assertIn('&lt;img src=x', html)
+
+    def test_html_keeps_scores_and_groups_identical_open_port_guidance(self):
+        output = reporter.generate_html_report(
+            '127.0.0.1', '127.0.0.1', {18079: 'open', 18080: 'open', 18081: 'closed'}, {}, 0.07,
+        )
+        html = output.read_text(encoding='utf-8')
+        markdown = (self.root / 'latest.md').read_text(encoding='utf-8')
+        self.assertIn('<h3><code>18079/tcp</code>, <code>18080/tcp</code></h3>', html)
+        self.assertEqual(html.count('LOW · Điểm tham khảo 3.5/10'), 1)
+        self.assertEqual(markdown.count('LOW · Điểm tham khảo 3.5/10'), 2)
+        self.assertIn('<code>ss -tlpn</code>', html)
+        self.assertNotIn('Đã mở từ trước', html)
 
 
 class ChatOpsUxTests(unittest.TestCase):

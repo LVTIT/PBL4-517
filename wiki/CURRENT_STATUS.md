@@ -1,5 +1,12 @@
 # Current Project Status
 
+**2026-11-28 — Giao diện báo cáo quét cổng (Refs #35).** HTML dùng toàn bộ bề rộng
+khả dụng trên desktop. Bảng phân biệt kết quả TCP và thay đổi so với mốc đã
+lưu. Hướng dẫn, mã sự kiện và chi tiết cổng mở hiển thị trực tiếp. Điểm tham
+khảo giữ nguyên giá trị. 66 kiểm thử scanner/ChatOps pass. Chrome kiểm tra sáu
+trạng thái trên sáu kích thước, bốn bản in A4 và bản HTML tải lại từ Telegram.
+[Bằng chứng](../evidence/MON-01/report-wide-20261128/README.md).
+
 **2026-11-27 — Báo cáo scanner và phản hồi Telegram (Refs #35, Related to #36 và #43).**
 Scanner dùng chung sự kiện thay đổi cho audit, HTML, Markdown và hai kênh cảnh báo.
 Báo cáo nêu cổng mới và cổng vừa đóng. Telegram xác nhận thao tác Báo cáo và
