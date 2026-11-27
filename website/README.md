@@ -562,7 +562,15 @@ Kiểm chứng local ngày **2026-09-15** trên Windows, Node.js **24.21.0**, np
 
 Phạm vi website hiện tại: Home, Products, ProductDetail, Reviews, Cart, Orders (khách vãng lai + thành viên), Register/Login/Profile, Admin Panel, REST API, migration và seed local. Khởi đầu từ skeleton [Issue #8](https://github.com/LVTIT/PBL4-517/issues/8), mở rộng ở các commit sau để tạo bề mặt kiểm thử OWASP. EC2, Nginx/systemd, scanner/alerts và OWASP lab nằm ở các issue khác. Source giữ security baseline với bốn cờ lab `VULN_IDOR_ENABLED`, `VULN_SQLI_ENABLED`, `VULN_XSS_ENABLED` và `VULN_AUTH_ENABLED` mặc định `false`. `src/lib/config.ts` từ chối cờ lab trong `APP_PROFILE=production` mặc định, độc lập với NODE_ENV.
 
-Backend có scoped npm overrides cho `@prisma/config@7.10.0 → deepmerge-ts@8.0.2` và `prisma@7.10.0 → mysql2@3.24.4` để xử lý advisory [deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) trong dependency bắc cầu. Prisma CLI/Client/adapter vẫn cùng `7.10.0`, database ứng dụng vẫn là PostgreSQL. Khi nâng Prisma 7 sau này, kiểm tra dependency upstream, bỏ override khi đã có bản sửa phù hợp và chạy lại `npm ci`, audit, generate/build, migrate/seed và integration test.
+Backend pin các dependency bắc cầu trong `overrides`. `@prisma/config@7.10.0`
+dùng `deepmerge-ts@8.0.2` và `effect@3.22.1`. `prisma@7.10.0` dùng
+`mysql2@3.24.4`. Các bản pin xử lý advisory
+[deepmerge-ts recursion](https://github.com/advisories/GHSA-ggr8-5vv4-36mx),
+[Effect ReDoS](https://github.com/advisories/GHSA-7589-6fvf-x4pw),
+[mysql2 auth downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr)
+và [mysql2 decompression DoS](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3).
+Khi nâng Prisma, đối chiếu các phiên bản upstream rồi chạy lại `npm ci`, audit,
+generate/build, migrate/seed và integration test.
 
 
 ## Local security lifecycle regression ? Refs #37, #38, #40, #44

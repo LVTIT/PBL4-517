@@ -1014,7 +1014,7 @@ external AWS acceptance. EC2 phải có evidence rule/listener và giới hạn 
 
 **Request và source:** đây là phép kết nối TCP tới từng cổng, không phải HTTP
 attack `/api/...`; `--no-banner` bỏ bước lấy banner. Đọc
-[scan.py](../../scanner/scan.py): `scan_port` phân loại connect success/refused/
+[nmap_backend.py](../../scanner/nmap_backend.py): Nmap phân loại kết nối thành công, từ chối hoặc
 timeout, `evaluate_diff_and_notify` so baseline; [state_store.py](../../scanner/state_store.py)
 lưu state dưới lock; [reporter.py](../../scanner/reporter.py) tạo trang báo cáo.
 Report HTML mở bằng browser từ đường dẫn scanner in ra; F12 Network của website

@@ -6,7 +6,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from scanner.scan import evaluate_diff_and_notify, scan_ports_parallel
+from scanner.nmap_backend import scan_tcp_ports
+from scanner.scan import evaluate_diff_and_notify
 from scanner.state_store import load_state, save_state, state_lock
 from alerts.notifier import notify_scan_event
 
@@ -18,17 +19,16 @@ class ReliabilityTests(unittest.TestCase):
         self.state = Path(self.temporary.name) / 'monitor.state.json'
 
     def scan(self, results, no_alert=True):
-        return evaluate_diff_and_notify('127.0.0.1', [p for p, status in results.items() if status == 'open'],
-            0.1, self.state, {}, no_alert=no_alert, scanned_ports=list(results), port_results=results)
+        return evaluate_diff_and_notify('127.0.0.1', results, 0.1, self.state, {}, no_alert=no_alert).event_type
 
     def test_real_listener_lifecycle(self):
         with socket.socket() as listener:
             listener.bind(('127.0.0.1', 0))
             listener.listen()
             port = listener.getsockname()[1]
-            self.assertEqual(self.scan(scan_ports_parallel('127.0.0.1', [port], 0.2)), 'INITIAL_SCAN')
-            self.assertEqual(self.scan(scan_ports_parallel('127.0.0.1', [port], 0.2)), 'NO_CHANGE')
-        result = scan_ports_parallel('127.0.0.1', [port], 0.3)
+            self.assertEqual(self.scan(scan_tcp_ports('127.0.0.1', [port], 0.2)), 'INITIAL_SCAN')
+            self.assertEqual(self.scan(scan_tcp_ports('127.0.0.1', [port], 0.2)), 'NO_CHANGE')
+        result = scan_tcp_ports('127.0.0.1', [port], 0.3)
         self.assertNotEqual(result[port], 'open')
         # Some host firewalls drop probes after listener shutdown. Do not call
         # that a confirmed close just to make a test pass.

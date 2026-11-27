@@ -1,7 +1,7 @@
 # External Security Scanner & Anomaly Detector — Issue #10 (SCAN-02)
 
 Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface Management) và giám sát điểm yếu bảo mật theo chuẩn **OWASP Top 10 - A05: Security Misconfiguration**:
-- **Quét mạng đa luồng:** Quét nhanh danh sách cổng TCP với `ThreadPoolExecutor`, hỗ trợ cả IP và Domain.
+- **Quét TCP bằng Nmap:** Đo danh sách cổng của một địa chỉ IPv4 bằng TCP Connect. Tên miền được phân giải trước khi quét.
 - **Thu thập Banner giao thức (Deep Banner Grabbing):** Thăm dò chi tiết phiên bản HTTP (`Server`, `X-Powered-By`), SSH handshake, PostgreSQL SSLRequest, MySQL packet, Redis PING.
 - **Đánh giá rủi ro theo heuristic & OWASP A05:** Chấm điểm heuristic score, xếp hạng độ nghiêm trọng (CRITICAL / HIGH / MEDIUM / INFO) và xếp loại Posture hệ thống (Grade A+ đến F).
 - **Phát hiện dị thường theo Baseline (Diffing Engine):** Tự động phát hiện cổng mới mở thêm hoặc cổng đã được bịt lại dựa trên mốc lưu trữ tại `scanner_state.json`.
@@ -10,9 +10,9 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
   - **Telegram Group Bot:** Thông báo định dạng Markdown an toàn kèm Inline Keyboard nút bấm tương tác nhanh.
 - **Telegram ChatOps Bot hai chiều:** Module `alerts/bot_listener.py` chạy nền tiếp nhận lệnh điều khiển từ xa (`/scan`, `/status`, `/report`, `/ping`, `/help`), gửi kèm bàn phím nút bấm và gửi trực tiếp file báo cáo HTML/Markdown vào chat.
 - **Xuất báo cáo kép (Dual Reporting):**
-  - **Living HTML Dashboard (`latest.html`):** Giao diện Dark Cyber Glassmorphism hiện đại, tự động lưu trữ tối đa 10 snapshot sự kiện, tích hợp nút in/xuất PDF trực tiếp từ trình duyệt (`window.print()`).
+  - **HTML (`latest.html`):** Tóm tắt thay đổi ở đầu trang, bảng kết quả TCP và hướng dẫn kiểm tra hiển thị trực tiếp. Có bản in A4 và lưu tối đa 10 snapshot.
   - **Markdown Report (`latest.md`):** Tự động sinh báo cáo chuẩn Markdown phục vụ việc sao chép vào báo cáo đề tài/đồ án.
-- **Không phụ thuộc thư viện ngoài:** 100% sử dụng thư viện chuẩn của Python (`socket`, `concurrent.futures`, `urllib.request`, `json`, `datetime`).
+- **Phụ thuộc runtime:** Nmap CLI và Python. Các module Python dùng thư viện chuẩn.
 
 ---
 
@@ -49,13 +49,20 @@ python alerts/notifier.py
 
 ## 3. Hướng dẫn Sử dụng Scanner
 
+### Cài Nmap
+
+- **Windows:** dùng [trình cài Nmap chính thức](https://nmap.org/download.html). Scanner tìm Nmap trên `PATH` rồi trong thư mục cài chuẩn của Windows. Với đường dẫn khác, đặt `SCANNER_NMAP_PATH` trong `.env` theo `.env.example`.
+- **Ubuntu:** `sudo apt-get install nmap`. Kiểm tra bản cài bằng `nmap --version`.
+
+Scanner đọc [XML của Nmap](https://nmap.org/book/output-formats-xml-output.html) và ghi `scanner: "nmap"` trong audit của lượt đo thành công. Mỗi lần chạy Nmap có hạn 30 giây. `--timeout` đặt ngưỡng RTT của Nmap trong khoảng 0,1–30 giây (mặc định 1 giây) và timeout đọc banner. Kết quả thiếu định danh cổng được ghi `filtered` (chưa xác định).
+
 ### 3.1. Quét cơ bản & Khởi tạo Baseline:
 ```bash
 # Quét danh sách port phổ biến (22, 80, 443, 3000, 5432, 8080)
 python scanner/scan.py 127.0.0.1
 
-# Chỉ định cổng cụ thể và số luồng song song
-python scanner/scan.py 127.0.0.1 --ports 22,80,443,3000,5432,6379 --workers 10
+# Chỉ định cổng cụ thể
+python scanner/scan.py 127.0.0.1 --ports 22,80,443,3000,5432,6379
 
 # Reset mốc Baseline ban đầu cho mục tiêu
 python scanner/scan.py 127.0.0.1 --reset-baseline
@@ -74,8 +81,34 @@ python scanner/scan.py 127.0.0.1 --watch 30
 
 ### 3.4. Chế độ Im lặng (Local Validation không bắn Bot):
 ```bash
-python scanner/scan.py 127.0.0.1 --no-alert
+python scanner/scan.py 127.0.0.1 --no-alert --state-file .local/runtime/local-check.state.json
 ```
+
+`--no-alert` vẫn cập nhật baseline và báo cáo. Dùng file state riêng cho lần thử
+để giữ mốc so sánh của lịch giám sát.
+
+### 3.5. Demo với website KEVILO local
+
+Mở PostgreSQL và Express theo [hướng dẫn chạy website](../website/README.md#local-nhanh-tren-windows).
+Chờ API `http://127.0.0.1:3000/api/health` báo kết nối database. Để Vite dừng
+trong lần quét đầu. Mở PowerShell ở gốc repo và dùng thư mục mới cho mỗi lượt demo.
+
+```powershell
+$demo = '.local/reports/website-demo-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
+$env:PBL517_REPORTS_DIR = $demo
+python scanner/scan.py 127.0.0.1 --ports 3000,5173,55432 --state-file "$demo/baseline.json" --no-banner --no-alert
+```
+
+Lần đầu, `3000/tcp` (Express) và `55432/tcp` (PostgreSQL) được ghi vào mốc.
+Bật Vite, chờ `http://127.0.0.1:5173` tải được rồi chạy lại **cùng lệnh với cùng file mốc**.
+Scanner ghi mới mở `5173/tcp`. Quét thêm một lần để thấy `NO_CHANGE`.
+Dừng Vite bằng Ctrl+C ở terminal frontend rồi quét để xác nhận đóng `5173/tcp`.
+Bật Vite và quét lại để xác nhận mở thêm lần nữa.
+
+Để gửi tin thật, chạy từ **lần đầu** với thư mục mốc mới, bỏ `--no-alert` và
+dùng kênh thử đã cấu hình. Xem HTML trong thư mục demo. Khi thử bằng bot local
+đã cấu hình đích `127.0.0.1`, dùng `/scan 3000,5173,55432` rồi `/report`.
+[Bằng chứng demo](../evidence/MON-01/website-demo-20261128/README.md).
 
 ---
 
@@ -107,7 +140,7 @@ Xem tên biến tại [`.env.example`](../.env.example); giữ cấu hình thậ
 Các lệnh tương tác hỗ trợ:
 - `/scan [target] [ports]`: Quét IPv4 trong allowlist (mặc định: `SCANNER_TARGET`); `/scan 80,443` chọn port trên target mặc định.
 - `/status`: Xem Baseline đã lưu của các target, gồm xếp hạng rủi ro, cổng mở, cổng timeout/filtered và số cảnh báo đang chờ gửi.
-- `/report`: Gửi trực tiếp `latest.html` và `latest.md` vào chat dưới dạng tài liệu Telegram. Nếu chưa có báo cáo, bot hướng dẫn chạy `/scan`; nếu gửi file thất bại, bot chỉ ra đường dẫn file trên máy scanner.
+- `/report`: Gửi `latest.html` và `latest.md` dưới dạng tài liệu Telegram. Nút **Báo cáo** hiện phản hồi khi bắt đầu gửi. Nếu một file thất bại, bot nêu tên file đã gửi và tên file chưa gửi được.
 - `/ping`: Kiểm tra độ trễ và tình trạng sẵn sàng của ChatOps Bot.
 - `/help` (hoặc `/menu`, `/start`): Xem hướng dẫn sử dụng, giới hạn an toàn và danh sách lệnh.
 
@@ -124,11 +157,14 @@ AWS Security Group.
 ## 5. Báo cáo & Bằng chứng Kiểm định (Reports & Evidence)
 
 Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mục báo cáo (mặc định `.local/reports/scanner/`, đổi bằng `PBL517_REPORTS_DIR`):
-1. **`latest.html` (Living Dashboard):** Giao diện động, hiển thị điểm heuristic, banner trạng thái theo sự kiện, ma trận toàn bộ cổng đã quét, phần giải thích giới hạn và nút bấm **🖨️ Xuất PDF / In Báo Cáo** chuẩn định dạng in ấn.
-2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
+1. **`latest.html`:** Báo cáo tự chứa, xem được khi offline. Đầu trang nêu thay đổi và số cổng theo từng kết quả TCP. Bảng phân biệt kết quả kết nối lần này với thay đổi so với mốc đã lưu. Trên màn hình rộng, **Việc cần kiểm tra** và **Mã sự kiện** (khi có) nằm cạnh bảng. Trên điện thoại, các phần xếp dọc. **Chi tiết cổng mở** hiển thị điểm tham khảo, hướng dẫn và banner nếu đã thu thập. Dùng **In / Lưu PDF** để in A4.
+2. **`latest.md`:** Cùng trạng thái, thời điểm và mã sự kiện ở dạng văn bản để trích vào báo cáo đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
 
-Khi một lần quét thất bại (DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
+Mục **Mã sự kiện** trong HTML dùng để đối chiếu tin Discord, Telegram và trường
+`events` của audit. Một lượt có thể ghi cả cổng mới và cổng vừa đóng.
+
+Khi một lần quét thất bại (Nmap, DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
 scanner ghi đè `latest.html`/`latest.md` bằng **trang lỗi** (`generate_error_report`). Trang này
 nêu lý do, việc cần kiểm tra và những gì nó **không** kết luận, để người xem không đọc nhầm
 báo cáo cũ hoặc tưởng lần quét vừa rồi đã thành công.
@@ -190,14 +226,22 @@ acceptance but before local acknowledgement can duplicate a message. Missing
 credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
 new alerts; it preserves existing pending events. No tokens enter the outbox.
 
-Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
-observations or pending delivery; 2 = configuration/state/lock/DNS/audit failure.
+Exit codes: 0 = conclusive observations with no pending delivery, 1 = uncertain
+observations or pending delivery, 2 = Nmap, configuration, state, lock, DNS or audit failure.
 JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at
 1 MiB with two backups. Audit write/rotation errors propagate as a failed scan;
 outbox metadata/payload are validated before baseline changes. Legacy baseline
 files without an outbox remain supported. Reports can use `PBL517_REPORTS_DIR`; score values are
 local port-based heuristics, not a validated CVSS assessment or proof of a CVE.
 
-Run `python -m unittest discover -s scanner/tests -v` from the repository root.
-These checks use loopback sockets and simulated alert outcomes; no chat is sent.
+Run `python -m unittest discover -s scanner/tests -v` from the repository root after installing Nmap.
+The suite runs Nmap against local TCP listeners and simulates alert delivery.
 [Ubuntu VM scheduler template and acceptance steps](systemd/README.md).
+
+## Mã nguồn tham khảo — Refs #35
+
+| Nguồn | Phần áp dụng |
+| --- | --- |
+| [PortQatyran `5573869`](https://github.com/LaggerIsME/PortQatyran/blob/5573869/network_scanner/scripts/passive_mode.sh) | Quét Nmap định kỳ và phát hiện cổng mới qua baseline. PBL4-517 dùng TCP Connect, đọc XML và so sánh tập cổng bằng bộ quản lý baseline đã có. Bài kiểm thử bao gồm trường hợp cổng mới có số nhỏ nhất. |
+| [NetAlert 2.0 `1ffa8fd`](https://github.com/NSM-Barii/NetAlert-2.0/blob/1ffa8fd/monitor.py#L350-L360) | Đối chiếu cách chuyển sự kiện thành thông báo Discord Webhook. Notifier hiện có nhận sự kiện TCP với IP, cổng, thời điểm và mã sự kiện. |
+| [telegram-port-scanner-bot `bfe46bc`](https://github.com/yoneshmurugan/telegram-port-scanner-bot/blob/bfe46bc/script.py#L40-L76) | Đối chiếu cách đưa kết quả Nmap vào Telegram. ChatOps của PBL4-517 đọc cùng baseline và báo cáo qua `/status` và `/report`, đồng thời áp dụng danh sách IP được phép cho `/scan`. |

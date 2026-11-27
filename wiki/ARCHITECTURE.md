@@ -78,6 +78,10 @@ flowchart TB
 
 Giai đoạn đầu có thể phục vụ trực tiếp qua Nginx trên EC2; ALB thuộc giai đoạn mở rộng đã nêu trong đề tài, chưa triển khai. Cấu hình SG/NACL, subnet, TLS và chuỗi trust proxy phải được xác minh khi triển khai. Scanner chạy từ bên ngoài và không cần truy cập database website.
 
+Scanner sử dụng Nmap TCP Connect cho phép đo và lưu baseline JSON tại máy quét.
+CLI, Telegram `/scan` và timer gọi cùng luồng đo, so sánh và gửi cảnh báo. Xem
+[scanner README](../scanner/README.md) để cài đặt và kiểm tra kết quả local.
+
 Thiết kế chi tiết cho ALB nằm ở [docs/aws/alb-design.md](../docs/aws/alb-design.md)
 (Issue #34, **Proposed**): ALB cần tối thiểu hai subnet khác Availability Zone,
 target phải là Nginx cổng 80 chứ không phải backend loopback 3000, chứng chỉ ACM

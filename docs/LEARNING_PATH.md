@@ -29,7 +29,7 @@ là ứng dụng để thực hành. Bắt đầu từ [README](../README.md), r
 | XSS | `website/frontend/src/pages/ProductDetailPage.tsx` | `product-service.ts`, `scripts/attacker/xss.mjs` |
 | Authentication lab | `website/backend/src/routes/auth-routes.ts` | `scripts/attacker/probes/auth.py::run` |
 | Dữ liệu | `website/backend/prisma/schema.prisma` | `migrations/`, `src/scripts/lab-fixtures.ts` |
-| TCP scan/baseline | `scanner/scan.py` | `scanner/state_store.py`, `scanner/FUNDAMENTALS.md` |
+| TCP scan/baseline | `scanner/nmap_backend.py`, `scanner/scan.py` | `scanner/state_store.py`, `scanner/FUNDAMENTALS.md` |
 | Alert/retry/bot | `alerts/notifier.py` | `alerts/bot_listener.py`, `scanner/config.py` |
 | EC2 | [DEMO.md](aws/DEMO.md) | Nginx/systemd/network/HTTPS runbook được liên kết ở đó |
 

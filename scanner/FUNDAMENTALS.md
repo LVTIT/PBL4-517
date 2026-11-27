@@ -1,7 +1,7 @@
 # Scanner Fundamentals — Issue #9 (SCAN-01)
 
-Note kiến thức nền và chốt công nghệ cho scanner PBL4-517.
-Hiện thực prototype: [`scan.py`](scan.py), hướng dẫn ở [`README.md`](README.md).
+Kiến thức nền của prototype Issue #9 và cách áp dụng với Nmap ở Issue #35.
+Hướng dẫn chạy và xem kết quả nằm trong [README scanner](README.md).
 
 ## 1. IP và port là gì
 
@@ -27,30 +27,26 @@ server trả `SYN-ACK` → client gửi `ACK`. Từ phía scanner, chỉ cần b
 | Bị từ chối (`refused`) | `CLOSED` — máy sống nhưng port không có service |
 | Hết timeout / lỗi mạng | `FILTERED` — không kết luận được (firewall chặn hoặc host chết) |
 
-`FILTERED` không đồng nghĩa port đóng — chỉ là không quan sát được.
-`scan.py` phân loại đúng 3 trạng thái này qua `socket.create_connection`
-và `timeout` cho mỗi port.
+`FILTERED` biểu thị rằng phép đo chưa xác định được cổng mở hay đóng. Ví dụ,
+Security Group có thể loại bỏ gói tin dù dịch vụ vẫn đang lắng nghe trên EC2.
+Đọc thêm [trạng thái cổng trong Nmap](https://nmap.org/book/man-port-scanning-basics.html).
 
 ## 4. Chốt công nghệ scanner
 
-**Python thư viện chuẩn (`socket`, `argparse`) — không thêm dependency.**
+Prototype Issue #9 dùng `socket.create_connection`. Bản hiện tại dùng
+[Nmap TCP Connect](https://nmap.org/book/scan-methods-connect-scan.html),
+vẫn dựa vào lời gọi `connect()` của hệ điều hành. Python đọc XML và đảm nhiệm
+lưu baseline, gửi thông báo cùng báo cáo. Cài đặt theo [README scanner](README.md).
 
-- Chạy được ngay trên mọi máy dev lẫn EC2, không cần `pip install`.
-- Nhóm đã dùng Python cho script tấn công mẫu (`scripts/attacker/`).
-- Output ASCII một dòng một port, dễ parse khi làm alert Telegram/Discord sau này.
-- Timeout mặc định `1.0s` mỗi port: đủ nhanh quét vài chục port, đủ chậm
-  để không báo `FILTERED` oan trên mạng thường.
+## 5. Theo dõi một lượt đo từ đầu đến cuối
 
-## 5. Scanner prototype hoạt động như thế nào (DoD #9)
-
-1. Nhận `host` → resolve DNS/IP qua `gethostbyname`.
-2. Parse `--ports` (`22,80,3000` hoặc khoảng `20-25`) → list đã sort/khử trùng.
-3. `connect()` từng port với `--timeout` → ghi `OPEN/CLOSED/FILTERED`.
-4. In bảng kết quả + dòng tổng hợp `Open ports: ...`, exit code `0`
-   (lỗi tham số/host exit `2`).
+1. Phân giải `host` thành một địa chỉ IPv4 và chuẩn hoá danh sách cổng.
+2. [`nmap_backend.py`](nmap_backend.py) lấy trạng thái TCP từ XML của Nmap.
+3. [`scan.py`](scan.py) so cổng đang mở với baseline. Chỉ kết quả `closed`
+   xác nhận loại cổng khỏi baseline.
+4. Đối chiếu bảng kết quả, file trạng thái và mã sự kiện trong audit với tin cảnh báo.
 
 ## 6. Liên quan
 
 - Kiến trúc scanner + alert flow: [docs/architecture/v0.1.md](../docs/architecture/v0.1.md).
-- Prototype + test localhost: [README.md](README.md), issue #10.
-- Quét EC2 thật sau issue #12.
+- Prototype: issue #10. Quét định kỳ từ Ubuntu VM: [hướng dẫn systemd](systemd/README.md).

@@ -22,6 +22,8 @@ Website luôn ở `http://127.0.0.1:5173`; API mặc định 3000. `up` lặp l�
 đang chạy nếu không có demo/cấu hình thay đổi. Trở về `up` sau demo tạo backend mới,
 xóa bộ đếm auth cũ. Đổi source cần down rồi setup để build lại.
 
+`dev ports` và lệnh `/scan` của bot cần Nmap. Xem [cài Nmap](../../scanner/README.md#cài-nmap).
+
 ## Database và bảo toàn dữ liệu
 
 Compose có một service `db`, PostgreSQL 16, container mặc định `pbl517-db`, publish

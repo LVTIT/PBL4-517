@@ -1,5 +1,38 @@
 # Current Project Status
 
+**2026-11-28 — Demo scanner bằng website KEVILO local (Refs #35).** Nmap quét
+Express `3000/tcp`, Vite `5173/tcp` và PostgreSQL `55432/tcp`. Hai kênh xác
+nhận tin lập mốc và chỉ ghi `5173/tcp` ở mục cổng mới mỗi lần bật Vite. Lượt
+giữ nguyên im lặng. [Bằng chứng](../evidence/MON-01/website-demo-20261128/README.md).
+
+**2026-11-28 — Giao diện báo cáo quét cổng (Refs #35).** HTML dùng toàn bộ bề rộng
+khả dụng trên desktop. Bảng phân biệt kết quả TCP và thay đổi so với mốc đã
+lưu. Hướng dẫn, mã sự kiện và chi tiết cổng mở hiển thị trực tiếp. Điểm tham
+khảo giữ nguyên giá trị. 66 kiểm thử scanner/ChatOps pass. Chrome kiểm tra sáu
+trạng thái trên sáu kích thước, bốn bản in A4 và bản HTML tải lại từ Telegram.
+[Bằng chứng](../evidence/MON-01/report-wide-20261128/README.md).
+
+**2026-11-27 — Báo cáo scanner và phản hồi Telegram (Refs #35, Related to #36 và #43).**
+Scanner dùng chung sự kiện thay đổi cho audit, HTML, Markdown và hai kênh cảnh báo.
+Báo cáo nêu cổng mới và cổng vừa đóng. Telegram xác nhận thao tác Báo cáo và
+báo tên file khi chỉ gửi được một phần. 65 kiểm thử scanner/ChatOps pass trên Windows.
+Demo localhost dùng Nmap thật và đối chiếu được mã sự kiện giữa HTML, audit,
+Discord và Telegram. Chrome kiểm tra sáu trạng thái ở 1440, 390 và 320 px.
+Bản in giữ trạng thái cổng. [Bằng chứng local](../evidence/MON-01/report-refresh-20261127/README.md).
+
+**2026-11-27 — Nmap external monitoring (Refs #35, related to #36 and #43).**
+Implemented Nmap TCP Connect as the scanner's single measurement engine and
+removed the Python TCP port loop and its worker option. CLI, timer and Telegram
+`/scan` share the same scanner. Baseline, reports and alert retry use the existing
+flow. Local Windows tests verified the initial scan, silent steady state, a new
+lower-numbered port, preserved state after failure and a fresh ChatOps process
+using the same baseline. Discord and Telegram each confirmed the initial and
+new-port alerts from the authorized local run. The scanner suite passed 61/61
+on Windows and Ubuntu 24.04 in a container, where static systemd unit
+verification also passed. Ubuntu VM reboot and EC2 acceptance remain pending.
+[Local evidence](../evidence/MON-01/local-nmap-20261127/README.md)
+and [scanner setup](../scanner/README.md).
+
 **2026-11-10 demo evidence and probe layout (#68, Related to #44):
 implemented / offline verified; committed `afc896d`, PR #75 open.** `.\demo
 <scenario>` now prints a bounded `observed` section for what the vulnerability

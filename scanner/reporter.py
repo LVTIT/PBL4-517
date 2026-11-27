@@ -1,684 +1,380 @@
-"""PBL4-517: Security Audit HTML & Markdown Reporter (Issue #10).
-
-Tạo báo cáo kiểm toán an ninh mạng chuyên nghiệp định dạng HTML và Markdown:
-- Giao diện Dashboard Cyber Security hiện đại, hoàn toàn tự chứa (Self-contained, nhúng sẵn CSS/SVG).
-- Không phụ thuộc mạng Internet/CDN (mở xem offline khi chấm bài hoàn hảo).
-- Nút bấm In ấn / Xuất PDF trực tiếp trên giao diện trình duyệt.
-- Tự động sinh báo cáo định dạng Markdown (latest.md) để dễ dàng kẹp vào bài nộp Word đồ án.
-- Cơ chế Living Dashboard chống đầy ổ cứng: Mặc định ghi đè file `.local/reports/scanner/latest.html`.
-- Cơ chế lưu trữ sự cố: Tự động lưu snapshot khi có cảnh báo và giới hạn tối đa 10 file gần nhất.
-"""
+"""Self-contained HTML and Markdown reports from one scanner observation."""
 
 from __future__ import annotations
 
+from collections import Counter
 import datetime
 from html import escape
 from pathlib import Path
 
-from scanner.risk_matrix import assess_port, calculate_system_posture
-
+from alerts.notifier import KNOWN_SERVICES
 from scanner.config import reports_dir
+from scanner.risk_matrix import assess_port
+from scanner.scan_result import ScanEvent, ScanResult
 
-# None uses shared dynamic configuration; tests may override with a temporary Path.
 REPORTS_DIR: Path | None = None
 MAX_ARCHIVED_REPORTS = 10
+REPORT_STYLE = Path(__file__).with_name("report.css").read_text(encoding="utf-8")
+PORT_STATES = {"open": "Mở", "closed": "Đóng", "filtered": "Chưa xác định"}
+TCP_RESULTS = {"open": "Kết nối được", "closed": "Kết nối bị từ chối", "filtered": "Chưa xác định"}
+EVENTS = {
+    "INITIAL_SCAN": "Đã lưu baseline",
+    "NEW_PORT_DETECTED": "Phát hiện cổng mới",
+    "PORT_CLOSED": "Đã xác nhận đóng cổng",
+    "SCAN_UNCERTAIN": "Kết quả quét chưa đầy đủ",
+    "SCAN_RECOVERED": "Lần quét này đã có đủ trạng thái",
+    "NO_CHANGE": "Không có thay đổi đã xác nhận",
+    "MANUAL_SCAN": "Kết quả quét TCP",
+}
+LIMITS = (
+    "Trạng thái cổng phản ánh kết nối từ máy quét vào thời điểm ghi nhận.",
+    "Chưa xác định (timeout/filtered) nghĩa là phép đo chưa xác nhận được cổng mở hay đóng.",
+    "Tên dịch vụ trong bảng là gợi ý theo số cổng. Chi tiết có banner nếu đã thu thập.",
+    "Đây không phải kiểm thử toàn diện ứng dụng, TLS hay quyền truy cập.",
+    "Không đưa báo cáo này lên Internet nếu có thông tin hạ tầng nhạy cảm.",
+)
 
 
 def ensure_reports_dir() -> Path:
-    """Đảm bảo thư mục lưu báo cáo tồn tại."""
     directory = REPORTS_DIR if REPORTS_DIR is not None else reports_dir()
     directory.mkdir(parents=True, exist_ok=True)
     return directory
 
 
-def clean_old_reports(reports_dir: Path, max_keep: int = MAX_ARCHIVED_REPORTS) -> None:
-    """Dọn dẹp các file báo cáo cũ để không làm đầy ổ đĩa (Retention Policy)."""
+def clean_old_reports(directory: Path, max_keep: int = MAX_ARCHIVED_REPORTS) -> None:
     try:
-        snapshots = sorted(
-            [f for f in reports_dir.glob("audit_*.html") if f.is_file()],
-            key=lambda f: f.stat().st_mtime,
-            reverse=True,
-        )
-        for old_file in snapshots[max_keep:]:
-            try:
-                old_file.unlink()
-            except Exception:
-                pass
-    except Exception:
-        pass
+        snapshots = sorted((file for file in directory.glob("audit_*.html") if file.is_file()),
+                           key=lambda file: file.stat().st_mtime, reverse=True)
+    except OSError:
+        return
+    for snapshot in snapshots[max_keep:]:
+        try:
+            snapshot.unlink()
+        except OSError:
+            pass
 
 
-def generate_markdown_report(
-    target_host: str,
-    target_ip: str,
-    port_results: dict[int, str],
-    banners: dict[int, str | None],
-    scan_duration: float,
-    event_type: str = "MANUAL_SCAN",
-) -> Path:
-    """Xuất báo cáo định dạng Markdown phục vụ dán vào báo cáo Word đồ án."""
-    reports_dir = ensure_reports_dir()
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    open_ports = [p for p, status in sorted(port_results.items()) if status == "open"]
-    posture = calculate_system_posture(open_ports)
-
-    md_lines = [
-        f"# Báo Cáo Kiểm Toán An Ninh Mạng Ngoài (External Audit)",
-        f"",
-        f"- **Mục tiêu:** `{target_host}` (`{target_ip}`)",
-        f"- **Thời điểm kiểm toán:** {now_str} (UTC+7)",
-        f"- **Thời gian quét:** {scan_duration:.2f} giây",
-        f"- **Sự kiện ghi nhận:** `{event_type}`",
-        f"- **Xếp hạng an ninh tổng thể:** **[{posture['grade']}] - {posture['status']}** (Điểm Heuristic score cao nhất: {posture['max_cvss']:.1f}/10)",
-        f"",
-        f"---",
-        f"",
-        f"## 1. Chi tiết các cổng đang mở & Đánh giá rủi ro (Findings)",
-        f"",
-        f"| Cổng | Dịch vụ mạng | Banner / Phiên bản thu thập | Mức rủi ro | Heuristic score | Nguy cơ an ninh (OWASP A05) | Khuyến nghị khắc phục |",
-        f"| :--- | :--- | :--- | :---: | :---: | :--- | :--- |",
-    ]
-
-    if open_ports:
-        for p in open_ports:
-            banner = banners.get(p) or "Không có phản hồi banner"
-            profile = assess_port(p, banner)
-            service_name = _get_service_name(p)
-            md_lines.append(
-                f"| **{p}/tcp** | {service_name} | `{banner}` | **{profile.severity}** | {profile.cvss_score:.1f} | {profile.impact} | `{profile.recommendation}` |"
-            )
-    else:
-        md_lines.append(
-            "| - | - | - | - | - | Chưa quan sát thấy cổng mở trong phạm vi quét | Đối chiếu kết quả chưa xác định và kiểm thử ứng dụng riêng |"
-        )
-
-    md_lines.extend([
-        f"",
-        f"---",
-        f"",
-        f"## 2. Toàn bộ trạng thái cổng mạng đã rà soát",
-        f"",
-        f"| Cổng | Trạng thái phản hồi | Ý nghĩa hạ tầng |",
-        f"| :--- | :---: | :--- |",
-    ])
-
-    for p, status in sorted(port_results.items()):
-        status_upper = status.upper()
-        meaning = "Đang mở cho Internet truy cập" if status == "open" else (
-            "Bị AWS Security Group chặn âm thầm (An toàn)" if status == "filtered" else "Máy chủ từ chối kết nối (Port đóng)"
-        )
-        md_lines.append(f"| `{p}/tcp` | **{status_upper}** | {meaning} |")
-
-    md_lines.extend([
-        f"",
-        f"---",
-        f"",
-        f"## 3. Khuyến nghị khắc phục trên AWS EC2 Security Group",
-        f"",
-        f"1. Đăng nhập vào **AWS Management Console** &rarr; Vào dịch vụ **EC2** &rarr; Chọn **Security Groups**.",
-        f"2. Tìm Security Group đang gắn với máy chủ `{target_host}`.",
-        f"3. Vào tab **Inbound rules** &rarr; Nhấn **Edit inbound rules**.",
-        f"4. Xóa bỏ hoàn toàn các rule mở cổng cơ sở dữ liệu (`5432`, `3306`, `6379`) hoặc cổng backend (`3000`, `8080`) có nguồn `0.0.0.0/0`.",
-        f"5. Đối với cổng **22 (SSH)**: Giới hạn IP cụ thể dạng `x.x.x.x/32`, không mở công khai cho mọi địa chỉ.",
-        f"",
-        f"> *Báo cáo được sinh tự động bởi module `scanner/reporter.py` thuộc Đề tài PBL4-517.*",
-    ])
-
-    md_path = reports_dir / "latest.md"
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(md_lines))
-    return md_path
+def _time_text(moment: datetime.datetime) -> str:
+    return moment.astimezone().isoformat(sep=" ", timespec="seconds")
 
 
-EVENT_STYLES: dict[str, tuple[str, str, str, str]] = {
-    # event_type: (css class, icon, title, detail)
-    "INITIAL_SCAN": (
-        "alert-info", "📢", "Đã thiết lập mốc Baseline",
-        "Lần quét này được lưu làm mốc so sánh cho các lần sau.",
-    ),
-    "NEW_PORT_DETECTED": (
-        "alert-danger", "🚨", "Phát hiện cổng mới mở ngoài Baseline",
-        "Đối chiếu ngay Security Group, tiến trình đang chạy và chủ đích của thay đổi.",
-    ),
-    "PORT_CLOSED": (
-        "alert-success", "🛡️", "Đã xác nhận đóng cổng",
-        "Chỉ các cổng nhận TCP refusal rõ ràng mới được coi là đã đóng. Các cổng còn mở và bảo mật ứng dụng vẫn cần đánh giá riêng.",
-    ),
-    "SCAN_UNCERTAIN": (
-        "alert-warning", "⚠️", "Kết quả quét chưa đầy đủ",
-        "Có cổng timeout/filtered. Không kết luận các cổng đó đã đóng hay hệ thống đã an toàn.",
-    ),
-    "SCAN_RECOVERED": (
-        "alert-info", "🔄", "Kết nối giám sát đã phục hồi",
-        "Lần quét này không còn cổng chưa xác định; vẫn cần đọc chi tiết từng cổng.",
-    ),
-    "NO_CHANGE": (
-        "alert-neutral", "ℹ️", "Không có thay đổi cổng đã xác nhận",
-        "Không có thay đổi không đồng nghĩa hệ thống không còn lỗ hổng.",
-    ),
-    "MANUAL_SCAN": (
-        "alert-neutral", "🔎", "Quét thủ công",
-        "Đây là kết quả tại thời điểm quét, không phải chứng nhận an toàn lâu dài.",
-    ),
-}
+def _port_summary(ports: tuple[int, ...]) -> str:
+    labels = ", ".join(f"{port}/tcp" for port in ports[:4])
+    return f"{labels} và {len(ports) - 4} cổng khác" if len(ports) > 4 else labels
 
 
-def _status_banner(event_type: str, uncertain_ports: list[int]) -> str:
-    """Banner trung thực về ý nghĩa của lần quét hiện tại."""
-    if uncertain_ports and event_type not in ("SCAN_UNCERTAIN",):
-        css, icon, title, detail = EVENT_STYLES["SCAN_UNCERTAIN"]
-    else:
-        css, icon, title, detail = EVENT_STYLES.get(
-            event_type, EVENT_STYLES["MANUAL_SCAN"]
-        )
-    extra = ""
-    if uncertain_ports:
-        extra = (
-            f'<p class="alert-extra">Cổng chưa xác định: '
-            f'<code>{", ".join(str(p) for p in uncertain_ports)}</code>. '
-            "Timeout/filtered không chứng minh cổng đã đóng.</p>"
-        )
-    return f"""
-    <div class="alert-banner {css}" role="status">
-      <div class="alert-icon" aria-hidden="true">{icon}</div>
-      <div>
-        <p class="alert-title">{escape(title)}</p>
-        <p class="alert-detail">{escape(detail)}</p>
-        {extra}
+def _event_ports(events: tuple[ScanEvent, ...], event_type: str) -> tuple[int, ...]:
+    return tuple(port for event in events if event.event_type == event_type for port in event.ports)
+
+
+def _page(
+    title: str, target_host: str, target_ip: str, moment: datetime.datetime, body: str,
+    scan_duration: float | None = None,
+) -> str:
+    host = escape(target_host)
+    ip = f" ({escape(target_ip)})" if target_ip and target_ip != target_host else ""
+    duration = (
+        f"<div><dt>Cách quét</dt><dd>Nmap TCP Connect</dd></div>"
+        f"<div><dt>Thời gian quét</dt><dd>{scan_duration:.2f} giây</dd></div>"
+        if scan_duration is not None else ""
+    )
+    local_time = moment.astimezone()
+    offset = local_time.strftime('%z')
+    timestamp = f"{local_time:%d/%m/%Y %H:%M:%S} (UTC{offset[:3]}:{offset[3:]})"
+    return f"""<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{escape(title)} — {host}</title>
+  <style>{REPORT_STYLE}</style>
+</head>
+<body>
+  <main>
+    <header class="report-header">
+      <div class="heading">
+        <h1>{escape(title)}</h1>
+        <button type="button" onclick="window.print()">In / Lưu PDF</button>
       </div>
-    </div>
-    """
+      <dl class="metadata">
+        <div><dt>Địa chỉ quét</dt><dd><code>{host}</code>{ip}</dd></div>
+        <div><dt>Lúc quét</dt><dd><time datetime="{moment.isoformat()}">{timestamp}</time></dd></div>
+        {duration}
+      </dl>
+    </header>
+    {body}
+  </main>
+</body>
+</html>
+"""
+
+
+def _port_table(port_results: dict[int, str], new: set[int], closed: set[int], comparison: str) -> str:
+    ordered = sorted(port_results, key=lambda port: (
+        port not in new, port not in closed, port_results[port] != "open", port,
+    ))
+    rows = []
+    for port in ordered:
+        state = port_results[port]
+        service = KNOWN_SERVICES.get(port)
+        hint = ""
+        if state == "open":
+            hint = f'<small>{escape(service)} (gợi ý theo cổng)</small>' if service else '<small>Chưa rõ dịch vụ</small>'
+        note = "Chưa so sánh"
+        if comparison == "initial":
+            note = "Ghi nhận vào mốc" if state == "open" else "Lần quét lập mốc"
+        elif comparison == "saved":
+            if port in new:
+                note = "Mới phát hiện mở"
+            elif port in closed:
+                note = "Vừa xác nhận đóng"
+            elif state == "open":
+                note = "Đã mở từ trước"
+            else:
+                note = "Không ghi nhận thay đổi"
+        if state == "filtered":
+            note = "Chưa đủ dữ liệu so sánh"
+        highlight = ' class="changed-row"' if port in new or port in closed else ""
+        rows.append(
+            f'<tr{highlight}><th scope="row"><code>{port}/tcp</code>{hint}</th>'
+            f'<td><span class="state {state}">{TCP_RESULTS[state]}</span></td><td>{note}</td></tr>'
+        )
+    table = f"""<table aria-labelledby="ports-title">
+        <colgroup><col class="port-col"><col class="state-col"><col></colgroup>
+        <thead><tr><th scope="col">Cổng</th><th scope="col">Kết quả TCP</th>
+          <th scope="col">So với mốc đã lưu</th></tr></thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>""" if rows else "<p>Lần quét này chưa có kết quả theo cổng.</p>"
+    return f"""<section class="panel results" aria-labelledby="ports-title">
+      <h2 id="ports-title">Kết quả theo cổng</h2>
+      {table}
+    </section>"""
+
+
+def _open_port_details(port_results: dict[int, str], banners: dict[int, str | None]) -> str:
+    groups: dict[tuple[str, float, str], list[tuple[int, str | None]]] = {}
+    for port, state in sorted(port_results.items()):
+        if state != "open":
+            continue
+        banner = banners.get(port)
+        profile = assess_port(port, banner)
+        key = (profile.severity, profile.cvss_score, profile.recommendation)
+        groups.setdefault(key, []).append((port, banner))
+    items = []
+    for (severity, score, recommendation), entries in groups.items():
+        ports = ", ".join(f"<code>{port}/tcp</code>" for port, _ in entries)
+        guidance = "".join(f"<code>{escape(part)}</code>" if index % 2 else escape(part)
+                           for index, part in enumerate(recommendation.split("`")))
+        observed_banners = "".join(
+            f"<p>Phản hồi từ <code>{port}/tcp</code> <code>{escape(banner)}</code></p>"
+            for port, banner in entries if banner
+        )
+        items.append(
+            f"<li><h3>{ports}</h3><p class=\"score\">{escape(severity)} · Điểm tham khảo {score:.1f}/10</p>"
+            f"<p>{guidance}</p>{observed_banners}</li>"
+        )
+    if not items:
+        return ""
+    return f"""<section class="panel port-details" aria-labelledby="details-title">
+      <h2 id="details-title">Chi tiết cổng mở</h2>
+      <p class="help">Điểm tham khảo dựa trên quy tắc theo cổng. Quét TCP chỉ xác nhận khả năng kết nối.</p>
+      <ul class="entries">{''.join(items)}</ul>
+    </section>"""
+
+
+def _next_step(new_ports: tuple[int, ...], counts: Counter[str]) -> str:
+    if new_ports:
+        ports = escape(_port_summary(new_ports))
+        return (f"Kiểm tra tiến trình đang lắng nghe trên <strong>{ports}</strong> và đối chiếu "
+                "với dịch vụ nhóm vừa bật hoặc cấu hình vừa thay đổi.")
+    if counts["filtered"]:
+        return "Kiểm tra đường mạng và tường lửa từ máy quét, sau đó đo lại các cổng chưa xác định."
+    if counts["open"]:
+        return "Đối chiếu các cổng kết nối được với danh sách dịch vụ dự kiến trên máy đích."
+    return "Nếu máy đích dự kiến có dịch vụ đang chạy, đối chiếu lại địa chỉ, danh sách cổng và cấu hình truy cập."
+
+
+def _markdown_value(value: str) -> str:
+    return escape(value, quote=False).replace("|", r"\|").replace("`", "&#96;").replace("\n", " ").replace("\r", "")
+
+
+def _markdown_report(
+    target_host: str, target_ip: str, moment: datetime.datetime, scan_duration: float,
+    event_type: str, events: tuple[ScanEvent, ...], port_results: dict[int, str],
+    banners: dict[int, str | None],
+) -> str:
+    lines = [
+        "# Báo cáo quét cổng", "",
+        f"- Mục tiêu **{_markdown_value(target_host)}** (`{_markdown_value(target_ip)}`)",
+        f"- Thời điểm {_time_text(moment)}",
+        f"- Phép đo Nmap TCP Connect · {scan_duration:.2f} giây",
+        f"- Sự kiện `{event_type}`",
+    ]
+    for event in events:
+        ports = f" · {_port_summary(event.ports)}" if event.ports else ""
+        lines.append(f"- {EVENTS[event.event_type]}{ports} · `{event.event_id}`")
+    lines.extend(["", "| Cổng | Trạng thái | Dịch vụ (tham khảo) |", "| --- | --- | --- |"])
+    for port, state in sorted(port_results.items()):
+        service = KNOWN_SERVICES.get(port, "—") if state == "open" else "—"
+        lines.append(f"| `{port}/tcp` | {PORT_STATES[state]} | {_markdown_value(service)} |")
+    open_ports = [port for port, state in sorted(port_results.items()) if state == "open"]
+    if open_ports:
+        lines.extend(["", "## Chi tiết cổng mở", ""])
+    for port in open_ports:
+        banner = banners.get(port)
+        profile = assess_port(port, banner)
+        lines.append(f"- **{port}/tcp** · {profile.severity} · Điểm tham khảo {profile.cvss_score:.1f}/10")
+        if banner:
+            lines.append(f"  - Banner `{_markdown_value(banner)}`")
+        lines.append(f"  - {_markdown_value(profile.impact)}")
+        lines.append(f"  - {_markdown_value(profile.recommendation)}")
+    lines.extend(["", "## Cách đọc kết quả", "", *(f"- {text}" for text in LIMITS), ""])
+    return "\n".join(lines)
 
 
 def generate_html_report(
-    target_host: str,
-    target_ip: str,
-    port_results: dict[int, str],
-    banners: dict[int, str | None],
-    scan_duration: float,
-    event_type: str = "MANUAL_SCAN",
-    output_path: Path | None = None,
-    archive_snapshot: bool = False,
+    target_host: str, target_ip: str, port_results: dict[int, str],
+    banners: dict[int, str | None], scan_duration: float, event_type: str = "MANUAL_SCAN",
+    output_path: Path | None = None, archive_snapshot: bool = False,
+    *, scan_result: ScanResult | None = None,
 ) -> Path:
-    """Tạo báo cáo HTML kiểm toán an ninh mạng và lưu ra đĩa."""
-    reports_dir = ensure_reports_dir()
-    now_dt = datetime.datetime.now()
-    now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
-    timestamp_id = now_dt.strftime("%Y%m%d_%H%M%S")
+    """Write the latest report pair and optionally retain the HTML snapshot."""
+    directory = ensure_reports_dir()
+    moment = (datetime.datetime.fromisoformat(scan_result.detected_at) if scan_result
+              else datetime.datetime.now(datetime.timezone.utc))
+    if scan_result is not None:
+        event_type = scan_result.event_type
+    if event_type not in EVENTS:
+        event_type = "MANUAL_SCAN"
+    events = scan_result.events if scan_result else ()
+    port_results = {port: state if state in PORT_STATES else "filtered" for port, state in port_results.items()}
+    counts = Counter(port_results.values())
+    new_ports = _event_ports(events, "NEW_PORT_DETECTED")
+    closed_ports = _event_ports(events, "PORT_CLOSED")
 
-    open_ports = [p for p, status in sorted(port_results.items()) if status == "open"]
-    uncertain_ports = [p for p, status in sorted(port_results.items()) if status == "filtered"]
-    closed_ports = [p for p, status in sorted(port_results.items()) if status == "closed"]
-    posture = calculate_system_posture(open_ports)
-    status_banner = _status_banner(event_type, uncertain_ports)
+    comparison = "manual"
+    if event_type == "INITIAL_SCAN":
+        comparison = "initial"
+    elif scan_result is not None:
+        comparison = "saved"
 
-    # 1. Xây dựng các hàng cho bảng phát hiện cổng mở
-    findings_rows = []
-    if open_ports:
-        for p in open_ports:
-            banner = banners.get(p) or "Không có phản hồi banner"
-            profile = assess_port(p, banner)
-            findings_rows.append(f"""
-            <tr>
-              <td><span class="port-num">{p}/tcp</span></td>
-              <td><strong>{_get_service_name(p)}</strong></td>
-              <td><code class="banner-code">{escape(banner)}</code></td>
-              <td><span class="badge {profile.color_badge}">{profile.severity}</span></td>
-              <td><span class="cvss-score">{profile.cvss_score:.1f}</span></td>
-              <td>{profile.impact}</td>
-              <td class="rec-cell"><code>{profile.recommendation}</code></td>
-            </tr>
-            """)
-    elif uncertain_ports:
-        findings_rows.append(f"""
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 24px; color: #f59e0b;">
-            ⚠️ <strong>Chưa kết luận an toàn:</strong> không có cổng mở được xác nhận,
-            nhưng {len(uncertain_ports)} cổng timeout/filtered
-            (<code>{", ".join(str(p) for p in uncertain_ports)}</code>).
-            Cần quét lại từ nguồn được phép và đối chiếu Security Group/tiến trình.
-          </td>
-        </tr>
-        """)
+    notes = []
+    if new_ports:
+        heading = f"Phát hiện thêm cổng {_port_summary(new_ports)} có thể kết nối"
+        if closed_ports:
+            notes.append(f"Đồng thời xác nhận đóng {_port_summary(closed_ports)}.")
+    elif closed_ports:
+        heading = f"Xác nhận đóng cổng {_port_summary(closed_ports)}"
+    elif comparison == "initial":
+        heading = "Đã lưu mốc so sánh cho các lần quét sau"
+        notes.append("Các cổng kết nối được trong lần này được ghi vào mốc đã lưu.")
+    elif counts["filtered"]:
+        heading = "Kết quả quét chưa đầy đủ"
+    elif event_type == "NO_CHANGE":
+        heading = "Không ghi nhận cổng mới mở hoặc vừa đóng"
+    elif event_type == "SCAN_RECOVERED":
+        heading = "Đã xác định lại trạng thái các cổng"
     else:
-        findings_rows.append("""
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 24px; color: #27ae60;">
-            ✅ <strong>Không quan sát thấy cổng mở</strong> trong phạm vi quét này.
-            Đây không phải kiểm thử toàn diện ứng dụng, TLS hay quyền truy cập.
-          </td>
-        </tr>
-        """)
+        heading = EVENTS[event_type]
 
-    # 2. Xây dựng ma trận toàn bộ cổng đã quét
-    all_ports_pills = []
-    for p, status in sorted(port_results.items()):
-        status_upper = status.upper()
-        if status == "open":
-            pill_class = "pill-open"
-        elif status == "filtered":
-            pill_class = "pill-filtered"
-        else:
-            pill_class = "pill-closed"
-        all_ports_pills.append(f'<span class="port-pill {pill_class}">{p}/tcp: {status_upper}</span>')
-
-    # 3. Mẫu HTML tự chứa (Self-contained)
-    html_content = f"""<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Báo Cáo Kiểm Toán An Ninh Mạng — {target_host}</title>
-  <style>
-    :root {{
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --success: #10b981;
-      --info: #06b6d4;
-    }}
-    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 32px 20px;
-      line-height: 1.5;
-    }}
-    .container {{ max-width: 1200px; margin: 0 auto; }}
-    .header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--card-border);
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }}
-    .eyebrow {{ color: var(--accent); font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }}
-    h1 {{ font-size: 1.8rem; margin: 4px 0; }}
-    .meta-time {{ color: var(--text-muted); font-size: 0.9rem; }}
-
-    /* Print / Action Buttons */
-    .header-actions {{
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }}
-    .btn-action {{
-      background: #0284c7;
-      color: white;
-      border: 1px solid #38bdf8;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.1s;
-    }}
-    .btn-action:hover {{
-      background: #0369a1;
-      transform: translateY(-1px);
-    }}
-
-    /* Cards Grid */
-    .grid-cards {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-bottom: 32px;
-    }}
-    .card {{
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 20px;
-    }}
-    .card-title {{ font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }}
-    .card-value {{ font-size: 1.8rem; font-weight: 700; }}
-    .grade-badge {{
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 6px;
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: white;
-      background: {posture['color_hex']};
-    }}
-
-    /* Table */
-    .section-title {{ font-size: 1.25rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }}
-    .table-container {{
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      overflow-x: auto;
-      margin-bottom: 32px;
-    }}
-    table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; }}
-    th {{ background: #0b1329; color: var(--text-muted); padding: 14px 16px; font-weight: 600; border-bottom: 1px solid var(--card-border); }}
-    td {{ padding: 14px 16px; border-bottom: 1px solid rgba(51, 65, 85, 0.5); vertical-align: top; }}
-    tr:last-child td {{ border-bottom: none; }}
-    tr:hover {{ background: rgba(56, 189, 248, 0.03); }}
-    .port-num {{ font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--accent); }}
-    .banner-code {{ font-family: monospace; font-size: 0.8rem; background: #0b1329; padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 250px; overflow-wrap: break-word; }}
-    .cvss-score {{ font-weight: 700; font-size: 1rem; color: #f8fafc; }}
-    .rec-cell code {{ font-size: 0.8rem; color: #a5f3fc; }}
-
-    /* Badges */
-    .badge {{ display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }}
-    .badge-critical {{ background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }}
-    .badge-high {{ background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }}
-    .badge-medium {{ background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.5); }}
-    .badge-info {{ background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }}
-    .badge-low {{ background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #64748b; }}
-
-    /* Pills Matrix */
-    .pills-box {{ background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 20px; margin-bottom: 32px; }}
-    .pills-grid {{ display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }}
-    .port-pill {{ padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; font-weight: 600; }}
-    .pill-open {{ background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }}
-    .pill-filtered {{ background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #475569; }}
-    .pill-closed {{ background: rgba(30, 41, 59, 0.8); color: #64748b; border: 1px solid #334155; }}
-
-    /* Remediation Guide */
-    .guide-box {{ background: #091a28; border: 1px solid #0284c7; border-radius: 10px; padding: 24px; margin-bottom: 32px; }}
-    .guide-box h3 {{ color: #38bdf8; margin-bottom: 12px; font-size: 1.1rem; }}
-    .guide-box ol {{ padding-left: 20px; color: #cbd5e1; font-size: 0.92rem; }}
-    .guide-box li {{ margin-bottom: 8px; }}
-
-    /* Status / error banner */
-    .alert-banner {{
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      border-radius: 10px;
-      padding: 18px 20px;
-      margin-bottom: 28px;
-      border: 1px solid var(--card-border);
-      background: var(--card-bg);
-    }}
-    .alert-banner.alert-danger {{ border-color: #ef4444; background: rgba(239, 68, 68, 0.12); }}
-    .alert-banner.alert-warning {{ border-color: #f59e0b; background: rgba(245, 158, 11, 0.12); }}
-    .alert-banner.alert-success {{ border-color: #10b981; background: rgba(16, 185, 129, 0.12); }}
-    .alert-banner.alert-info {{ border-color: #38bdf8; background: rgba(56, 189, 248, 0.10); }}
-    .alert-banner.alert-neutral {{ border-color: #475569; background: rgba(148, 163, 184, 0.08); }}
-    .alert-icon {{ font-size: 1.5rem; line-height: 1; }}
-    .alert-title {{ font-weight: 700; font-size: 1rem; margin-bottom: 4px; }}
-    .alert-detail {{ color: var(--text-muted); font-size: 0.92rem; }}
-    .alert-extra {{ color: #fcd34d; font-size: 0.88rem; margin-top: 8px; }}
-    .alert-extra code {{ color: #fde68a; }}
-
-    /* Limitations */
-    .limits-box {{ background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 20px 24px; margin-bottom: 32px; }}
-    .limits-box h3 {{ font-size: 1rem; margin-bottom: 10px; color: var(--text); }}
-    .limits-box ul {{ padding-left: 20px; color: var(--text-muted); font-size: 0.9rem; }}
-    .limits-box li {{ margin-bottom: 6px; }}
-    .limits-box code {{ color: #a5f3fc; }}
-
-    .footer {{ text-align: center; color: var(--text-muted); font-size: 0.85rem; padding-top: 24px; border-top: 1px solid var(--card-border); }}
-
-    /* Print / PDF Media Styles */
-    @media print {{
-      body {{ background: white !important; color: black !important; padding: 0 !important; }}
-      .btn-action, .badge {{ display: none !important; }}
-      .card, .table-container, .pills-box, .guide-box, .alert-banner, .limits-box {{
-        background: white !important;
-        border: 1px solid #cbd5e1 !important;
-        color: black !important;
-        box-shadow: none !important;
-      }}
-      th {{ background: #f1f5f9 !important; color: #0f172a !important; }}
-      td, p, h1, h2, h3, .meta-time, .card-title, .alert-detail, .alert-extra, .limits-box ul {{ color: #0f172a !important; }}
-      .port-num {{ color: #0284c7 !important; }}
-      .banner-code {{ background: #f8fafc !important; color: #0f172a !important; border: 1px solid #e2e8f0; }}
-      .guide-box {{ border-color: #94a3b8 !important; }}
-    }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header class="header">
-      <div>
-        <p class="eyebrow">PBL4-517 SECURITY AUDIT SUITE</p>
-        <h1>Báo Cáo Kiểm Toán An Ninh Mạng Ngoài (External Audit)</h1>
-        <p class="meta-time">Mục tiêu: <strong>{target_host}</strong> ({target_ip}) • Thời điểm kiểm toán: <strong>{now_str}</strong></p>
-      </div>
-      <div class="header-actions">
-        <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid var(--accent); padding: 8px 16px; font-size: .85rem;">
-          SỰ KIỆN: {event_type}
-        </span>
-        <button onclick="window.print()" class="btn-action" title="In báo cáo hoặc lưu ra file PDF">
-          🖨️ Xuất PDF / In Báo Cáo
-        </button>
-      </div>
-    </header>
-
-    {status_banner}
-
-    <!-- Executive Summary Cards -->
-    <div class="grid-cards">
-      <div class="card">
-        <div class="card-title">Xếp hạng an ninh</div>
-        <div class="card-value"><span class="grade-badge">{posture['grade']}</span></div>
-        <p style="font-size: 0.85rem; margin-top: 8px; color: {posture['color_hex']}; font-weight: 600;">{posture['status']}</p>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Điểm Heuristic score cao nhất</div>
-        <div class="card-value" style="color: {posture['color_hex']};">{posture['max_cvss']:.1f} <span style="font-size: 1rem; color: var(--text-muted);">/ 10</span></div>
-        <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Mức cao nhất: <strong>{posture['highest_severity']}</strong></p>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Cổng đang mở</div>
-        <div class="card-value" style="color: {'#ef4444' if open_ports else '#10b981'};">{len(open_ports)}</div>
-        <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Trên tổng số {len(port_results)} cổng quét</p>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Tốc độ quét</div>
-        <div class="card-value" style="color: var(--accent);">{scan_duration:.2f}s</div>
-        <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Đa luồng ThreadPoolExecutor</p>
-      </div>
-    </div>
-
-    <!-- Findings Table -->
-    <h2 class="section-title">🔍 Chi tiết các điểm phát hiện an ninh (Findings)</h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Port</th>
-            <th>Dịch vụ</th>
-            <th>Banner / Phiên bản thu thập</th>
-            <th>Mức độ</th>
-            <th>Heuristic score</th>
-            <th>Tác động / Nguy cơ an ninh (OWASP A05)</th>
-            <th>Khuyến nghị khắc phục (AWS)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {''.join(findings_rows)}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- All Ports Status Matrix -->
-    <div class="pills-box">
-      <h3 style="font-size: 1rem; margin-bottom: 4px;">📡 Ma trận toàn bộ các cổng mạng đã kiểm tra:</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Hiển thị cả các cổng bị AWS Security Group chặn (FILTERED) hoặc không có dịch vụ (CLOSED):</p>
-      <div class="pills-grid">
-        {''.join(all_ports_pills)}
-      </div>
-    </div>
-
-    <!-- Remediation Guide -->
-    <div class="guide-box">
-      <h3>🛠️ Hướng dẫn Khắc phục trên AWS EC2 Security Group:</h3>
-      <ol>
-        <li>Đăng nhập vào <strong>AWS Management Console</strong> &rarr; Vào dịch vụ <strong>EC2</strong> &rarr; Chọn <strong>Security Groups</strong>.</li>
-        <li>Tìm Security Group đang gắn với máy chủ EC2 (Mục tiêu <code>{target_host}</code>).</li>
-        <li>Chuyển sang tab <strong>Inbound rules</strong> &rarr; Nhấn nút <strong>Edit inbound rules</strong>.</li>
-        <li><strong>Xóa bỏ hoàn toàn</strong> các rule mở cổng cơ sở dữ liệu (5432, 3306, 6379, 27017) hoặc backend thô (3000, 8080) có Source là <code>0.0.0.0/0</code>.</li>
-        <li>Đối với port <strong>22 (SSH)</strong>: Chỉ cho phép IP tĩnh cụ thể của người quản trị (Dạng <code>x.x.x.x/32</code>), tuyệt đối không mở cho mọi IP.</li>
-        <li>Lưu lại cấu hình và chạy lại Scanner để kiểm chứng trạng thái cổng đã chuyển thành <strong>FILTERED</strong>.</li>
-      </ol>
-    </div>
-
-    <!-- Reading guide and limits -->
-    <div class="limits-box">
-      <h3>📘 Cách đọc kết quả &amp; giới hạn của lần quét</h3>
-      <ul>
-        <li><strong>OPEN</strong>: kết nối TCP thành công. Cổng đang có dịch vụ lắng nghe, cần đánh giá tiếp quyền truy cập và lỗ hổng ứng dụng.</li>
-        <li><strong>CLOSED</strong>: nhận TCP refusal rõ ràng từ host. Chỉ cổng này được coi là đóng tại thời điểm quét.</li>
-        <li><strong>FILTERED</strong>: timeout hoặc không có phản hồi. Không kết luận cổng đóng; có thể do firewall, Security Group hoặc mất mạng.</li>
-        <li>Kết quả phụ thuộc nguồn quét, thời điểm, timeout và tuyến mạng. Quét lại từ nguồn được phép khi cần kết luận.</li>
-        <li>Báo cáo cổng không chứng minh SQL Injection, XSS, IDOR hay xác thực đã được vá; các kiểm thử đó nằm ở quy trình OWASP riêng.</li>
-        <li>Không đưa báo cáo này lên Internet công khai nếu có thông tin hạ tầng nhạy cảm.</li>
-      </ul>
-    </div>
-
-    <footer class="footer">
-      <p>Đề tài PBL4-517: Tìm hiểu AWS Cloud, xây dựng chương trình phân tích và giám sát các điểm yếu bảo mật từ bên ngoài.</p>
-      <p style="margin-top: 4px; font-size: 0.8rem;">Báo cáo được sinh tự động bởi <code>scanner/reporter.py</code> • Trường Đại học Bách Khoa - ĐH Đà Nẵng</p>
-    </footer>
-  </div>
-</body>
-</html>"""
-
-    # 4. Lưu ra file:
-    # A. File Living Dashboard (Luôn ghi đè, dung lượng cố định ~10KB)
-    latest_file = output_path or (reports_dir / "latest.html")
-    with open(latest_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    # B. Sinh đồng thời file Markdown tương ứng (latest.md)
-    generate_markdown_report(
-        target_host=target_host,
-        target_ip=target_ip,
-        port_results=port_results,
-        banners=banners,
-        scan_duration=scan_duration,
-        event_type=event_type,
+    if counts["filtered"]:
+        notes.append(f"{counts['filtered']} cổng chưa xác định (timeout/filtered). Không kết luận các cổng đó đã đóng.")
+    elif port_results and not counts["open"]:
+        notes.append("Không quan sát thấy cổng mở trong phạm vi quét.")
+    summary_notes = "".join(f"<p>{escape(note)}</p>" for note in notes)
+    metrics = "".join(
+        f'<div class="{state}"><dt>{label}</dt><dd>{counts[state]}</dd></div>'
+        for state, label in TCP_RESULTS.items()
     )
+    event_labels = {
+        "INITIAL_SCAN": "Lưu mốc so sánh",
+        "NEW_PORT_DETECTED": "Phát hiện cổng mới mở",
+        "PORT_CLOSED": "Xác nhận đóng cổng",
+        "SCAN_UNCERTAIN": "Có cổng chưa xác định",
+        "SCAN_RECOVERED": "Đã xác định lại trạng thái cổng",
+    }
+    event_lines = "".join(
+        f"<li><span>{escape(event_labels.get(event.event_type, event.event_type))}</span>"
+        f"<code>{escape(event.event_id)}</code></li>"
+        for event in events
+    )
+    event_codes = f"""<section class="panel" aria-labelledby="events-title">
+        <h2 id="events-title">Mã sự kiện</h2>
+        <ul class="entries events">{event_lines}</ul>
+      </section>""" if event_lines else ""
+    limits = "".join(f"<li>{text}</li>" for text in LIMITS)
+    body = f"""<section class="outcome{' partial' if counts['filtered'] else ''}" aria-labelledby="outcome-title">
+      <div>
+        <p class="scan-count">Đã quét {len(port_results)} cổng</p>
+        <h2 id="outcome-title">{escape(heading)}</h2>
+        {summary_notes}
+      </div>
+      <dl class="metrics" aria-label="Tổng hợp kết quả TCP">{metrics}</dl>
+    </section>
+    <div class="report-grid">
+      {_port_table(port_results, set(new_ports), set(closed_ports), comparison)}
+      <div class="side-column">
+        <section class="panel next-step" aria-labelledby="next-title">
+          <h2 id="next-title">Việc cần kiểm tra</h2>
+          <p>{_next_step(new_ports, counts)}</p>
+        </section>
+        {event_codes}
+      </div>
+    </div>
+    {_open_port_details(port_results, banners)}
+    <section class="limits" aria-labelledby="limits-title">
+      <h2 id="limits-title">Cách đọc kết quả</h2>
+      <ul>{limits}</ul>
+    </section>"""
 
-    # C. Lưu snapshot lịch sử nếu có sự kiện bất thường hoặc yêu cầu lưu trữ
+    html = _page("Báo cáo quét cổng", target_host, target_ip, moment, body, scan_duration)
+    latest = output_path or directory / "latest.html"
+    latest.write_text(html, encoding="utf-8")
+    (directory / "latest.md").write_text(
+        _markdown_report(target_host, target_ip, moment, scan_duration, event_type, events, port_results, banners),
+        encoding="utf-8",
+    )
     if archive_snapshot:
-        snapshot_file = reports_dir / f"audit_{timestamp_id}_{event_type}.html"
-        with open(snapshot_file, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        clean_old_reports(reports_dir)
-
-    return latest_file
+        snapshot = directory / f"audit_{moment:%Y%m%d_%H%M%S_%f}_{event_type}.html"
+        snapshot.write_text(html, encoding="utf-8")
+        clean_old_reports(directory)
+    return latest
 
 
 def generate_error_report(
-    target_host: str,
-    reason: str,
-    *,
-    target_ip: str = "",
-    event_type: str = "SCAN_FAILED",
+    target_host: str, reason: str, *, target_ip: str = "", event_type: str = "SCAN_FAILED",
     output_path: Path | None = None,
 ) -> Path:
-    """Tạo trang HTML lỗi tự chứa khi không thể hoàn tất một lần quét.
-
-    Trang này thay thế ``latest.html`` để người xem không đọc nhầm báo cáo cũ
-    hoặc tưởng lần quét vừa rồi đã thành công.
-    """
+    """Replace the latest reports with the failure, while preserving snapshots."""
     directory = ensure_reports_dir()
-    now_dt = datetime.datetime.now()
-    now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
-    target = escape(str(target_host))
-    ip_text = escape(str(target_ip)) if target_ip else "chưa phân giải được"
-    safe_reason = escape(str(reason))
-    html_content = f"""<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quét thất bại — {target}</title>
-  <style>
-    :root {{ --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; --muted: #94a3b8; --danger: #ef4444; --warning: #f59e0b; }}
-    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{ background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 32px 20px; line-height: 1.6; }}
-    .container {{ max-width: 860px; margin: 0 auto; }}
-    .eyebrow {{ color: var(--danger); font-size: .82rem; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }}
-    h1 {{ font-size: 1.7rem; margin: 6px 0 10px; }}
-    .meta {{ color: var(--muted); font-size: .9rem; margin-bottom: 24px; }}
-    .panel {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; }}
-    .panel.danger {{ border-color: var(--danger); background: rgba(239, 68, 68, .12); }}
-    .panel h2 {{ font-size: 1.05rem; margin-bottom: 10px; }}
-    .reason {{ font-family: ui-monospace, SFMono-Regular, Consolas, "Segoe UI", monospace; background: #0b1329; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; color: #fca5a5; overflow-wrap: anywhere; }}
-    ol, ul {{ padding-left: 22px; color: #cbd5e1; font-size: .92rem; }}
-    li {{ margin-bottom: 8px; }}
-    code {{ color: #a5f3fc; }}
-    .footer {{ color: var(--muted); font-size: .82rem; border-top: 1px solid var(--border); padding-top: 18px; margin-top: 28px; }}
-    @media print {{ body {{ background: white; color: black; }} .panel, .reason {{ background: white !important; color: black !important; border-color: #cbd5e1 !important; }} ol, ul, .meta, .footer {{ color: #0f172a !important; }} }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <p class="eyebrow">PBL4-517 SECURITY AUDIT SUITE</p>
-    <h1>Không thể hoàn tất lần quét</h1>
-    <p class="meta">Mục tiêu: <strong>{target}</strong> ({ip_text}) • Thời điểm: <strong>{now_str}</strong> • Sự kiện: <code>{escape(event_type)}</code></p>
-
-    <div class="panel danger">
-      <h2>⚠️ Lý do</h2>
-      <p class="reason">{safe_reason}</p>
-    </div>
-
-    <div class="panel">
-      <h2>Việc cần kiểm tra</h2>
-      <ol>
-        <li>Xác nhận mục tiêu đúng là host được phép quét và DNS/địa chỉ IP phân giải được.</li>
-        <li>Kiểm tra kết nối mạng, VPN hoặc Security Group có chặn nguồn quét hay không.</li>
-        <li>Chạy lại <code>python scanner/scan.py &lt;target&gt; --no-alert</code> để tách lỗi mạng khỏi lỗi cấu hình.</li>
-        <li>Đọc log/audit của scanner; không sửa hoặc xóa Baseline khi chưa xác minh nguyên nhân.</li>
-      </ol>
-    </div>
-
-    <div class="panel">
-      <h2>Điều trang này KHÔNG kết luận</h2>
-      <ul>
-        <li>Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn.</li>
-        <li>Không thay thế báo cáo quét thành công gần nhất; báo cáo cũ có thể đã lỗi thời.</li>
-        <li>Không chứng minh SQL Injection, XSS, IDOR hay xác thực đã được vá.</li>
-      </ul>
-    </div>
-
-    <p class="footer">Trang lỗi được sinh tự động bởi <code>scanner/reporter.py</code> • Đề tài PBL4-517.</p>
-  </div>
-</body>
-</html>"""
-    latest_file = output_path or (directory / "latest.html")
-    with open(latest_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    md_path = directory / "latest.md"
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(
-            "# Báo cáo quét thất bại\n\n"
-            f"- **Mục tiêu:** `{target_host}` ({target_ip or 'chưa phân giải được'})\n"
-            f"- **Thời điểm:** {now_str}\n"
-            f"- **Sự kiện:** `{event_type}`\n"
-            f"- **Lý do:** {reason}\n\n"
-            "Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn. "
-            "Kiểm tra DNS, mạng, Security Group và chạy lại khi điều kiện cho phép.\n"
-        )
-    return latest_file
-
-
-def _get_service_name(port: int) -> str:
-    from alerts.notifier import KNOWN_SERVICES
-    return KNOWN_SERVICES.get(port, "Dịch vụ mạng")
+    moment = datetime.datetime.now(datetime.timezone.utc)
+    checks = (
+        "Kiểm tra thông báo lỗi, cấu hình Nmap và quyền đọc ghi của scanner.",
+        "Đối chiếu DNS, đường mạng và quy tắc truy cập tại điểm đo.",
+        "Đối chiếu log và audit trước khi chạy lại.",
+    )
+    items = "".join(f"<li>{text}</li>" for text in checks)
+    body = f"""<section class="outcome error" aria-labelledby="failure-title">
+      <div>
+        <h2 id="failure-title">Lần quét này chưa có kết quả theo cổng</h2>
+        <p class="reason">{escape(reason)}</p>
+        <p>Loại sự kiện <code>{escape(event_type)}</code></p>
+      </div>
+    </section>
+    <section class="panel next-step" aria-labelledby="next-title">
+      <h2 id="next-title">Việc cần kiểm tra</h2>
+      <ul>{items}</ul>
+      <p>Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn.</p>
+    </section>"""
+    latest = output_path or directory / "latest.html"
+    latest.write_text(_page("Không thể hoàn tất lần quét", target_host, target_ip, moment, body), encoding="utf-8")
+    (directory / "latest.md").write_text(
+        "# Báo cáo quét thất bại\n\n"
+        f"- Mục tiêu **{_markdown_value(target_host)}** ({_markdown_value(target_ip) or 'chưa phân giải được'})\n"
+        f"- Thời điểm {_time_text(moment)}\n"
+        f"- Sự kiện `{_markdown_value(event_type)}`\n"
+        f"- Lý do {_markdown_value(reason)}\n\n"
+        "Không kết luận mục tiêu đã đóng cổng hoặc đã an toàn.\n",
+        encoding="utf-8",
+    )
+    return latest

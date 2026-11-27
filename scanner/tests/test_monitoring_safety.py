@@ -27,8 +27,8 @@ class MonitoringSafetyTests(unittest.TestCase):
         self.state = Path(temporary.name) / 'monitor.state.json'
 
     def observe(self, ports, no_alert=True):
-        return evaluate_diff_and_notify('127.0.0.1', ports, 0.1, self.state, {},
-            no_alert=no_alert, scanned_ports=ports, port_results={p: 'open' for p in ports})
+        return evaluate_diff_and_notify('127.0.0.1', {p: 'open' for p in ports}, 0.1, self.state, {},
+            no_alert=no_alert).event_type
 
     @patch('scanner.scan.configured_alert_channels', return_value=['telegram'])
     @patch('scanner.scan.notify_scan_event', return_value={'telegram': True})
@@ -137,7 +137,7 @@ class MonitoringSafetyTests(unittest.TestCase):
 
     def test_watch_recovers_after_dns_failure_and_audits_both_runs(self):
         with patch('scanner.scan.socket.gethostbyname', side_effect=[socket.gaierror('simulated'), '127.0.0.1']), \
-             patch('scanner.scan.scan_ports_parallel', return_value={80: 'open'}), \
+             patch('scanner.scan.scan_tcp_ports', return_value={80: 'open'}), \
              patch('scanner.scan.generate_html_report', return_value=self.state.parent / 'latest.html'), \
              patch('scanner.scan.time.sleep', side_effect=[None, KeyboardInterrupt]):
             status = main(['owned-test.invalid', '--ports', '80', '--state-file', str(self.state),
@@ -150,7 +150,7 @@ class MonitoringSafetyTests(unittest.TestCase):
 
     def test_scan_returns_failure_when_audit_disk_write_fails(self):
         with patch('scanner.scan.socket.gethostbyname', return_value='127.0.0.1'), \
-             patch('scanner.scan.scan_ports_parallel', return_value={80: 'closed'}), \
+             patch('scanner.scan.scan_tcp_ports', return_value={80: 'closed'}), \
              patch('scanner.scan.generate_html_report', return_value=self.state.parent / 'latest.html'), \
              patch('scanner.state_store.RotatingFileHandler._open', side_effect=FailedAuditStream):
             self.assertEqual(main(['127.0.0.1', '--ports', '80', '--state-file', str(self.state),
