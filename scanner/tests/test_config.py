@@ -38,7 +38,7 @@ class ConfigurationTests(unittest.TestCase):
             expected = self.root / '.local/runtime/monitor.state.json'
             self.assertEqual(bot_listener._state_file(), expected)
             with patch('scanner.scan.socket.gethostbyname', return_value='127.0.0.1'), \
-                 patch('scanner.scan.scan_ports_parallel', return_value={80: 'closed'}):
+                 patch('scanner.scan.scan_tcp_ports', return_value={80: 'closed'}):
                 self.assertEqual(main(['127.0.0.1', '--ports', '80', '--no-alert', '--no-banner']), 0)
             self.assertTrue(expected.exists())
             self.assertTrue((self.root / '.local/reports/demo/latest.html').exists())

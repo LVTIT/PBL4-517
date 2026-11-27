@@ -1,13 +1,13 @@
 """PBL4-517: External Security Scanner & Anomaly Detector (Issue #10).
 
 Chương trình phân tích và giám sát các điểm yếu bảo mật từ bên ngoài:
-- Quét nhanh danh sách port TCP bằng đa luồng (ThreadPoolExecutor).
+- Đo trạng thái danh sách cổng TCP bằng Nmap TCP Connect.
 - Thu thập banner và nhận diện phiên bản dịch vụ thực tế (Banner Grabbing).
 - Đánh giá mức độ rủi ro an ninh theo chuẩn quốc tế (Risk score & OWASP Top 10 - A05).
 - Tự động lưu mốc Baseline và phát hiện cổng mới mở thêm (scanner_state.json).
 - Tự động đẩy cảnh báo tức thì tới Discord Webhook và Telegram Group Bot.
 - Xuất Báo cáo Kiểm toán An ninh mạng chuyên nghiệp (HTML Dashboard tự chứa).
-- Chỉ sử dụng thư viện chuẩn Python (không cần cài thêm package).
+- Dùng Nmap CLI và thư viện chuẩn Python.
 
 Phạm vi cho phép: CHỈ quét localhost hoặc máy chủ AWS EC2 do nhóm sở hữu/được cấp phép.
 """
@@ -15,10 +15,9 @@ Phạm vi cho phép: CHỈ quét localhost hoặc máy chủ AWS EC2 do nhóm s�
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
 import copy
 import datetime
-import json
+import math
 import uuid
 import socket
 import sys
@@ -52,6 +51,7 @@ except ImportError:
     notify_scan_event = None  # type: ignore
 
 from scanner.config import state_file, resolve_path
+from scanner.nmap_backend import scan_tcp_ports
 from scanner.state_store import load_state, save_state, state_lock, write_audit
 from scanner.prober import grab_banner
 from scanner.risk_matrix import assess_port, calculate_system_posture
@@ -82,40 +82,6 @@ def parse_ports(value: str) -> list[int]:
     if not ports:
         raise ValueError("Danh sách port rỗng.")
     return sorted(ports)
-
-
-def scan_port(host: str, port: int, timeout: float) -> tuple[int, str]:
-    """Trả về (port, 'open' | 'closed' | 'filtered') cho một port TCP."""
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return port, "open"
-    except socket.timeout:
-        return port, "filtered"
-    except ConnectionRefusedError:
-        return port, "closed"
-    except OSError:
-        # Host không resolve được, network unreachable, firewall drop...
-        return port, "filtered"
-
-
-def scan_ports_parallel(
-    host: str,
-    ports: list[int],
-    timeout: float,
-    max_workers: int = 10,
-) -> dict[int, str]:
-    """Quét đồng thời danh sách port qua ThreadPoolExecutor (tối ưu tốc độ cao)."""
-    results: dict[int, str] = {}
-    workers = min(max_workers, len(ports)) or 1
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        future_map = {
-            executor.submit(scan_port, host, port, timeout): port
-            for port in ports
-        }
-        for future in concurrent.futures.as_completed(future_map):
-            port, status = future.result()
-            results[port] = status
-    return results
 
 
 def _deliver_due_alerts(state_file: Path, state: dict, pending: list, now: float, limit: int) -> int:
@@ -241,15 +207,10 @@ def run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -
 def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) -> int:
     """Thực thi một vòng quét duy nhất."""
     start_time = time.time()
-    print(f"\n[>] Bắt đầu quét {args.host} ({resolved}): {len(ports)} ports (Đa luồng {args.workers} workers, timeout={args.timeout}s)")
+    print(f"\n[>] Nmap TCP Connect: {args.host} ({resolved}), {len(ports)} cổng")
     print("-" * 65)
 
-    results = scan_ports_parallel(
-        host=resolved,
-        ports=ports,
-        timeout=args.timeout,
-        max_workers=args.workers,
-    )
+    results = scan_tcp_ports(resolved, ports, args.timeout)
     duration = time.time() - start_time
 
     open_ports: list[int] = []
@@ -313,7 +274,7 @@ def _run_single_scan(args: argparse.Namespace, ports: list[int], resolved: str) 
 
     record = load_state(state_file).get(args.host, {})
     result = 1 if record.get("uncertain_ports") or record.get("pending_alerts") else 0
-    write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, results=results,
+    write_audit(state_file, target=args.host, target_ip=resolved, event=event_type, scanner="nmap", results=results,
                 pending_alerts=len(record.get("pending_alerts", [])), exit_status=result)
     return result
 
@@ -332,13 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         "--timeout",
         type=float,
         default=1.0,
-        help="Timeout (giây) cho mỗi kết nối port (Mặc định: 1.0)",
-    )
-    parser.add_argument(
-        "--workers",
-        type=int,
-        default=10,
-        help="Số luồng quét song song đồng thời (Mặc định: 10)",
+        help="Ngưỡng RTT Nmap và timeout đọc banner, tính bằng giây (Mặc định: 1.0)",
     )
     parser.add_argument(
         "--state-file",
@@ -381,11 +336,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.html_output:
         args.html_output = str(resolve_path(args.html_output))
 
-    if args.timeout <= 0:
-        print("[-] Lỗi: --timeout phải lớn hơn 0.", file=sys.stderr)
-        return 2
-    if args.workers <= 0:
-        print("[-] Lỗi: --workers phải lớn hơn 0.", file=sys.stderr)
+    if not math.isfinite(args.timeout) or args.timeout <= 0:
+        print("[-] Lỗi: --timeout phải là số hữu hạn lớn hơn 0.", file=sys.stderr)
         return 2
 
     try:

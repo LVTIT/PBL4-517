@@ -1,5 +1,17 @@
 # Current Project Status
 
+**2026-11-27 — Nmap external monitoring (Refs #35, related to #36 and #43).**
+Implemented Nmap TCP Connect as the scanner's single measurement engine and
+removed the Python TCP port loop and its worker option. CLI, timer and Telegram
+`/scan` share the same scanner. Baseline, reports and alert retry use the existing
+flow. Local Windows tests verified the initial scan, silent steady state, a new
+lower-numbered port, preserved state after failure and a fresh ChatOps process
+using the same baseline. Real channel delivery and Ubuntu VM/EC2 acceptance
+remain pending. The scanner suite passed 61/61 on Windows and Ubuntu 24.04
+in a container, where static systemd unit verification also passed.
+[Local evidence](../evidence/MON-01/local-nmap-20261127/README.md)
+and [scanner setup](../scanner/README.md).
+
 **2026-11-10 demo evidence and probe layout (#68, Related to #44):
 implemented / offline verified; committed `afc896d`, PR #75 open.** `.\demo
 <scenario>` now prints a bounded `observed` section for what the vulnerability

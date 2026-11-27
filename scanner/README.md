@@ -1,7 +1,7 @@
 # External Security Scanner & Anomaly Detector — Issue #10 (SCAN-02)
 
 Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface Management) và giám sát điểm yếu bảo mật theo chuẩn **OWASP Top 10 - A05: Security Misconfiguration**:
-- **Quét mạng đa luồng:** Quét nhanh danh sách cổng TCP với `ThreadPoolExecutor`, hỗ trợ cả IP và Domain.
+- **Quét TCP bằng Nmap:** Đo danh sách cổng của một địa chỉ IPv4 bằng TCP Connect. Tên miền được phân giải trước khi quét.
 - **Thu thập Banner giao thức (Deep Banner Grabbing):** Thăm dò chi tiết phiên bản HTTP (`Server`, `X-Powered-By`), SSH handshake, PostgreSQL SSLRequest, MySQL packet, Redis PING.
 - **Đánh giá rủi ro theo heuristic & OWASP A05:** Chấm điểm heuristic score, xếp hạng độ nghiêm trọng (CRITICAL / HIGH / MEDIUM / INFO) và xếp loại Posture hệ thống (Grade A+ đến F).
 - **Phát hiện dị thường theo Baseline (Diffing Engine):** Tự động phát hiện cổng mới mở thêm hoặc cổng đã được bịt lại dựa trên mốc lưu trữ tại `scanner_state.json`.
@@ -12,7 +12,7 @@ Chương trình phân tích bề mặt tấn công bên ngoài (Attack Surface M
 - **Xuất báo cáo kép (Dual Reporting):**
   - **Living HTML Dashboard (`latest.html`):** Giao diện Dark Cyber Glassmorphism hiện đại, tự động lưu trữ tối đa 10 snapshot sự kiện, tích hợp nút in/xuất PDF trực tiếp từ trình duyệt (`window.print()`).
   - **Markdown Report (`latest.md`):** Tự động sinh báo cáo chuẩn Markdown phục vụ việc sao chép vào báo cáo đề tài/đồ án.
-- **Không phụ thuộc thư viện ngoài:** 100% sử dụng thư viện chuẩn của Python (`socket`, `concurrent.futures`, `urllib.request`, `json`, `datetime`).
+- **Phụ thuộc runtime:** Nmap CLI và Python. Các module Python dùng thư viện chuẩn.
 
 ---
 
@@ -49,13 +49,20 @@ python alerts/notifier.py
 
 ## 3. Hướng dẫn Sử dụng Scanner
 
+### Cài Nmap
+
+- **Windows:** dùng [trình cài Nmap chính thức](https://nmap.org/download.html). Scanner tìm Nmap trên `PATH` rồi trong thư mục cài chuẩn của Windows. Với đường dẫn khác, đặt `SCANNER_NMAP_PATH` trong `.env` theo `.env.example`.
+- **Ubuntu:** `sudo apt-get install nmap`. Kiểm tra bản cài bằng `nmap --version`.
+
+Scanner đọc [XML của Nmap](https://nmap.org/book/output-formats-xml-output.html) và ghi `scanner: "nmap"` trong audit của lượt đo thành công. Mỗi lần chạy Nmap có hạn 30 giây. `--timeout` đặt ngưỡng RTT của Nmap trong khoảng 0,1–30 giây (mặc định 1 giây) và timeout đọc banner. Kết quả thiếu định danh cổng được ghi `filtered` (chưa xác định).
+
 ### 3.1. Quét cơ bản & Khởi tạo Baseline:
 ```bash
 # Quét danh sách port phổ biến (22, 80, 443, 3000, 5432, 8080)
 python scanner/scan.py 127.0.0.1
 
-# Chỉ định cổng cụ thể và số luồng song song
-python scanner/scan.py 127.0.0.1 --ports 22,80,443,3000,5432,6379 --workers 10
+# Chỉ định cổng cụ thể
+python scanner/scan.py 127.0.0.1 --ports 22,80,443,3000,5432,6379
 
 # Reset mốc Baseline ban đầu cho mục tiêu
 python scanner/scan.py 127.0.0.1 --reset-baseline
@@ -74,8 +81,11 @@ python scanner/scan.py 127.0.0.1 --watch 30
 
 ### 3.4. Chế độ Im lặng (Local Validation không bắn Bot):
 ```bash
-python scanner/scan.py 127.0.0.1 --no-alert
+python scanner/scan.py 127.0.0.1 --no-alert --state-file .local/runtime/local-check.state.json
 ```
+
+`--no-alert` vẫn cập nhật baseline và báo cáo. Dùng file state riêng cho lần thử
+để giữ mốc so sánh của lịch giám sát.
 
 ---
 
@@ -128,7 +138,7 @@ Hệ thống tự động đồng bộ hóa hai dạng báo cáo tại thư mụ
 2. **`latest.md` (Markdown Report):** Báo cáo văn bản dạng bảng Markdown, sẵn sàng sao chép vào báo cáo đề tài/đồ án.
 3. **Lưu trữ Snapshot:** Mỗi khi có sự kiện `NEW_PORT_DETECTED` hoặc `PORT_CLOSED`, hệ thống sẽ lưu một bản sao thời gian thực (giới hạn tối đa 10 bản ghi gần nhất để tránh phình dung lượng ổ đĩa).
 
-Khi một lần quét thất bại (DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
+Khi một lần quét thất bại (Nmap, DNS, state/lock hoặc lỗi cấu hình) và không bật `--no-alert`,
 scanner ghi đè `latest.html`/`latest.md` bằng **trang lỗi** (`generate_error_report`). Trang này
 nêu lý do, việc cần kiểm tra và những gì nó **không** kết luận, để người xem không đọc nhầm
 báo cáo cũ hoặc tưởng lần quét vừa rồi đã thành công.
@@ -190,14 +200,22 @@ acceptance but before local acknowledgement can duplicate a message. Missing
 credentials mean that channel is not enabled. `--no-alert` never sends or enqueues
 new alerts; it preserves existing pending events. No tokens enter the outbox.
 
-Exit codes: 0 = conclusive observations with no pending delivery; 1 = uncertain
-observations or pending delivery; 2 = configuration/state/lock/DNS/audit failure.
+Exit codes: 0 = conclusive observations with no pending delivery, 1 = uncertain
+observations or pending delivery, 2 = Nmap, configuration, state, lock, DNS or audit failure.
 JSON-lines audit is stored beside state as `<state-file>.audit.log`, rotated at
 1 MiB with two backups. Audit write/rotation errors propagate as a failed scan;
 outbox metadata/payload are validated before baseline changes. Legacy baseline
 files without an outbox remain supported. Reports can use `PBL517_REPORTS_DIR`; score values are
 local port-based heuristics, not a validated CVSS assessment or proof of a CVE.
 
-Run `python -m unittest discover -s scanner/tests -v` from the repository root.
-These checks use loopback sockets and simulated alert outcomes; no chat is sent.
+Run `python -m unittest discover -s scanner/tests -v` from the repository root after installing Nmap.
+The suite runs Nmap against local TCP listeners and simulates alert delivery.
 [Ubuntu VM scheduler template and acceptance steps](systemd/README.md).
+
+## Mã nguồn tham khảo — Refs #35
+
+| Nguồn | Phần áp dụng |
+| --- | --- |
+| [PortQatyran `5573869`](https://github.com/LaggerIsME/PortQatyran/blob/5573869/network_scanner/scripts/passive_mode.sh) | Quét Nmap định kỳ và phát hiện cổng mới qua baseline. PBL4-517 dùng TCP Connect, đọc XML và so sánh tập cổng bằng bộ quản lý baseline đã có. Bài kiểm thử bao gồm trường hợp cổng mới có số nhỏ nhất. |
+| [NetAlert 2.0 `1ffa8fd`](https://github.com/NSM-Barii/NetAlert-2.0/blob/1ffa8fd/monitor.py#L350-L360) | Đối chiếu cách chuyển sự kiện thành thông báo Discord Webhook. Notifier hiện có nhận sự kiện TCP với IP, cổng, thời điểm và mã sự kiện. |
+| [telegram-port-scanner-bot `bfe46bc`](https://github.com/yoneshmurugan/telegram-port-scanner-bot/blob/bfe46bc/script.py#L40-L76) | Đối chiếu cách đưa kết quả Nmap vào Telegram. ChatOps của PBL4-517 đọc cùng baseline và báo cáo qua `/status` và `/report`, đồng thời áp dụng danh sách IP được phép cho `/scan`. |

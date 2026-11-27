@@ -14,7 +14,8 @@ lab được phép → vá lỗi → dùng lại cùng kịch bản để kiểm
 
 Website KEVILO là ứng dụng phục vụ chu trình đó. Giữ stack React/TypeScript/Vite,
 Express, PostgreSQL/Prisma và Python standard library theo quyết định Accepted.
-PHP, DVWA, Juice Shop, nmap và các repository được thầy nêu là lựa chọn tham khảo;
+Scanner dùng Nmap theo [quyết định #35](DECISIONS.md).
+PHP, DVWA, Juice Shop và các repository được thầy nêu là lựa chọn tham khảo;
 không cần xây lại phần tương đương đã có. Tạm ưu tiên chất lượng lab/vận hành hơn
 thêm payment, tính năng bán hàng hoặc tiếp tục mở rộng giao diện.
 
@@ -27,21 +28,21 @@ thêm payment, tính năng bán hàng hoặc tiếp tục mở rộng giao diệ
 | 3. SQLi #37 | Đã tích hợp từ `59b75f3`/PR #47 qua PR #56 vào main; có tautology/UNION và truy vấn Prisma an toàn | Xác nhận review/nghiệm thu của issue và bàn giao evidence; không cherry-pick trùng lần nữa |
 | 4. Stored XSS #38 | Review lưu PostgreSQL, marker vô hại chạy trong browser lab; secure mode hiển thị text | Giữ browser regression, giải thích nguồn dữ liệu và escaping; human review |
 | 5. Authentication #40 | Lab bỏ login limiter; baseline chặn bằng 429; session/CSRF/bcrypt vẫn có | Đối chiếu thêm kiểm tra login/logout/session trong suite API; không dùng cùng IP đang bị khóa để suy ra login hợp lệ bị hỏng |
-| 6. Monitoring #35/#36/#43 | Scanner, baseline, retry từng kênh, lock, audit rotation và systemd template có source; PR #57 sửa recovery/ChatOps với 27 local checks; bằng chứng gửi thật cũ đã có | Tích hợp/review #57 sau cập nhật main; cài và reboot Ubuntu VM thật; thu receipt hai kênh mới |
+| 6. Monitoring #35/#36/#43 | PR #57 đã merge cơ chế recovery và kiểm tra quyền ChatOps. Xem [trạng thái Nmap](CURRENT_STATUS.md) và [hướng dẫn scanner](../scanner/README.md) | Cài và reboot Ubuntu VM thật, thu receipt hai kênh mới trên EC2 |
 | 7. Regression/evidence #44/#45/#46 | Ma trận local cho IDOR/SQLi/XSS/auth, browser checkout và scanner | Bộ bằng chứng cùng revision, kết quả AWS/VM, đối chiếu Linux log và human handoff |
 
 Nguồn baseline: [website local](../evidence/UI-01/local-baseline-20261025/README.md),
 [ma trận security local](../evidence/TEST-02/local-20261025/README.md),
 [IDOR](../evidence/OWASP-01/README.md), [monitoring](../evidence/MON-03/README.md).
 PR #55 và #56 đã merge; main `5a7abb7` PASS đủ năm CI jobs ngày 26/10.
-PR #57 đang được cập nhật từ main. Kết quả CI phải khớp revision mới nhất của
-chính PR #57, không suy từ các run của commit cha.
+PR #57 đã merge vào main tại `559ce14`. Xem [trạng thái hiện tại](CURRENT_STATUS.md)
+để đối chiếu kết quả của các revision monitoring sau đó.
 
 ## Thứ tự thực hiện tiếp
 
 | Ưu tiên | Công việc / Issue | Đầu ra và điều kiện đạt |
 | --- | --- | --- |
-| P0 — tích hợp/review | Monitoring #43 / PR #57 | Các sửa lỗi đã implemented và local verified: queue recovery, due events, audit/state validation, ChatOps chat + sender + target. Giải conflict, kiểm chứng revision mới và human review; issue #43 vẫn cần nghiệm thu VM thật |
+| P0 — tích hợp/review | Monitoring #35/#43 | Xác minh CLI Nmap, baseline và cảnh báo trên local, sau đó kiểm tra CI và human review của revision bàn giao. Issue #43 vẫn cần nghiệm thu VM thật |
 | P1 — giữ regression | Kiểm chứng bước 1–5 và 7, #44/#45 | Local matrix và main CI sau #56 PASS; cập nhật evidence cho revision #57. Fresh install/build/audit; DB thử riêng; API, UI và security lifecycle; không đổi `.env` hay dữ liệu thật |
 | P2 — hạ tầng hiện hành | #16/#17/#33 | Đọc cấu hình VPC/subnet/route/IGW/SG/NACL thật; HTTPS/service smoke; bảng 22/80/443/3000/5432/8080 từ nguồn được phép; sơ đồ khớp AWS. Bằng chứng triển khai cũ phải giữ ngày và revision gốc |
 | P3 — external monitor | #35/#36/#43 | Ubuntu VM nằm ngoài EC2; timer chạy ít nhất hai lần, state tồn tại; lỗi mạng/kênh gửi và recovery; receipt Telegram/Discord thật; reboot VM rồi xác minh lịch/audit tiếp tục |

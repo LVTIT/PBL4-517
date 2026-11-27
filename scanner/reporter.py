@@ -58,7 +58,7 @@ def generate_markdown_report(
 ) -> Path:
     """Xuất báo cáo định dạng Markdown phục vụ dán vào báo cáo Word đồ án."""
     reports_dir = ensure_reports_dir()
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
     open_ports = [p for p, status in sorted(port_results.items()) if status == "open"]
     posture = calculate_system_posture(open_ports)
 
@@ -66,7 +66,8 @@ def generate_markdown_report(
         f"# Báo Cáo Kiểm Toán An Ninh Mạng Ngoài (External Audit)",
         f"",
         f"- **Mục tiêu:** `{target_host}` (`{target_ip}`)",
-        f"- **Thời điểm kiểm toán:** {now_str} (UTC+7)",
+        f"- **Thời điểm kiểm toán:** {now_str}",
+        "- **Phép đo:** Nmap TCP Connect",
         f"- **Thời gian quét:** {scan_duration:.2f} giây",
         f"- **Sự kiện ghi nhận:** `{event_type}`",
         f"- **Xếp hạng an ninh tổng thể:** **[{posture['grade']}] - {posture['status']}** (Điểm Heuristic score cao nhất: {posture['max_cvss']:.1f}/10)",
@@ -488,9 +489,9 @@ def generate_html_report(
       </div>
 
       <div class="card">
-        <div class="card-title">Tốc độ quét</div>
+        <div class="card-title">Thời gian quét</div>
         <div class="card-value" style="color: var(--accent);">{scan_duration:.2f}s</div>
-        <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Đa luồng ThreadPoolExecutor</p>
+        <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">Nmap TCP Connect</p>
       </div>
     </div>
 

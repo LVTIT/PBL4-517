@@ -4,7 +4,9 @@ Status: templates implemented; actual Ubuntu VM install/reboot and EC2 acceptanc
 are pending. Do not describe Docker/Windows unit checks as VM reboot evidence.
 Run this on the group's external Ubuntu VM, separate from the monitored EC2.
 
-1. Clone the reviewed source at `/opt/pbl4-517`; keep it read-only for the runtime user.
+1. Clone the reviewed source at `/opt/pbl4-517`, with read access for the runtime user.
+   Install Nmap using the [scanner setup](../README.md#cài-nmap). Both the timer
+   and Telegram `/scan` use the same Nmap CLI.
 2. Create a dedicated system user/group `pbl517-monitor` with no login shell.
 3. Create `/etc/pbl517-monitor.env` owned by root, mode 0600. Set `SCANNER_TARGET`
    to the authorized EC2 IP/hostname, `SCANNER_PORTS=22,80,443,3000,5432,8080`,

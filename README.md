@@ -15,7 +15,7 @@ mật từ bên ngoài.
 
 - **Website KEVILO** (`website/frontend`, `website/backend`): React + TypeScript +
   Vite, Express + Prisma, PostgreSQL, API dưới `/api/`.
-- **External Scanner** (`scanner/`): quét cổng TCP, thu thập banner, chấm điểm
+- **External Scanner** (`scanner/`): quét cổng TCP bằng Nmap, thu thập banner, chấm điểm
   heuristic theo OWASP A05, lưu Baseline và phát hiện thay đổi.
 - **Cảnh báo & ChatOps** (`alerts/`): Discord Webhook và Telegram Bot, gửi báo
   cáo HTML/Markdown, hỗ trợ `/scan`, `/status`, `/report`, `/ping`, `/help`.
@@ -28,7 +28,7 @@ mật từ bên ngoài.
 ```text
 Trình duyệt ──> Nginx/Vite (frontend) ──> Express API (/api/) ──> PostgreSQL
                                               │
-Scanner (TCP + banner) ──> Baseline + báo cáo HTML/Markdown
+Scanner (Nmap TCP Connect) ──> Baseline + báo cáo HTML/Markdown
         │
         └──> Discord Webhook / Telegram Bot (ChatOps)
 ```

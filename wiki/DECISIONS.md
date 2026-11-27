@@ -2,6 +2,20 @@
 
 Chỉ ghi **Accepted** khi có yêu cầu/xác nhận hoặc quyết định đã được chấp nhận trong task; **Proposed** dành cho đề xuất chưa chốt. Khi thay đổi quyết định, thêm entry mới, đánh dấu entry cũ **Superseded** và dẫn tới entry thay thế; không xóa lý do/lịch sử cũ. Trạng thái triển khai/kiểm thử được duy trì riêng tại [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
+## 2026-11-27 — Nmap cho phép đo TCP (Refs #35, Related to #36 và #43)
+
+**Status: Accepted.** Người dùng duyệt dùng Nmap và bỏ bộ quét TCP tự viết.
+
+CLI, timer và lệnh Telegram `/scan` gọi cùng một scanner. Scanner chạy Nmap
+TCP Connect cho một IPv4 và danh sách cổng cấu hình, rồi đọc XML bằng thư viện
+chuẩn Python. Cổng thiếu kết quả xác định vẫn thuộc nhóm chưa xác định. Lỗi
+thực thi hoặc XML không hợp lệ giữ baseline và xuất trạng thái lỗi.
+
+Cách đo mới thay quyết định ở prototype Issue #9 về việc dùng trực tiếp
+`socket.create_connection` để quét danh sách cổng. Giữ định dạng state JSON và
+luồng cảnh báo đã kiểm thử. Nmap là phụ thuộc runtime trên máy quét. Xem
+[cài đặt, nguồn tham khảo và kiểm thử](../scanner/README.md).
+
 ## 2026-11-10 — Demo probe layout: shared core + one module per vulnerability (Refs #68)
 
 **Status: Accepted** — user approved this layout for the local demo, the EC2 lab demo
